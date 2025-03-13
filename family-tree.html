@@ -636,24 +636,60 @@
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
                 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
-            OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
+            OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.olivia);
+            OrgChart.templates.couple_male.size = [280, 120];
             OrgChart.templates.couple_male.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            
-            // Đảm bảo template couple_male kế thừa đúng định nghĩa img_0 từ couple
-            OrgChart.templates.couple_male.img_0 = OrgChart.templates.couple.img_0;
-            OrgChart.templates.couple_male.img_1 = OrgChart.templates.couple.img_1;
+            OrgChart.templates.couple_male.nodeMenuButton = 
+                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
+                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
+                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
+                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
+                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
+                '</g>';
+            OrgChart.templates.couple_male.field_0 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_male.field_1 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="50" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_male.field_2 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_male.field_3 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="50" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_male.img_0 = 
+                '<clipPath id="personClip_{id}"><circle cx="70" cy="80" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="55" width="50" height="50"></image>';
+            OrgChart.templates.couple_male.img_1 = 
+                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
-            OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
+            OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.olivia);
+            OrgChart.templates.couple_female.size = [280, 120];
             OrgChart.templates.couple_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            
-            // Đảm bảo template couple_female kế thừa đúng định nghĩa img_0 từ couple
-            OrgChart.templates.couple_female.img_0 = OrgChart.templates.couple.img_0;
-            OrgChart.templates.couple_female.img_1 = OrgChart.templates.couple.img_1;
+            OrgChart.templates.couple_female.nodeMenuButton = 
+                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
+                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
+                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
+                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
+                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
+                '</g>';
+            OrgChart.templates.couple_female.field_0 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_female.field_1 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="50" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_female.field_2 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_female.field_3 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="50" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_female.img_0 = 
+                '<clipPath id="personClip_{id}"><circle cx="70" cy="80" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="55" width="50" height="50"></image>';
+            OrgChart.templates.couple_female.img_1 = 
+                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
 
             // Thêm debug để kiểm tra các template đã tạo
             console.log("Template single:", OrgChart.templates.single);
@@ -670,12 +706,27 @@
                     // Ràng buộc chung cho tất cả các node
                     field_0: "name",
                     field_1: "birth",
-                    img_0: "img",
+                    img_0: function(node) {
+                        // Logic xử lý img_0 tùy thuộc vào loại node
+                        if (node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)) {
+                            console.log(`Node ${node.id}: ràng buộc img_0 với ${node.img}`);
+                            return node.img;
+                        } else {
+                            return node.img;
+                        }
+                    },
                     
                     // Ràng buộc đặc biệt cho node vợ chồng
                     field_2: "spouseName",
                     field_3: "spouseBirth",
-                    img_1: "spouseImg"
+                    img_1: function(node) {
+                        // Logic xử lý img_1 tùy thuộc vào loại node
+                        if (node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)) {
+                            console.log(`Node ${node.id}: ràng buộc img_1 với ${node.spouseImg}`);
+                            return node.spouseImg;
+                        }
+                        return null; // Không áp dụng cho node đơn
+                    }
                 },
                 nodeMenu: {
                     details: { text: "Chi tiết" }
@@ -766,6 +817,21 @@
                     console.log(`Node ${node.id} - img:`, node.data.img);
                     console.log(`Node ${node.id} - spouseImg:`, node.data.spouseImg);
                 });
+                
+                // Thêm sự kiện bắt lỗi cho tất cả các ảnh trong biểu đồ
+                setTimeout(() => {
+                    const chartImages = document.querySelectorAll('#family-tree image');
+                    console.log(`Đã tìm thấy ${chartImages.length} ảnh trong biểu đồ`);
+                    
+                    chartImages.forEach((img, index) => {
+                        console.log(`Ảnh ${index + 1}: href=${img.getAttribute('xlink:href')}`);
+                        
+                        // Bắt sự kiện lỗi khi tải ảnh
+                        img.addEventListener('error', function(e) {
+                            console.error(`Lỗi khi tải ảnh: ${img.getAttribute('xlink:href')}`, e);
+                        });
+                    });
+                }, 1000);
             });
 
             return chart;
@@ -927,6 +993,31 @@
                 // Debug thông tin formattedData
                 console.log("Formatted data:", formattedData);
                 console.log("Kiểm tra node couple:", formattedData.nodes.filter(n => n.id.includes('_')));
+                
+                // Xử lý lại dữ liệu couple nodes để đảm bảo ảnh hiển thị đúng
+                formattedData.nodes.forEach(node => {
+                    if (node.id.includes('_')) {
+                        console.log(`Xử lý đặc biệt cho node couple ${node.id}`);
+                        // Đảm bảo thuộc tính img và spouseImg đều tồn tại và có giá trị
+                        if (!node.img || node.img === "") {
+                            console.warn(`Node ${node.id} không có img, sử dụng ảnh mặc định`);
+                            if (node.personGender === 'male') {
+                                node.img = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                            } else {
+                                node.img = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                            }
+                        }
+                        
+                        if (!node.spouseImg || node.spouseImg === "") {
+                            console.warn(`Node ${node.id} không có spouseImg, sử dụng ảnh mặc định`);
+                            if (node.spouseGender === 'male') {
+                                node.spouseImg = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                            } else {
+                                node.spouseImg = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                            }
+                        }
+                    }
+                });
                 
                 // Khởi tạo OrgChart
                 document.getElementById('family-tree-container').style.display = 'block';
