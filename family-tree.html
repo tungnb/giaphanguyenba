@@ -350,6 +350,13 @@
                 const nodes = convertFamilyDataToOrgChartFormat();
                 console.log("Đã chuyển đổi dữ liệu thành công:", nodes);
                 
+                // Thêm timeout để ẩn loading nếu sự kiện ready không kích hoạt
+                const loadingTimeout = setTimeout(function() {
+                    console.log("Timeout - Ẩn loading indicator sau 5 giây");
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    document.getElementById('family-tree-container').style.display = 'block';
+                }, 5000);
+                
                 // Tạo và cấu hình chart
                 console.log("Đang khởi tạo OrgChart...");
                 orgChart = new OrgChart(document.getElementById('org-chart-container'), {
@@ -400,11 +407,17 @@
                 
                 // Xử lý khi chart đã sẵn sàng
                 orgChart.on('ready', function() {
-                    console.log("OrgChart đã sẵn sàng");
+                    console.log("OrgChart đã sẵn sàng - Sự kiện ready đã kích hoạt");
+                    // Hủy timeout vì sự kiện ready đã kích hoạt
+                    clearTimeout(loadingTimeout);
                     // Ẩn loading và hiển thị family tree
                     document.getElementById('loading-indicator').style.display = 'none';
                     document.getElementById('family-tree-container').style.display = 'block';
                 });
+                
+                // Kích hoạt draw ngay lập tức
+                console.log("Kích hoạt vẽ OrgChart");
+                orgChart.draw();
                 
                 // Thiết lập zoom controls
                 setupOrgChartZoomControls();
