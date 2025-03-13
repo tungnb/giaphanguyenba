@@ -659,6 +659,39 @@
             OrgChart.templates.couple_female.nodeMenuButton = 
                 '<g style="display:none"></g>';
 
+            // Tùy chỉnh template cho nút mở rộng/thu gọn
+            OrgChart.templates.single.min = {
+                w: 280,
+                h: 120
+            };
+            OrgChart.templates.single.plus = 
+                '<circle cx="140" cy="110" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="140" y="116">+</text>';
+            OrgChart.templates.single.minus = 
+                '<circle cx="140" cy="110" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="140" y="116">-</text>';
+
+            // Sao chép cấu hình nút mở rộng/thu gọn cho tất cả các template khác
+            OrgChart.templates.single_male.plus = OrgChart.templates.single.plus;
+            OrgChart.templates.single_male.minus = OrgChart.templates.single.minus;
+            OrgChart.templates.single_male.min = OrgChart.templates.single.min;
+            
+            OrgChart.templates.single_female.plus = OrgChart.templates.single.plus;
+            OrgChart.templates.single_female.minus = OrgChart.templates.single.minus;
+            OrgChart.templates.single_female.min = OrgChart.templates.single.min;
+            
+            OrgChart.templates.couple.plus = OrgChart.templates.single.plus;
+            OrgChart.templates.couple.minus = OrgChart.templates.single.minus;
+            OrgChart.templates.couple.min = OrgChart.templates.single.min;
+            
+            OrgChart.templates.couple_male.plus = OrgChart.templates.single.plus;
+            OrgChart.templates.couple_male.minus = OrgChart.templates.single.minus;
+            OrgChart.templates.couple_male.min = OrgChart.templates.single.min;
+            
+            OrgChart.templates.couple_female.plus = OrgChart.templates.single.plus;
+            OrgChart.templates.couple_female.minus = OrgChart.templates.single.minus;
+            OrgChart.templates.couple_female.min = OrgChart.templates.single.min;
+
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
                 enableSearch: false,
@@ -675,6 +708,19 @@
                     field_3: "spouseBirth",
                     img_1: "spouseImg"
                 },
+                // Cấu hình collapse
+                collapse: {
+                    level: 0, // Chỉ hiển thị node gốc ban đầu
+                    allChildren: false // Chỉ collapse thế hệ con trực tiếp, không collapse tất cả con cháu
+                },
+                // Thêm nút mở rộng/thu gọn nhánh
+                enableCollapsing: true,
+                // Cấu hình hiển thị nút mở rộng/thu gọn
+                plusVisibility: [2, 3, 4, 5], // Hiển thị nút + cho các thế hệ 2 trở đi
+                minusVisibility: [2, 3, 4, 5], // Hiển thị nút - cho các thế hệ 2 trở đi
+                // Thêm kiểu di chuột vào nút mở rộng
+                mouseScroolBehaviour: OrgChart.action.ctrlZoom,
+                // Cho phép xử lý thao tác với nút +/-
                 nodeMenu: {
                     pdf: null,
                     png: null,
@@ -738,9 +784,35 @@
             
             // Sự kiện đơn giản - khi chart được tải
             chart.on('load', function() {
-                // Không còn cần thêm defs nữa vì mỗi node đã có clipPath riêng
-                // Chỉ log thông báo chart đã tải xong
                 console.log("Biểu đồ gia phả đã tải xong");
+                
+                // Thu gọn nhánh từ thế hệ thứ 2 trở đi, nhưng giữ lại thế hệ đầu tiên
+                const roots = chart.roots;
+                if (roots && roots.length > 0) {
+                    // Lấy các node ở thế hệ đầu tiên (có thể là node gốc và vợ/chồng)
+                    const firstGenNodes = chart.getNode(roots[0]);
+                    
+                    if (firstGenNodes) {
+                        console.log("Node gốc được giữ mở:", firstGenNodes.id);
+                        
+                        // Lấy danh sách các nhánh con của node gốc
+                        const childrenNodes = chart.getChildrenIds(firstGenNodes.id);
+                        
+                        // Thu gọn từng nhánh con
+                        if (childrenNodes && childrenNodes.length > 0) {
+                            childrenNodes.forEach(childId => {
+                                chart.collapse(childId, true);
+                                console.log("Thu gọn nhánh con:", childId);
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Xử lý sự kiện mở rộng và thu gọn nhánh
+            chart.on('expcollclick', function(sender, collapse, id, ids) {
+                console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
+                return true; // Cho phép mở rộng/thu gọn
             });
 
             // Xử lý sự kiện khi click vào node
