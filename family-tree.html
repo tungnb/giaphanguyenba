@@ -124,6 +124,17 @@
                         generation: 1,
                         birthDate: '1900-01-01',
                         deathDate: '1970-01-01',
+                        spouses: ['100'],
+                        children: ['2', '3', '4']
+                    },
+                    {
+                        id: '100',
+                        name: 'Nguyễn Thị Vợ Cụ',
+                        gender: 'female',
+                        generation: 1,
+                        birthDate: '1905-01-01',
+                        deathDate: '1975-01-01',
+                        spouses: ['1'],
                         children: ['2', '3', '4']
                     },
                     {
@@ -132,7 +143,17 @@
                         gender: 'male',
                         generation: 2,
                         birthDate: '1930-01-01',
-                        parents: ['1'],
+                        parents: ['1', '100'],
+                        spouses: ['101'],
+                        children: ['5', '6']
+                    },
+                    {
+                        id: '101',
+                        name: 'Nguyễn Thị Vợ Trưởng',
+                        gender: 'female',
+                        generation: 2,
+                        birthDate: '1935-01-01',
+                        spouses: ['2'],
                         children: ['5', '6']
                     },
                     {
@@ -141,7 +162,17 @@
                         gender: 'male',
                         generation: 2,
                         birthDate: '1935-01-01',
-                        parents: ['1'],
+                        parents: ['1', '100'],
+                        spouses: ['102'],
+                        children: ['7']
+                    },
+                    {
+                        id: '102',
+                        name: 'Nguyễn Thị Vợ Thứ',
+                        gender: 'female',
+                        generation: 2,
+                        birthDate: '1940-01-01',
+                        spouses: ['3'],
                         children: ['7']
                     },
                     {
@@ -150,7 +181,17 @@
                         gender: 'male',
                         generation: 2,
                         birthDate: '1940-01-01',
-                        parents: ['1'],
+                        parents: ['1', '100'],
+                        spouses: ['103'],
+                        children: ['8', '9']
+                    },
+                    {
+                        id: '103',
+                        name: 'Nguyễn Thị Vợ Út',
+                        gender: 'female',
+                        generation: 2,
+                        birthDate: '1945-01-01',
+                        spouses: ['4'],
                         children: ['8', '9']
                     },
                     {
@@ -159,7 +200,7 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1960-01-01',
-                        parents: ['2']
+                        parents: ['2', '101']
                     },
                     {
                         id: '6',
@@ -167,7 +208,7 @@
                         gender: 'female',
                         generation: 3,
                         birthDate: '1965-01-01',
-                        parents: ['2']
+                        parents: ['2', '101']
                     },
                     {
                         id: '7',
@@ -175,7 +216,7 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1965-01-01',
-                        parents: ['3']
+                        parents: ['3', '102']
                     },
                     {
                         id: '8',
@@ -183,7 +224,7 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1970-01-01',
-                        parents: ['4']
+                        parents: ['4', '103']
                     },
                     {
                         id: '9',
@@ -191,7 +232,7 @@
                         gender: 'female',
                         generation: 3,
                         birthDate: '1975-01-01',
-                        parents: ['4']
+                        parents: ['4', '103']
                     }
                 ];
             }
@@ -365,7 +406,7 @@
         function setupFamilyConnections() {
             // Xóa tất cả đường kết nối hiện có
             const treeContainer = document.getElementById('family-tree-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector, .svg-container');
+            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector, .svg-container, .spouse-connector');
             existingConnectors.forEach(conn => conn.remove());
             
             // Tạo container SVG cho các đường kết nối
@@ -399,18 +440,38 @@
                         createSvgConnector(svgContainer, parentElement, childElements, treeContainer);
                     }
                 }
+                
+                // Thêm xử lý kết nối vợ chồng
+                if (person.spouses && person.spouses.length > 0) {
+                    const personElement = document.getElementById(`person-${person.id}`);
+                    
+                    if (!personElement) return;
+                    
+                    person.spouses.forEach(spouseId => {
+                        const spouseElement = document.getElementById(`person-${spouseId}`);
+                        
+                        if (spouseElement) {
+                            // Để tránh vẽ 2 lần, chỉ vẽ kết nối khi personId < spouseId
+                            if (person.id < spouseId) {
+                                createSpouseConnector(svgContainer, personElement, spouseElement, treeContainer);
+                            }
+                        }
+                    });
+                }
             });
         }
 
-        // Cải thiện hàm tạo kết nối cha mẹ-con
+        // Cải thiện hàm tạo kết nối cha mẹ-con để đảm bảo hiển thị tất cả
         function createSvgConnector(svgContainer, parentElement, childElements, treeContainer) {
+            if (!parentElement || childElements.length === 0) return;
+
             const treeRect = treeContainer.getBoundingClientRect();
             const scrollTop = treeContainer.scrollTop;
             const scrollLeft = treeContainer.scrollLeft;
             
             const parentRect = parentElement.getBoundingClientRect();
             
-            // Vị trí của cha mẹ - lấy vị trí ở chính giữa phía dưới của thẻ
+            // Lấy vị trí giữa đáy của thẻ cha mẹ
             const parentX = parentRect.left + parentRect.width / 2 - treeRect.left + scrollLeft;
             const parentY = parentRect.bottom - treeRect.top + scrollTop;
             
@@ -424,10 +485,13 @@
                 const childX = childRect.left + childRect.width / 2 - treeRect.left + scrollLeft;
                 const childY = childRect.top - treeRect.top + scrollTop;
                 
-                childPositions.push({ x: childX, y: childY });
+                childPositions.push({ x: childX, y: childY, element: childElement });
                 minChildX = Math.min(minChildX, childX);
                 maxChildX = Math.max(maxChildX, childX);
             });
+            
+            // Sắp xếp lại các con theo thứ tự từ trái sang phải
+            childPositions.sort((a, b) => a.x - b.x);
             
             // Điểm trung tâm ngang giữa các con
             const centerX = (minChildX + maxChildX) / 2;
@@ -435,7 +499,7 @@
             // Khoảng cách dọc cho đường kết nối
             const verticalGap = 30;
             
-            // Đường dọc từ cha xuống
+            // Vẽ đường dọc từ cha mẹ xuống
             const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             verticalLine.setAttribute("x1", parentX);
             verticalLine.setAttribute("y1", parentY);
@@ -445,7 +509,7 @@
             verticalLine.setAttribute("stroke-width", "2");
             svgContainer.appendChild(verticalLine);
             
-            // Đường ngang nối giữa nếu cần
+            // Vẽ đường ngang nối từ cha mẹ đến trung tâm các con (nếu cần)
             if (Math.abs(parentX - centerX) > 2) {
                 const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 horizontalLine.setAttribute("x1", parentX);
@@ -457,7 +521,7 @@
                 svgContainer.appendChild(horizontalLine);
             }
             
-            // Đường dọc xuống giữa từ đường ngang
+            // Đường dọc xuống từ trung tâm
             const middleVerticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
             middleVerticalLine.setAttribute("x1", centerX);
             middleVerticalLine.setAttribute("y1", parentY + verticalGap);
@@ -467,28 +531,81 @@
             middleVerticalLine.setAttribute("stroke-width", "2");
             svgContainer.appendChild(middleVerticalLine);
             
-            // Vẽ các đường nối từ trung tâm đến từng người con
-            childPositions.forEach((childPos, index) => {
-                // Đường ngang từ trung tâm đến con
-                const horizontalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                horizontalToChild.setAttribute("x1", centerX);
-                horizontalToChild.setAttribute("y1", parentY + verticalGap * 2);
-                horizontalToChild.setAttribute("x2", childPos.x);
-                horizontalToChild.setAttribute("y2", parentY + verticalGap * 2);
-                horizontalToChild.setAttribute("stroke", "#0066cc");
-                horizontalToChild.setAttribute("stroke-width", "2");
-                svgContainer.appendChild(horizontalToChild);
-                
-                // Đường dọc xuống đến con
+            // Vẽ đường ngang từ trung tâm đến mỗi con
+            const childLineY = parentY + verticalGap * 2;
+            
+            // Vẽ đường ngang chính đi từ con trái cùng đến con phải cùng
+            if (childPositions.length > 1) {
+                const mainHorizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                mainHorizontalLine.setAttribute("x1", childPositions[0].x);
+                mainHorizontalLine.setAttribute("y1", childLineY);
+                mainHorizontalLine.setAttribute("x2", childPositions[childPositions.length - 1].x);
+                mainHorizontalLine.setAttribute("y2", childLineY);
+                mainHorizontalLine.setAttribute("stroke", "#0066cc");
+                mainHorizontalLine.setAttribute("stroke-width", "2");
+                svgContainer.appendChild(mainHorizontalLine);
+            }
+            
+            // Vẽ đường dọc xuống từ đường ngang đến mỗi con
+            childPositions.forEach(childPos => {
                 const verticalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 verticalToChild.setAttribute("x1", childPos.x);
-                verticalToChild.setAttribute("y1", parentY + verticalGap * 2);
+                verticalToChild.setAttribute("y1", childLineY);
                 verticalToChild.setAttribute("x2", childPos.x);
                 verticalToChild.setAttribute("y2", childPos.y);
                 verticalToChild.setAttribute("stroke", "#0066cc");
                 verticalToChild.setAttribute("stroke-width", "2");
                 svgContainer.appendChild(verticalToChild);
+                
+                // Thêm điểm kết nối giữa đường dọc và con
+                const connectionPoint = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                connectionPoint.setAttribute("cx", childPos.x);
+                connectionPoint.setAttribute("cy", childPos.y);
+                connectionPoint.setAttribute("r", "3");
+                connectionPoint.setAttribute("fill", "#0066cc");
+                svgContainer.appendChild(connectionPoint);
             });
+        }
+
+        // Thêm hàm mới để tạo kết nối vợ chồng
+        function createSpouseConnector(svgContainer, person1Element, person2Element, treeContainer) {
+            const treeRect = treeContainer.getBoundingClientRect();
+            const scrollTop = treeContainer.scrollTop;
+            const scrollLeft = treeContainer.scrollLeft;
+            
+            const person1Rect = person1Element.getBoundingClientRect();
+            const person2Rect = person2Element.getBoundingClientRect();
+            
+            // Tính toán vị trí kết nối (giữa hai người)
+            const person1RightX = person1Rect.right - treeRect.left + scrollLeft;
+            const person2LeftX = person2Rect.left - treeRect.left + scrollLeft;
+            const person1CenterY = person1Rect.top + person1Rect.height / 2 - treeRect.top + scrollTop;
+            const person2CenterY = person2Rect.top + person2Rect.height / 2 - treeRect.top + scrollTop;
+            
+            // Vẽ đường nối
+            const spouseLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            spouseLine.setAttribute("x1", person1RightX);
+            spouseLine.setAttribute("y1", person1CenterY);
+            spouseLine.setAttribute("x2", person2LeftX);
+            spouseLine.setAttribute("y2", person2CenterY);
+            spouseLine.setAttribute("stroke", "#ff9800");
+            spouseLine.setAttribute("stroke-width", "2");
+            svgContainer.appendChild(spouseLine);
+            
+            // Thêm hai điểm tròn ở hai đầu đường kẻ
+            const point1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            point1.setAttribute("cx", person1RightX);
+            point1.setAttribute("cy", person1CenterY);
+            point1.setAttribute("r", "4");
+            point1.setAttribute("fill", "#ff9800");
+            svgContainer.appendChild(point1);
+            
+            const point2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            point2.setAttribute("cx", person2LeftX);
+            point2.setAttribute("cy", person2CenterY);
+            point2.setAttribute("r", "4");
+            point2.setAttribute("fill", "#ff9800");
+            svgContainer.appendChild(point2);
         }
 
         // Thêm hàm theo dõi pinch-to-zoom để cập nhật các kết nối
@@ -777,84 +894,4 @@
                         let marriageInfo = '';
                         spousesHTML += `
                             <div class="relation-item">
-                                ${spouseData.name} ${marriageInfo ? `(${marriageInfo})` : ''}
-                            </div>
-                        `;
-                    }
-                });
-                spousesHTML += '</div>';
-            }
-
-            // Tìm thông tin con cái
-            let childrenHTML = '<p>Không có thông tin</p>';
-            if (person.children && person.children.length > 0) {
-                childrenHTML = '<div class="relation-list">';
-                person.children.forEach(childId => {
-                    const childData = familyData.find(p => p.id === childId);
-                    if (childData) {
-                        childrenHTML += `
-                            <div class="relation-item">
-                                ${childData.name} (${childData.gender === 'male' ? 'Con trai' : 'Con gái'})
-                            </div>
-                        `;
-                    }
-                });
-                childrenHTML += '</div>';
-            }
-
-            // Tạo HTML chi tiết
-            contentContainer.innerHTML = `
-                <div class="person-detail-header">
-                    <img src="${photoUrl}" alt="${person.name}" class="person-detail-photo">
-                    <div class="person-detail-info">
-                        <h2 class="person-detail-name">${person.name}</h2>
-                        <p class="person-detail-dates">${lifespan}</p>
-                        <p class="person-detail-gender">${person.gender === 'male' ? 'Nam' : 'Nữ'}</p>
-                    </div>
-                </div>
-
-                <div class="person-detail-section">
-                    <h3>Tiểu sử</h3>
-                    <p>${person.bio || 'Không có thông tin tiểu sử.'}</p>
-                </div>
-
-                <div class="person-detail-section">
-                    <h3>Cha mẹ</h3>
-                    ${parentsHTML}
-                </div>
-
-                <div class="person-detail-section">
-                    <h3>Vợ/Chồng</h3>
-                    ${spousesHTML}
-                </div>
-
-                <div class="person-detail-section">
-                    <h3>Con cái</h3>
-                    ${childrenHTML}
-                </div>
-            `;
-
-            // Hiển thị modal
-            modal.style.display = 'block';
-        }
-
-        // Định dạng ngày tháng
-        function formatDate(dateString) {
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    return '';
-                }
-
-                return date.toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            } catch (error) {
-                return '';
-            }
-        }
-    </script>
-</body>
-</html>
+                                ${spouseData.name} ${marriageInfo ? `
