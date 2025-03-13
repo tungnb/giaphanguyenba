@@ -1140,7 +1140,12 @@
                 });
                 
                 // Cập nhật giao diện
-                populateRelations(currentRelationType + 's', currentMember[currentRelationType + 's'] || []);
+                let relationType = currentRelationType;
+                if (relationType === 'child') {
+                    populateRelations('children', currentMember.children || []);
+                } else {
+                    populateRelations(relationType + 's', currentMember[relationType + 's'] || []);
+                }
                 
                 showSuccess('Đã thêm quan hệ thành công');
                 closeRelationModal();
@@ -1273,10 +1278,6 @@
                     },
                     body: JSON.stringify({ id: id })
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
-                }
                 
                 // Cập nhật mối quan hệ cho các thành viên có liên quan
                 updateRelatedMembers(id);
