@@ -238,11 +238,6 @@
         <div class="container">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
 
-            <h2 class="section-title">Gia phả gia đình Nguyễn Bá</h2>
-            
-            <div class="zoom-instructions">
-                <i class="fas fa-info-circle"></i> Bạn có thể cuộn ngang để xem toàn bộ cây gia phả. Trên thiết bị di động, dùng hai ngón tay để phóng to/thu nhỏ hoặc sử dụng nút điều khiển zoom.
-            </div>
 
             <div id="loading-indicator" class="loading-indicator">
                 <div class="loading-spinner"></div>
@@ -675,16 +670,17 @@
                     return personNode;
                 }
                 
-                // Xử lý trường hợp có vợ/chồng
-                // Tạo node giả đại diện cho cặp vợ chồng
+                // Xử lý trường hợp có vợ/chồng - CẢI TIẾN TỪ ĐÂY
+                // Tạo node giả cho cặp vợ chồng
                 const coupleNode = {
                     pseudo: true,
                     children: []
                 };
                 
-                // Thêm người hiện tại và vợ/chồng vào node cặp đôi
+                // Thêm người hiện tại vào node vợ chồng
                 coupleNode.children.push(personNode);
                 
+                // Thêm vợ/chồng vào node vợ chồng 
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
@@ -700,23 +696,15 @@
                     allChildren = [...allChildren, ...commonChildren];
                 }
                 
-                // Nếu có con cái, tạo một node cha cho tất cả con cái
+                // Nếu có con cái, thêm vào personNode thay vì coupleNode
                 if (allChildren.length > 0) {
                     // Loại bỏ trùng lặp (nếu có)
                     const uniqueChildren = allChildren.filter((child, index, self) => 
                         self.findIndex(c => c.id === child.id) === index
                     );
                     
-                    // Tạo cây cho từng đứa con
-                    const childrenNodes = uniqueChildren.map(child => createFamilySubtree(child));
-                    
-                    // Chỉ giữ lại những node con hợp lệ
-                    const validChildrenNodes = childrenNodes.filter(node => node !== null);
-                    
-                    if (validChildrenNodes.length > 0) {
-                        // Thêm tất cả con trực tiếp vào node của cặp vợ chồng
-                        coupleNode.children = [...coupleNode.children, ...validChildrenNodes];
-                    }
+                    // Tạo cây cho từng đứa con và thêm vào personNode
+                    personNode.children = uniqueChildren.map(child => createFamilySubtree(child));
                 }
                 
                 return coupleNode;
