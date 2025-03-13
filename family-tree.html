@@ -591,61 +591,15 @@
                 '<clipPath id="personClip_{id}"><circle cx="140" cy="80" r="25"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="115" y="55" width="50" height="50"></image>';
 
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
-            OrgChart.templates.couple_male = {};
-            OrgChart.templates.couple_male.size = [280, 120];
-            OrgChart.templates.couple_male.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_male.nodeMenuButton = 
-                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
-                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
-                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
-                '</g>';
-            OrgChart.templates.couple_male.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_male.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="50" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_male.field_2 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_male.field_3 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="50" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_male.img_0 = 
-                '<clipPath id="personClip_{id}"><circle cx="70" cy="80" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="55" width="50" height="50"></image>';
-            OrgChart.templates.couple_male.img_1 = 
-                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
+            // Tùy chỉnh template cho node nam
+            OrgChart.templates.single_male = Object.assign({}, OrgChart.templates.single);
+            OrgChart.templates.single_male.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>';
 
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
-            OrgChart.templates.couple_female = {};
-            OrgChart.templates.couple_female.size = [280, 120];
-            OrgChart.templates.couple_female.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_female.nodeMenuButton = 
-                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
-                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
-                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
-                '</g>';
-            OrgChart.templates.couple_female.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_female.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="50" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_female.field_2 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_female.field_3 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="50" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple_female.img_0 = 
-                '<clipPath id="personClip_{id}"><circle cx="70" cy="80" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="55" width="50" height="50"></image>';
-            OrgChart.templates.couple_female.img_1 = 
-                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
+            // Tùy chỉnh template cho node nữ
+            OrgChart.templates.single_female = Object.assign({}, OrgChart.templates.single);
+            OrgChart.templates.single_female.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>';
 
             // Tạo template tùy chỉnh cho node vợ chồng
             OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
@@ -674,6 +628,18 @@
             OrgChart.templates.couple.img_1 = 
                 '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
+
+            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
+            OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
+            OrgChart.templates.couple_male.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
+            OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
+            OrgChart.templates.couple_female.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
