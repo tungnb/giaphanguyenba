@@ -1,52 +1,5 @@
-                            const coupleKey = [person.id, spouseId].sort().join('-');
-                            
-                            // Kiểm tra xem cặp này đã hiển thị chưa
-                            if (!displayedCouples.has(coupleKey)) {
-                                displayedCouples.add(coupleKey);
-                                
-                                const spouse = findPersonById(spouseId);
-                                if (spouse && spouse.generation == person.generation && !displayedPersons.has(spouseId)) {
-                                    // Đánh dấu vợ/chồng đã được hiển thị
-                                    displayedPersons.add(spouseId);
-                                    
-                                    // Thêm đường kết nối vợ chồng
-                                    const spouseConnector = document.createElement('div');
-                                    spouseConnector.className = 'spouse-connector';
-                                    familyGroup.appendChild(spouseConnector);
-                                    
-                                    // Thêm vợ/chồng
-                                    const spouseElement = createPersonElement(spouse);
-                                    spouseElement.id = `person-${spouseId}`;
-                                    familyGroup.appendChild(spouseElement);
-                                }
-                            }
-                        });
-                    }
-                });
-                
-                treeContainer.appendChild(genContainer);
-            });
 
-            // Thiết lập các kết nối kiểu mindmap
-            setTimeout(setupMindmapConnections, 300);
-        }
-
-        // Hàm thiết lập các kết nối kiểu mindmap
-        function setupMindmapConnections() {
-            // Xóa tất cả đường kết nối hiện có
 <!DOCTYPE html>
-            const treeContainer = document.getElementById('family-tree-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector');
-            existingConnectors.forEach(conn => conn.remove());
-            
-            // Tạo kết nối giữa cha mẹ và con
-            familyData.forEach(person => {
-                if (person.children && person.children.length > 0) {
-                    const parentElement = document.getElementById(`person-${person.id}`);
-                    
-                    if (!parentElement) return;
-                    
-                    const childElements = person.children.map(childId => document.getElementById(`person-${childId}`)).filter(el => el);
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
