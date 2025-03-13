@@ -499,7 +499,7 @@
                             spouseBirth: spouseLifespan,
                             spouseGender: spouse.gender,
                             generation: person.generation,
-                            tags: person.gender === 'male' ? ['couple_male_person'] : ['couple_female_person'],
+                            tags: ['couple'],
                             children: [...(person.children || []), ...(spouse.children || [])]
                         };
 
@@ -718,14 +718,8 @@
                             details: { text: "Chi tiết" }
                         }
                     },
-                    couple_male_person: {
-                        template: "couple_male",
-                        nodeMenu: {
-                            details: { text: "Chi tiết" }
-                        }
-                    },
-                    couple_female_person: {
-                        template: "couple_female",
+                    couple: {
+                        template: "couple",
                         nodeMenu: {
                             details: { text: "Chi tiết" }
                         }
@@ -741,7 +735,7 @@
             chart.on('click', function(sender, args) {
                 if (args.node) {
                     // Nếu là node vợ chồng, xác định vị trí click để quyết định hiển thị ai
-                    if (args.node.tags && (args.node.tags.indexOf('couple_male_person') != -1 || args.node.tags.indexOf('couple_female_person') != -1)) {
+                    if (args.node.tags && args.node.tags.indexOf('couple') != -1) {
                         const x = args.event.offsetX;
                         const nodeX = args.node.x;
                         
