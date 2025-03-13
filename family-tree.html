@@ -6,6 +6,58 @@
     <title>Gia phả dòng họ Nguyễn Bá - xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa</title>
     <link rel="stylesheet" href="family-tree.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://balkangraph.com/js/latest/OrgChart.js"></script>
+    <link href="https://balkangraph.com/js/latest/style.css" rel="stylesheet" />
+
+    <style>
+        #org-chart-container {
+            height: 700px;
+            width: 100%;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        /* CSS tùy chỉnh cho node */
+        .custom-node {
+            border-radius: 10px;
+            overflow: hidden;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .node-image {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 10px;
+            display: block;
+            border: 3px solid #f0f5ff;
+        }
+        
+        .node-info {
+            text-align: center;
+        }
+        
+        .node-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .node-dates {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .male-border {
+            border-left: 5px solid #0066cc;
+        }
+        
+        .female-border {
+            border-left: 5px solid #e91e63;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -271,65 +323,120 @@
             }
         });
 
-        // Hàm render cây gia phả sử dụng OrgChart.js
+        // Thay thế hàm renderFamilyTree() và setupOrgChartZoomControls()
         function renderFamilyTree() {
-            // Chuyển đổi dữ liệu
-            const nodes = convertFamilyDataToOrgChartFormat();
-            
-            // Tạo và cấu hình chart
-            orgChart = new OrgChart(document.getElementById('org-chart-container'), {
-                template: "familyTemplate",
-                nodeBinding: {
-                    field_0: "name",
-                    field_1: "dates",
-                    img_0: "photo"
-                },
-                nodes: nodes,
-                menu: {
-                    pdf: { text: "Xuất PDF" },
-                    png: { text: "Xuất PNG" },
-                    svg: { text: "Xuất SVG" }
-                },
-                nodeMenu: {
-                    details: { text: "Xem chi tiết" }
-                },
-                enableSearch: true,
-                searchPlaceholder: "Tìm kiếm thành viên...",
-                searchFields: ["name", "dates"],
-                mouseScrool: OrgChart.action.zoom,
-                scaleInitial: 0.6,
-                orientation: OrgChart.orientation.top,
-                levelSeparation: 120,
-                siblingSeparation: 60,
-                subtreeSeparation: 80,
-                padding: 50,
-                showXScroll: OrgChart.scroll.visible,
-                showYScroll: OrgChart.scroll.visible,
-                tags: {
-                    male: {
-                        template: "male"
-                    },
-                    female: {
-                        template: "female"
-                    }
-                }
-            });
-            
-            // Xử lý sự kiện chi tiết
-            orgChart.on('details', function(sender, args) {
-                showPersonDetail(args.node.id);
-                return false;
-            });
-            
-            // Xử lý khi chart đã sẵn sàng
-            orgChart.on('ready', function() {
-                // Ẩn loading và hiển thị family tree
+            // Kiểm tra xem OrgChart có tồn tại không
+            if (typeof OrgChart === 'undefined') {
+                console.error('OrgChart không được định nghĩa. Vui lòng kiểm tra thư viện.');
                 document.getElementById('loading-indicator').style.display = 'none';
+                
+                const errorMessage = document.createElement('p');
+                errorMessage.style.textAlign = 'center';
+                errorMessage.style.padding = '40px 0';
+                errorMessage.style.color = '#e74c3c';
+                errorMessage.textContent = 'Lỗi: Thư viện OrgChart.js không được tải. Vui lòng kiểm tra kết nối internet.';
+                document.getElementById('family-tree-container').appendChild(errorMessage);
                 document.getElementById('family-tree-container').style.display = 'block';
-            });
+                return;
+            }
             
-            // Thiết lập zoom controls
-            setupOrgChartZoomControls();
+            try {
+                // Chuyển đổi dữ liệu
+                const nodes = convertFamilyDataToOrgChartFormat();
+                
+                // Tạo và cấu hình chart
+                orgChart = new OrgChart(document.getElementById('org-chart-container'), {
+                    template: "olivia", // Sử dụng template có sẵn
+                    nodeBinding: {
+                        field_0: "name",
+                        field_1: "dates",
+                        img_0: "photo"
+                    },
+                    nodes: nodes,
+                    menu: {
+                        pdf: { text: "Xuất PDF" },
+                        png: { text: "Xuất PNG" },
+                        svg: { text: "Xuất SVG" }
+                    },
+                    nodeMenu: {
+                        details: { text: "Xem chi tiết" }
+                    },
+                    enableSearch: true,
+                    searchPlaceholder: "Tìm kiếm thành viên...",
+                    searchFields: ["name", "dates"],
+                    mouseScrool: OrgChart.action.zoom,
+                    scaleInitial: 0.8,
+                    orientation: OrgChart.orientation.top,
+                    levelSeparation: 120,
+                    siblingSeparation: 60,
+                    subtreeSeparation: 80,
+                    padding: 50,
+                    showXScroll: OrgChart.scroll.visible,
+                    showYScroll: OrgChart.scroll.visible,
+                    tags: {
+                        male: {
+                            template: "belinda" // Template cho nam
+                        },
+                        female: {
+                            template: "diva" // Template cho nữ
+                        }
+                    }
+                });
+                
+                // Xử lý sự kiện chi tiết
+                orgChart.on('click', function(sender, args) {
+                    showPersonDetail(args.node.id);
+                    return false;
+                });
+                
+                // Xử lý khi chart đã sẵn sàng
+                orgChart.on('ready', function() {
+                    // Ẩn loading và hiển thị family tree
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    document.getElementById('family-tree-container').style.display = 'block';
+                });
+                
+                // Thiết lập zoom controls
+                setupOrgChartZoomControls();
+            } catch (error) {
+                console.error('Lỗi khi khởi tạo OrgChart:', error);
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                const errorMessage = document.createElement('p');
+                errorMessage.style.textAlign = 'center';
+                errorMessage.style.padding = '40px 0';
+                errorMessage.style.color = '#e74c3c';
+                errorMessage.textContent = `Lỗi khi khởi tạo biểu đồ gia phả: ${error.message}`;
+                document.getElementById('family-tree-container').appendChild(errorMessage);
+                document.getElementById('family-tree-container').style.display = 'block';
+            }
+        }
+
+        // Cập nhật hàm setupOrgChartZoomControls()
+        function setupOrgChartZoomControls() {
+            if (!orgChart) return;
+            
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const zoomResetBtn = document.getElementById('zoom-reset');
+            
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', function() {
+                    orgChart.zoom(1.2, null, 'smooth');
+                });
+            }
+            
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', function() {
+                    orgChart.zoom(0.8, null, 'smooth');
+                });
+            }
+            
+            if (zoomResetBtn) {
+                zoomResetBtn.addEventListener('click', function() {
+                    orgChart.fit();
+                });
+            }
         }
 
         // Hàm chuyển đổi dữ liệu gia phả sang định dạng OrgChart
@@ -405,105 +512,22 @@
             return nodes;
         }
 
-        // Thiết lập điều khiển zoom cho OrgChart
-        function setupOrgChartZoomControls() {
-            const zoomInBtn = document.getElementById('zoom-in');
-            const zoomOutBtn = document.getElementById('zoom-out');
-            const zoomResetBtn = document.getElementById('zoom-reset');
-            
-            if (zoomInBtn) {
-                zoomInBtn.addEventListener('click', function() {
-                    orgChart.zoom(1.2, null, 'smooth');
-                });
-            }
-            
-            if (zoomOutBtn) {
-                zoomOutBtn.addEventListener('click', function() {
-                    orgChart.zoom(0.8, null, 'smooth');
-                });
-            }
-            
-            if (zoomResetBtn) {
-                zoomResetBtn.addEventListener('click', function() {
-                    orgChart.fit();
-                });
-            }
-        }
-
         // Thêm hàm theo dõi pinch-to-zoom để cập nhật các kết nối
         function setupZoomHandlers() {
-            let lastTouchDistance = 0;
-            let isZooming = false;
-            
-            // Theo dõi sự kiện zoom bằng cử chỉ
-            document.addEventListener('touchstart', function(e) {
-                if (e.touches.length === 2) {
-                    lastTouchDistance = Math.hypot(
-                        e.touches[0].pageX - e.touches[1].pageX,
-                        e.touches[0].pageY - e.touches[1].pageY
-                    );
-                }
-            });
-            
-            document.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 2) {
-                    // Tính toán khoảng cách pinch
-                    const touchDistance = Math.hypot(
-                        e.touches[0].pageX - e.touches[1].pageX,
-                        e.touches[0].pageY - e.touches[1].pageY
-                    );
-                    
-                    // Nếu khoảng cách thay đổi đáng kể, coi là đang zoom
-                    if (Math.abs(touchDistance - lastTouchDistance) > 10) {
-                        isZooming = true;
-                    }
-                    
-                    lastTouchDistance = touchDistance;
-                }
-            });
-            
-            document.addEventListener('touchend', function() {
-                if (isZooming) {
-                    // Cập nhật các kết nối sau khi zoom
-                    setTimeout(setupFamilyConnections, 300);
-                    isZooming = false;
-                }
-            });
-            
-            // Theo dõi sự kiện zoom bằng bánh xe hoặc phím tắt
-            window.addEventListener('wheel', function(e) {
-                if (e.ctrlKey) {
-                    // Người dùng đang zoom bằng ctrl+wheel
-                    setTimeout(setupFamilyConnections, 300);
-                }
-            });
+            // Không còn cần thiết khi sử dụng OrgChart
+            console.log('setupZoomHandlers không còn cần thiết');
         }
 
         // Cập nhật hàm observeTreeContainer
         function observeTreeContainer() {
-            const treeContainer = document.getElementById('org-chart-container');
-            
-            // Cập nhật khi cuộn
-            treeContainer.addEventListener('scroll', function() {
-                requestAnimationFrame(function() {
-                    setupFamilyConnections();
-                });
-            });
-            
-            // Tạo ResizeObserver để theo dõi thay đổi kích thước
-            if (window.ResizeObserver) {
-                const resizeObserver = new ResizeObserver(function() {
-                    setupFamilyConnections();
-                });
-                
-                resizeObserver.observe(treeContainer);
-            }
-            
-            // Thêm theo dõi zoom
-            setupZoomHandlers();
-            
-            // Cập nhật ban đầu
-            setupFamilyConnections();
+            // Không còn cần thiết khi sử dụng OrgChart
+            console.log('observeTreeContainer không còn cần thiết');
+        }
+
+        // Cập nhật hàm setupFamilyConnections
+        function setupFamilyConnections() {
+            // Không còn cần thiết khi sử dụng OrgChart
+            console.log('setupFamilyConnections không còn cần thiết');
         }
 
         // Hàm tìm chi của một người
