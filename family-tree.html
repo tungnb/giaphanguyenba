@@ -347,17 +347,107 @@
         // Hàm tạo cấu trúc cây từ dữ liệu phẳng
         function createTreeStructure() {
             console.log("Đang tạo cấu trúc cây...");
+            console.log("Dữ liệu gia phả:", familyData);
             
-            // Tìm tổ tiên đầu tiên (thế hệ 1)
-            const rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            // Tìm tổ tiên đầu tiên (thế hệ 1) - Sửa để linh hoạt hơn
+            let rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            
+            // Nếu không tìm thấy nam giới thế hệ 1, tìm nữ giới thế hệ 1
+            if (rootPersons.length === 0) {
+                console.warn('Không tìm thấy nam giới ở thế hệ 1, đang tìm nữ giới ở thế hệ 1...');
+                rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'female');
+            }
+            
+            // Nếu vẫn không tìm thấy ai ở thế hệ 1, tìm người có thế hệ thấp nhất
+            if (rootPersons.length === 0) {
+                console.warn('Không tìm thấy ai ở thế hệ 1, đang tìm người có thế hệ thấp nhất...');
+                
+                // Kiểm tra xem có trường generation trong dữ liệu không
+                const hasGeneration = familyData.some(person => person.generation !== undefined);
+                
+                if (!hasGeneration) {
+                    console.error('Không tìm thấy trường generation trong dữ liệu!');
+                    // Nếu không có trường generation, thêm generation = 1 cho người đầu tiên
+                    if (familyData.length > 0) {
+                        familyData[0].generation = 1;
+                        rootPersons = [familyData[0]];
+                        console.log(`Đã gán thế hệ 1 cho người đầu tiên: ${familyData[0].name}`);
+                    }
+                } else {
+                    // Tìm thế hệ nhỏ nhất trong dữ liệu
+                    const generations = familyData
+                        .filter(person => person.generation !== undefined)
+                        .map(person => person.generation);
+                    
+                    if (generations.length > 0) {
+                        const minGeneration = Math.min(...generations);
+                        console.log(`Thế hệ nhỏ nhất trong dữ liệu: ${minGeneration}`);
+                        
+                        // Tìm tất cả người trong thế hệ thấp nhất
+                        rootPersons = familyData.filter(person => 
+                            person.generation === minGeneration
+                        );
+                        
+                        // Ưu tiên nam giới nếu có
+                        const maleRootPersons = rootPersons.filter(person => person.gender === 'male');
+                        if (maleRootPersons.length > 0) {
+                            rootPersons = maleRootPersons;
+                        }
+                    }
+                }
+            }
             
             if (rootPersons.length === 0) {
-                console.error('Không tìm thấy người ở thế hệ 1 làm gốc');
+                console.error('Không tìm thấy ai phù hợp làm gốc trong dữ liệu gia phả!');
+                
+                // Nếu vẫn không tìm thấy ai, tạo một người gốc ảo
+                if (familyData.length > 0) {
+                    // Sử dụng người đầu tiên trong danh sách làm gốc
+                    const rootPerson = familyData[0];
+                    rootPerson.generation = 1; // Gán thế hệ 1 cho họ
+                    
+                    console.log(`Đã chọn ${rootPerson.name} làm gốc cây gia phả (gán thế hệ 1)`);
+                    
+                    // Tạo node gốc
+                    const rootNode = createNodeFromPerson(rootPerson);
+                    
+                    // Đệ quy thêm con
+                    addChildrenNodes(rootNode, rootPerson);
+                    
+                    return {
+                        chart: {
+                            container: "#family-tree",
+                            connectors: {
+                                type: 'step',
+                                style: {
+                                    'stroke': '#bbb',
+                                    'stroke-width': 2
+                                }
+                            },
+                            nodeAlign: "BOTTOM",
+                            scrollbar: "native",
+                            padding: 50
+                        },
+                        nodeStructure: rootNode
+                    };
+                }
+                
                 return null;
             }
             
-            // Lấy tổ tiên đầu tiên làm gốc
+            // Sắp xếp theo ngày sinh nếu có, hoặc theo ID
+            rootPersons.sort((a, b) => {
+                if (a.birthDate && b.birthDate) {
+                    return new Date(a.birthDate) - new Date(b.birthDate);
+                } else if (a.id && b.id) {
+                    return a.id.localeCompare(b.id);
+                }
+                return 0;
+            });
+            
+            // Lấy người đầu tiên sau khi sắp xếp
             const rootPerson = rootPersons[0];
+            console.log(`Đã chọn ${rootPerson.name} làm gốc cây gia phả (${rootPerson.gender}, thế hệ ${rootPerson.generation})`);
             
             // Tạo node gốc
             const rootNode = createNodeFromPerson(rootPerson);
