@@ -182,6 +182,17 @@
             margin: 0 auto 8px;
             border: 3px solid #f0f5ff;
         }
+
+        .Treant .error-node {
+            padding: 15px;
+            background-color: #f8d7da;
+            border-radius: 8px;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            width: 300px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -478,10 +489,18 @@
         function createTreeStructure() {
             console.log("Đang tạo cấu trúc cây...");
             
-            // ... (phần code tìm người gốc giữ nguyên)
-            
             // Thay thế toàn bộ cách xây dựng cây gia phả
             let finalTree = processFamily();
+            
+            // Kiểm tra finalTree trước khi trả về
+            if (!finalTree) {
+                console.error("Không thể tạo cấu trúc cây: Không tìm thấy người gốc phù hợp");
+                // Tạo một cấu trúc cây đơn giản để tránh lỗi null
+                finalTree = {
+                    innerHTML: "Không thể tìm thấy người gốc phù hợp",
+                    HTMLclass: "error-node"
+                };
+            }
             
             return {
                 chart: {
@@ -511,13 +530,50 @@
 
         // Tạo cây gia phả với vợ chồng ngang hàng
         function processFamily() {
-            // Tìm người gốc (đã được chọn trước đó)
-            const rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
-            if (rootPersons.length === 0) return null;
+            console.log("Đang tìm người gốc cho cây gia phả...");
+            
+            // 1. Tìm người nam ở thế hệ 1
+            let rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            
+            // 2. Nếu không có, tìm người nữ ở thế hệ 1
+            if (rootPersons.length === 0) {
+                console.log("Không tìm thấy người nam ở thế hệ 1, tìm người nữ...");
+                rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'female');
+            }
+            
+            // 3. Nếu vẫn không có, tìm người có thế hệ thấp nhất
+            if (rootPersons.length === 0) {
+                console.log("Không tìm thấy người ở thế hệ 1, tìm người ở thế hệ thấp nhất...");
+                const minGeneration = Math.min(...familyData.map(person => person.generation));
+                rootPersons = familyData.filter(person => person.generation === minGeneration);
+                
+                // Ưu tiên người nam
+                const maleRoots = rootPersons.filter(person => person.gender === 'male');
+                if (maleRoots.length > 0) {
+                    rootPersons = maleRoots;
+                }
+            }
+            
+            // Nếu vẫn không tìm thấy, trả về node thông báo lỗi
+            if (rootPersons.length === 0) {
+                console.error("Không thể tìm thấy người gốc trong dữ liệu");
+                return {
+                    innerHTML: "Không có dữ liệu người gốc",
+                    HTMLclass: "error-node"
+                };
+            }
+            
+            // Sắp xếp người gốc theo ngày sinh hoặc ID để đảm bảo kết quả nhất quán
+            rootPersons.sort((a, b) => {
+                if (a.birthDate && b.birthDate) {
+                    return new Date(a.birthDate) - new Date(b.birthDate);
+                }
+                return a.id.localeCompare(b.id);
+            });
             
             // Lấy người đầu tiên làm gốc
             const rootPerson = rootPersons[0];
-            console.log(`Đang xây dựng cây từ gốc: ${rootPerson.name}`);
+            console.log(`Đang xây dựng cây từ gốc: ${rootPerson.name} (ID: ${rootPerson.id}, Giới tính: ${rootPerson.gender}, Thế hệ: ${rootPerson.generation})`);
             
             // Tạo cấu trúc cây
             return createFamilySubtree(rootPerson);
