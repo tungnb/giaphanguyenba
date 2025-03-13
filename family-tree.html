@@ -193,6 +193,16 @@
             text-align: center;
             font-weight: bold;
         }
+
+        /* Thêm CSS cho family-node (node vô hình) */
+        .Treant .family-node {
+            width: 0;
+            height: 0;
+            padding: 0;
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -976,3 +986,35 @@
                     const spouseData = familyData.find(p => p.id === spouseId);
                     if (spouseData) {
                         spousesHTML += `
+                            <div class="relation-item">
+                                ${spouseData.name} (${spouseData.gender === 'male' ? 'Chồng' : 'Vợ'})
+                            </div>
+                        `;
+                    }
+                });
+                spousesHTML += '</div>';
+            }
+
+            // Tạo nội dung chi tiết người
+            contentContainer.innerHTML = `
+                <img src="${photoUrl}" alt="${person.name}" class="node-image">
+                <div class="node-info">
+                    <p class="node-name">${person.name}</p>
+                    <p class="node-dates">${lifespan}</p>
+                </div>
+                <div class="relation-list">
+                    <p><strong>Cha mẹ:</strong></p>
+                    ${parentsHTML}
+                </div>
+                <div class="relation-list">
+                    <p><strong>Vợ/chồng:</strong></p>
+                    ${spousesHTML}
+                </div>
+            `;
+
+            // Hiển thị modal
+            modal.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
