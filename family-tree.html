@@ -590,7 +590,33 @@
             OrgChart.templates.single.img_0 = 
                 '<clipPath id="personClip_{id}"><circle cx="140" cy="80" r="25"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="115" y="55" width="50" height="50"></image>';
+                    // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
+OrgChart.templates.couple_male = {};
+OrgChart.templates.couple_male.size = [280, 120];
+OrgChart.templates.couple_male.node = 
+    '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
+    '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+OrgChart.templates.couple_male.nodeMenuButton = OrgChart.templates.couple.nodeMenuButton;
+OrgChart.templates.couple_male.field_0 = OrgChart.templates.couple.field_0;
+OrgChart.templates.couple_male.field_1 = OrgChart.templates.couple.field_1;
+OrgChart.templates.couple_male.field_2 = OrgChart.templates.couple.field_2;
+OrgChart.templates.couple_male.field_3 = OrgChart.templates.couple.field_3;
+OrgChart.templates.couple_male.img_0 = OrgChart.templates.couple.img_0;
+OrgChart.templates.couple_male.img_1 = OrgChart.templates.couple.img_1;
 
+// Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
+OrgChart.templates.couple_female = {};
+OrgChart.templates.couple_female.size = [280, 120];
+OrgChart.templates.couple_female.node = 
+    '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
+    '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+OrgChart.templates.couple_female.nodeMenuButton = OrgChart.templates.couple.nodeMenuButton;
+OrgChart.templates.couple_female.field_0 = OrgChart.templates.couple.field_0;
+OrgChart.templates.couple_female.field_1 = OrgChart.templates.couple.field_1;
+OrgChart.templates.couple_female.field_2 = OrgChart.templates.couple.field_2;
+OrgChart.templates.couple_female.field_3 = OrgChart.templates.couple.field_3;
+OrgChart.templates.couple_female.img_0 = OrgChart.templates.couple.img_0;
+OrgChart.templates.couple_female.img_1 = OrgChart.templates.couple.img_1;
             // Tùy chỉnh template cho node nam
             OrgChart.templates.single_male = Object.assign({}, OrgChart.templates.single);
             OrgChart.templates.single_male.node = 
@@ -719,7 +745,47 @@
                 }
                 return false; // Ngăn hành vi mặc định
             });
-
+            nodeBinding: {
+    // Ràng buộc chung cho tất cả các node
+    field_0: "name",
+    field_1: "birth",
+    img_0: "img",
+    
+    // Ràng buộc đặc biệt cho node vợ chồng
+    field_2: "spouseName",
+    field_3: "spouseBirth",
+    img_1: "spouseImg"
+},
+nodeMenu: {
+    details: { text: "Chi tiết" }
+},
+nodes: formattedData.nodes,
+tags: {
+    male: {
+        template: "single_male",
+        nodeMenu: {
+            details: { text: "Chi tiết" }
+        }
+    },
+    female: {
+        template: "single_female",
+        nodeMenu: {
+            details: { text: "Chi tiết" }
+        }
+    },
+    couple_male: {
+        template: "couple_male",
+        nodeMenu: {
+            details: { text: "Chi tiết" }
+        }
+    },
+    couple_female: {
+        template: "couple_female",
+        nodeMenu: {
+            details: { text: "Chi tiết" }
+        }
+    }
+},
             // Xử lý sự kiện khi click vào menu chi tiết
             chart.on('details', function(sender, args) {
                 // Luôn hiển thị chi tiết của người trong gia phả (personId)
