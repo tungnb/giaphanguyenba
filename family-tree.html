@@ -710,7 +710,7 @@
                 },
                 // Cấu hình collapse
                 collapse: {
-                    level: 0, // Chỉ hiển thị node gốc ban đầu
+                    level: 1, // Hiển thị 2 thế hệ đầu (0=gốc, 1=thế hệ con)
                     allChildren: false // Chỉ collapse thế hệ con trực tiếp, không collapse tất cả con cháu
                 },
                 // Thêm nút mở rộng/thu gọn nhánh
@@ -786,7 +786,7 @@
             chart.on('load', function() {
                 console.log("Biểu đồ gia phả đã tải xong");
                 
-                // Thu gọn nhánh từ thế hệ thứ 2 trở đi, nhưng giữ lại thế hệ đầu tiên
+                // Thu gọn nhánh từ thế hệ thứ 3 trở đi (giữ lại 2 thế hệ đầu)
                 const roots = chart.roots;
                 if (roots && roots.length > 0) {
                     // Lấy các node ở thế hệ đầu tiên (có thể là node gốc và vợ/chồng)
@@ -795,14 +795,22 @@
                     if (firstGenNodes) {
                         console.log("Node gốc được giữ mở:", firstGenNodes.id);
                         
-                        // Lấy danh sách các nhánh con của node gốc
+                        // Lấy danh sách các nhánh con của node gốc (thế hệ 2)
                         const childrenNodes = chart.getChildrenIds(firstGenNodes.id);
                         
-                        // Thu gọn từng nhánh con
+                        // Với mỗi node ở thế hệ 2, thu gọn các nhánh con của nó (thế hệ 3)
                         if (childrenNodes && childrenNodes.length > 0) {
                             childrenNodes.forEach(childId => {
-                                chart.collapse(childId, true);
-                                console.log("Thu gọn nhánh con:", childId);
+                                // Lấy các node con của thế hệ 2 (tức là thế hệ 3)
+                                const grandChildrenNodes = chart.getChildrenIds(childId);
+                                
+                                // Thu gọn các node ở thế hệ 3
+                                if (grandChildrenNodes && grandChildrenNodes.length > 0) {
+                                    grandChildrenNodes.forEach(grandChildId => {
+                                        chart.collapse(grandChildId, true);
+                                        console.log("Thu gọn node thế hệ 3:", grandChildId);
+                                    });
+                                }
                             });
                         }
                     }
