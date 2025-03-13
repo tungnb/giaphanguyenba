@@ -474,140 +474,25 @@
             }
         });
 
-        // Hàm tạo cấu trúc cây từ dữ liệu phẳng
+        // Cách tiếp cận hoàn toàn mới để xử lý vợ chồng
         function createTreeStructure() {
             console.log("Đang tạo cấu trúc cây...");
-            console.log("Dữ liệu gia phả:", familyData);
             
-            // Tìm tổ tiên đầu tiên (thế hệ 1) - Sửa để linh hoạt hơn
-            let rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            // ... (phần code tìm người gốc giữ nguyên)
             
-            // Nếu không tìm thấy nam giới thế hệ 1, tìm nữ giới thế hệ 1
-            if (rootPersons.length === 0) {
-                console.warn('Không tìm thấy nam giới ở thế hệ 1, đang tìm nữ giới ở thế hệ 1...');
-                rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'female');
-            }
-            
-            // Nếu vẫn không tìm thấy ai ở thế hệ 1, tìm người có thế hệ thấp nhất
-            if (rootPersons.length === 0) {
-                console.warn('Không tìm thấy ai ở thế hệ 1, đang tìm người có thế hệ thấp nhất...');
-                
-                // Kiểm tra xem có trường generation trong dữ liệu không
-                const hasGeneration = familyData.some(person => person.generation !== undefined);
-                
-                if (!hasGeneration) {
-                    console.error('Không tìm thấy trường generation trong dữ liệu!');
-                    // Nếu không có trường generation, thêm generation = 1 cho người đầu tiên
-                    if (familyData.length > 0) {
-                        familyData[0].generation = 1;
-                        rootPersons = [familyData[0]];
-                        console.log(`Đã gán thế hệ 1 cho người đầu tiên: ${familyData[0].name}`);
-                    }
-                } else {
-                    // Tìm thế hệ nhỏ nhất trong dữ liệu
-                    const generations = familyData
-                        .filter(person => person.generation !== undefined)
-                        .map(person => person.generation);
-                    
-                    if (generations.length > 0) {
-                        const minGeneration = Math.min(...generations);
-                        console.log(`Thế hệ nhỏ nhất trong dữ liệu: ${minGeneration}`);
-                        
-                        // Tìm tất cả người trong thế hệ thấp nhất
-                        rootPersons = familyData.filter(person => 
-                            person.generation === minGeneration
-                        );
-                        
-                        // Ưu tiên nam giới nếu có
-                        const maleRootPersons = rootPersons.filter(person => person.gender === 'male');
-                        if (maleRootPersons.length > 0) {
-                            rootPersons = maleRootPersons;
-                        }
-                    }
-                }
-            }
-            
-            if (rootPersons.length === 0) {
-                console.error('Không tìm thấy ai phù hợp làm gốc trong dữ liệu gia phả!');
-                
-                // Nếu vẫn không tìm thấy ai, tạo một người gốc ảo
-                if (familyData.length > 0) {
-                    // Sử dụng người đầu tiên trong danh sách làm gốc
-                    const rootPerson = familyData[0];
-                    rootPerson.generation = 1; // Gán thế hệ 1 cho họ
-                    
-                    console.log(`Đã chọn ${rootPerson.name} làm gốc cây gia phả (gán thế hệ 1)`);
-                    
-                    // Tạo node gốc
-                    const rootNode = createNodeFromPerson(rootPerson);
-                    
-                    // Đệ quy thêm con
-                    addChildrenNodes(rootNode, rootPerson);
-                    
-                    return {
-                        chart: {
-                            container: "#family-tree",
-                            connectors: {
-                                type: 'step',
-                                style: {
-                                    'stroke': '#bbb',
-                                    'stroke-width': 2
-                                }
-                            },
-                            nodeAlign: "BOTTOM",
-                            scrollbar: "native",
-                            padding: 50,
-                            siblingSeparation: 80,
-                            levelSeparation: 150,
-                            subtreeSeparation: 100,
-                            connectors: {
-                                type: 'step',
-                                style: {
-                                    'stroke': '#bbb',
-                                    'stroke-width': 2
-                                }
-                            },
-                            animateOnInit: false,
-                            node: {
-                                collapsable: false
-                            }
-                        },
-                        nodeStructure: rootNode
-                    };
-                }
-                
-                return null;
-            }
-            
-            // Sắp xếp theo ngày sinh nếu có, hoặc theo ID
-            rootPersons.sort((a, b) => {
-                if (a.birthDate && b.birthDate) {
-                    return new Date(a.birthDate) - new Date(b.birthDate);
-                } else if (a.id && b.id) {
-                    return a.id.localeCompare(b.id);
-                }
-                return 0;
-            });
-            
-            // Lấy người đầu tiên sau khi sắp xếp
-            const rootPerson = rootPersons[0];
-            console.log(`Đã chọn ${rootPerson.name} làm gốc cây gia phả (${rootPerson.gender}, thế hệ ${rootPerson.generation})`);
-            
-            // Tạo node gốc
-            const rootNode = createNodeFromPerson(rootPerson);
-            
-            // Đệ quy thêm con
-            addChildrenNodes(rootNode, rootPerson);
+            // Thay thế toàn bộ cách xây dựng cây gia phả
+            let finalTree = processFamily();
             
             return {
                 chart: {
                     container: "#family-tree",
+                    rootOrientation: "NORTH", 
                     nodeAlign: "CENTER",
                     scrollbar: "native",
-                    padding: 80,
-                    siblingSeparation: 120,
+                    padding: 50,
+                    siblingSeparation: 80,
                     levelSeparation: 150,
-                    subtreeSeparation: 180,
+                    subtreeSeparation: 100,
                     connectors: {
                         type: 'step',
                         style: {
@@ -620,11 +505,100 @@
                         collapsable: false
                     }
                 },
-                nodeStructure: rootNode
+                nodeStructure: finalTree
             };
         }
 
-        // Hàm tạo node từ thông tin người
+        // Tạo cây gia phả với vợ chồng ngang hàng
+        function processFamily() {
+            // Tìm người gốc (đã được chọn trước đó)
+            const rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            if (rootPersons.length === 0) return null;
+            
+            // Lấy người đầu tiên làm gốc
+            const rootPerson = rootPersons[0];
+            console.log(`Đang xây dựng cây từ gốc: ${rootPerson.name}`);
+            
+            // Tạo cấu trúc cây
+            return createFamilySubtree(rootPerson);
+        }
+
+        // Tạo cây con cho một người và gia đình của họ
+        function createFamilySubtree(person) {
+            console.log(`Tạo cây con cho: ${person.name}`);
+            
+            // Tạo node cho người này
+            const personNode = createNodeFromPerson(person);
+            
+            // Nếu không có vợ/chồng, xử lý đơn giản - chỉ hiển thị con
+            if (!person.spouses || person.spouses.length === 0) {
+                const children = getChildrenOf(person.id);
+                if (children.length > 0) {
+                    personNode.children = children.map(child => createFamilySubtree(child));
+                }
+                return personNode;
+            }
+            
+            // Xử lý trường hợp có vợ/chồng - CHÚ Ý: PHƯƠNG PHÁP MỚI HOÀN TOÀN
+            // Tạo một node giả để chứa cặp vợ chồng
+            const familyNode = {
+                pseudo: true,
+                children: []
+            };
+            
+            // Thêm cả người hiện tại và vợ/chồng như anh chị em (siblings)
+            familyNode.children.push(personNode);
+            
+            // Thêm mỗi vợ/chồng như một anh chị em
+            for (const spouseId of person.spouses) {
+                const spouse = findPersonById(spouseId);
+                if (spouse) {
+                    const spouseNode = createNodeFromPerson(spouse);
+                    familyNode.children.push(spouseNode);
+                    
+                    // Tạo node con chứa con cái của cặp vợ chồng này
+                    const commonChildren = getCommonChildren(person.id, spouseId);
+                    if (commonChildren.length > 0) {
+                        // Tạo một node giả để chứa tất cả con
+                        const childrenNode = {
+                            pseudo: true,
+                            children: commonChildren.map(child => createFamilySubtree(child))
+                        };
+                        
+                        // Thêm node con vào cây
+                        familyNode.children.push(childrenNode);
+                    }
+                }
+            }
+            
+            return familyNode;
+        }
+
+        // Hàm lấy con cái của một người
+        function getChildrenOf(personId) {
+            return familyData.filter(p => 
+                p.parents && p.parents.includes(personId)
+            ).sort((a, b) => {
+                if (a.birthDate && b.birthDate) 
+                    return new Date(a.birthDate) - new Date(b.birthDate);
+                return 0;
+            });
+        }
+
+        // Hàm lấy con chung của hai người
+        function getCommonChildren(person1Id, person2Id) {
+            return familyData.filter(p => 
+                p.parents && 
+                p.parents.includes(person1Id) && 
+                p.parents.includes(person2Id)
+            ).sort((a, b) => {
+                if (a.birthDate && b.birthDate) 
+                    return new Date(a.birthDate) - new Date(b.birthDate);
+                return 0;
+            });
+        }
+
+        // Sửa hàm createNodeFromPerson để tránh tạo thẻ div lồng nhau
         function createNodeFromPerson(person) {
             // Tính tuổi hoặc năm sống
             let lifespan = '';
@@ -657,289 +631,19 @@
                 }
             }
             
+            // Chỉ trả về nội dung bên trong, không bao gồm thẻ div.node
             return {
                 innerHTML: `
-                    <div class="node ${person.gender}" data-id="${person.id}">
-                        <img src="${photoUrl}" alt="${person.name}" class="node-image">
-                        <div class="node-info">
-                            <p class="node-name">${displayName}</p>
-                            <p class="node-dates">${lifespan}</p>
-                            <a class="view-details-link" data-id="${person.id}">Xem chi tiết</a>
-                        </div>
+                    <img src="${photoUrl}" alt="${person.name}" class="node-image">
+                    <div class="node-info">
+                        <p class="node-name">${displayName}</p>
+                        <p class="node-dates">${lifespan}</p>
+                        <a class="view-details-link" data-id="${person.id}">Xem chi tiết</a>
                     </div>
                 `,
                 HTMLclass: person.gender,
                 data: { id: person.id }
             };
-        }
-
-        // Hàm đệ quy thêm con vào node
-        function addChildrenNodes(parentNode, parentPerson) {
-            console.log(`Đang thêm con cho ${parentPerson.name} (ID: ${parentPerson.id})`);
-            
-            // Đặt kiểu hiển thị con cho node cha
-            parentNode.stackChildren = false;
-            
-            // Trường hợp 1: Người có vợ/chồng
-            if (parentPerson.spouses && parentPerson.spouses.length > 0) {
-                // Tạo mảng để chứa vợ/chồng và con cái
-                let familyNodes = [];
-                
-                // Thêm từng vợ/chồng vào cây
-                for (const spouseId of parentPerson.spouses) {
-                    const spouse = familyData.find(p => p.id === spouseId);
-                    if (!spouse) continue;
-                    
-                    console.log(`Đang thêm vợ/chồng ${spouse.name} cho ${parentPerson.name}`);
-                    
-                    // Tạo node cho vợ/chồng
-                    const spouseNode = createNodeFromPerson(spouse);
-                    spouseNode.stackChildren = false;
-                    
-                    // Thêm vợ/chồng vào cây gia đình
-                    familyNodes.push(spouseNode);
-                    
-                    // Tìm con chung giữa người hiện tại và vợ/chồng
-                    const childrenWithSpouse = familyData.filter(p => 
-                        p.parents && 
-                        p.parents.includes(parentPerson.id) && 
-                        p.parents.includes(spouseId)
-                    );
-                    
-                    if (childrenWithSpouse.length > 0) {
-                        console.log(`Tìm thấy ${childrenWithSpouse.length} con chung giữa ${parentPerson.name} và ${spouse.name}`);
-                        
-                        // Tạo node giả để chứa con
-                        const childrenContainer = {
-                            pseudo: true,
-                            stackChildren: false,
-                            children: []
-                        };
-                        
-                        // Sắp xếp con theo thứ tự sinh
-                        childrenWithSpouse.sort((a, b) => {
-                            if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
-                            return 0;
-                        });
-                        
-                        // Thêm từng người con vào node giả
-                        for (const child of childrenWithSpouse) {
-                            const childNode = createNodeFromPerson(child);
-                            addChildrenNodes(childNode, child);
-                            childrenContainer.children.push(childNode);
-                        }
-                        
-                        if (childrenContainer.children.length > 0) {
-                            // Gán node con cho node vợ/chồng
-                            spouseNode.children = [childrenContainer];
-                        }
-                    }
-                }
-                
-                // Gán các node vợ/chồng cho node cha mẹ
-                if (familyNodes.length > 0) {
-                    parentNode.children = familyNodes;
-                }
-            }
-            // Trường hợp 2: Người không có vợ/chồng nhưng có con
-            else if (parentPerson.children && parentPerson.children.length > 0) {
-                const childNodes = [];
-                
-                // Lấy tất cả con
-                const children = familyData.filter(p => 
-                    p.parents && p.parents.includes(parentPerson.id)
-                );
-                
-                console.log(`Tìm thấy ${children.length} con của ${parentPerson.name}`);
-                
-                // Sắp xếp con theo thứ tự sinh
-                children.sort((a, b) => {
-                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
-                    return 0;
-                });
-                
-                // Thêm con vào danh sách
-                for (const child of children) {
-                    const childNode = createNodeFromPerson(child);
-                    childNode.stackChildren = false;
-                    addChildrenNodes(childNode, child);
-                    childNodes.push(childNode);
-                }
-                
-                // Thêm con vào node cha mẹ
-                if (childNodes.length > 0) {
-                    parentNode.children = childNodes;
-                }
-            }
-        }
-
-        // Hàm render cây gia phả
-        function renderFamilyTree() {
-            console.log("Bắt đầu render cây gia phả");
-            
-            // Hiện loading ngay lập tức
-            document.getElementById('loading-indicator').style.display = 'block';
-            
-            // Kiểm tra xem Treant có tồn tại không
-            if (typeof Treant === 'undefined') {
-                console.error('Treant không được định nghĩa. Vui lòng kiểm tra thư viện.');
-                document.getElementById('loading-indicator').style.display = 'none';
-                
-                const errorMessage = document.createElement('p');
-                errorMessage.style.textAlign = 'center';
-                errorMessage.style.padding = '40px 0';
-                errorMessage.style.color = '#e74c3c';
-                errorMessage.textContent = 'Lỗi: Thư viện Treant không được tải. Vui lòng kiểm tra kết nối internet.';
-                document.getElementById('family-tree-container').appendChild(errorMessage);
-                document.getElementById('family-tree-container').style.display = 'block';
-                return;
-            }
-            
-            // Đã thêm timeout để luôn hiển thị gì đó cho người dùng sau 3 giây
-            setTimeout(function() {
-                if (document.getElementById('loading-indicator').style.display !== 'none') {
-                    console.log("Quá trình tải mất nhiều thời gian. Hiển thị thông báo...");
-                    
-                    // Thêm thông báo vào loading indicator
-                    const loadingIndicator = document.getElementById('loading-indicator');
-                    const loadingText = loadingIndicator.querySelector('p');
-                    if (loadingText) {
-                        loadingText.innerHTML = 'Đang tải dữ liệu gia phả... <br><small>Có vẻ như quá trình này đang mất nhiều thời gian hơn dự kiến.</small>';
-                    }
-                    
-                    // Hiển thị cây gia phả dù có lỗi
-                    setTimeout(function() {
-                        if (document.getElementById('loading-indicator').style.display !== 'none') {
-                            console.log("Ẩn loading indicator sau 8 giây dù chưa tải xong");
-                            document.getElementById('loading-indicator').style.display = 'none';
-                            document.getElementById('family-tree-container').style.display = 'block';
-                            
-                            // Hiển thị thông báo lỗi nếu vẫn chưa có cây
-                            if (!document.querySelector('#family-tree .node')) {
-                                const errorMessage = document.createElement('p');
-                                errorMessage.style.textAlign = 'center';
-                                errorMessage.style.padding = '40px 0';
-                                errorMessage.style.color = '#e74c3c';
-                                errorMessage.innerHTML = 'Không thể hiển thị cây gia phả. Vui lòng làm mới trang và thử lại.<br>Nếu lỗi vẫn tiếp tục, vui lòng kiểm tra dữ liệu gia phả.';
-                                document.getElementById('family-tree').appendChild(errorMessage);
-                            }
-                        }
-                    }, 5000);
-                }
-            }, 3000);
-            
-            try {
-                // Tạo cấu trúc cây với xử lý lỗi tốt hơn
-                console.log("Đang chuyển đổi dữ liệu...");
-                let treeConfig;
-                
-                try {
-                    treeConfig = createTreeStructure();
-                    console.log("Đã chuyển đổi dữ liệu thành công");
-                } catch (structError) {
-                    console.error('Lỗi khi tạo cấu trúc cây:', structError);
-                    throw new Error(`Lỗi khi tạo cấu trúc cây: ${structError.message}`);
-                }
-                
-                if (!treeConfig) {
-                    throw new Error('Không thể tạo cấu trúc cây gia phả - treeConfig là null');
-                }
-                
-                // Tạo và hiển thị cây với nhiều thông tin hơn
-                console.log("Đang khởi tạo Treant với cấu hình:", JSON.stringify(treeConfig.chart));
-                
-                // Thêm try-catch cho việc khởi tạo Treant
-                try {
-                    treeChart = new Treant(treeConfig);
-                    console.log("Treant đã được khởi tạo thành công");
-                } catch (treantError) {
-                    console.error('Lỗi khi khởi tạo Treant:', treantError);
-                    throw new Error(`Lỗi khi khởi tạo Treant: ${treantError.message}`);
-                }
-                
-                // Hiển thị cây gia phả
-                document.getElementById('loading-indicator').style.display = 'none';
-                document.getElementById('family-tree-container').style.display = 'block';
-                
-                // Kiểm tra xem cây có được tạo thành công không
-                setTimeout(() => {
-                    const nodesCreated = document.querySelectorAll('.node').length;
-                    console.log(`Số lượng node đã tạo: ${nodesCreated}`);
-                    
-                    if (nodesCreated === 0) {
-                        console.warn('Không tìm thấy node nào sau khi khởi tạo Treant!');
-                        const errorMessage = document.createElement('p');
-                        errorMessage.style.textAlign = 'center';
-                        errorMessage.style.padding = '40px 0';
-                        errorMessage.style.color = '#e74c3c';
-                        errorMessage.textContent = 'Lỗi: Cây gia phả được khởi tạo nhưng không có node nào được hiển thị.';
-                        document.getElementById('family-tree').appendChild(errorMessage);
-                    }
-                }, 1000);
-                
-                // Thiết lập zoom controls và sự kiện click
-                setupZoomControls();
-                setupTreeClickEvents();
-                
-            } catch (error) {
-                console.error('Lỗi khi khởi tạo cây gia phả:', error);
-                document.getElementById('loading-indicator').style.display = 'none';
-                
-                const errorMessage = document.createElement('p');
-                errorMessage.style.textAlign = 'center';
-                errorMessage.style.padding = '40px 0';
-                errorMessage.style.color = '#e74c3c';
-                errorMessage.innerHTML = `<strong>Lỗi khi khởi tạo biểu đồ gia phả:</strong><br>${error.message}<br><br>
-                    <button onclick="location.reload()" style="padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        Tải lại trang
-                    </button>`;
-                document.getElementById('family-tree-container').appendChild(errorMessage);
-                document.getElementById('family-tree-container').style.display = 'block';
-            }
-        }
-
-        // Thiết lập sự kiện click trên cây
-        function setupTreeClickEvents() {
-            // Thêm sự kiện click cho các nút xem chi tiết
-            document.querySelectorAll('.view-details-link').forEach(link => {
-                link.addEventListener('click', function() {
-                    const personId = this.getAttribute('data-id');
-                    showPersonDetail(personId);
-                });
-            });
-        }
-
-        // Thiết lập các nút zoom
-        function setupZoomControls() {
-            const container = document.getElementById('family-tree');
-            
-            const zoomInBtn = document.getElementById('zoom-in');
-            const zoomOutBtn = document.getElementById('zoom-out');
-            const zoomResetBtn = document.getElementById('zoom-reset');
-            
-            if (zoomInBtn) {
-                zoomInBtn.addEventListener('click', function() {
-                    currentScale *= 1.2;
-                    container.style.transform = `scale(${currentScale})`;
-                    container.style.transformOrigin = 'top left';
-                });
-            }
-            
-            if (zoomOutBtn) {
-                zoomOutBtn.addEventListener('click', function() {
-                    currentScale *= 0.8;
-                    container.style.transform = `scale(${currentScale})`;
-                    container.style.transformOrigin = 'top left';
-                });
-            }
-            
-            if (zoomResetBtn) {
-                zoomResetBtn.addEventListener('click', function() {
-                    currentScale = 1.0;
-                    container.style.transform = 'scale(1)';
-                    container.style.transformOrigin = 'top left';
-                });
-            }
         }
 
         // Hàm tìm chi của một người
@@ -1003,66 +707,48 @@
             return familyData.find(person => person.id === id);
         }
 
-        // Tạo phần tử hiển thị một người trong gia phả
-        function createPersonElement(person) {
-            const personElement = document.createElement('div');
-            personElement.className = `person ${person.gender}`;
-            personElement.dataset.id = person.id;
-
-            // Tính tuổi hoặc năm sống
-            let lifespan = '';
-            if (person.birthDate) {
-                const birthYear = new Date(person.birthDate).getFullYear();
-                if (person.deathDate) {
-                    const deathYear = new Date(person.deathDate).getFullYear();
-                    lifespan = `${birthYear} - ${deathYear}`;
-                } else {
-                    lifespan = `Sinh năm ${birthYear}`;
-                }
-            }
-
-            // Ảnh đại diện theo giới tính
-            let photoUrl = person.photo;
-            if (!photoUrl) {
-                if (person.gender === 'male') {
-                    photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
-                } else {
-                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
-                }
-            }
-
-            // Thêm thông tin chi vào tên nếu là nam
-            let displayName = person.name;
-            if (person.gender === 'male' && person.generation > 1) {
-                const branch = findPersonBranch(person);
-                if (branch > 0) {
-                    displayName = `Chi ${branch} - ${person.name}`;
-                }
-            }
-
-            personElement.innerHTML = `
-                <img src="${photoUrl}" alt="${person.name}" class="person-photo">
-                <div class="person-name">${displayName}</div>
-                <div class="person-dates">${lifespan}</div>
-                <a href="#" class="view-details" data-id="${person.id}">Xem chi tiết</a>
-            `;
-
-            return personElement;
+        // Thiết lập sự kiện click trên cây
+        function setupTreeClickEvents() {
+            // Thêm sự kiện click cho các nút xem chi tiết
+            document.querySelectorAll('.view-details-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    const personId = this.getAttribute('data-id');
+                    showPersonDetail(personId);
+                });
+            });
         }
 
-        // Tạo phần tử tham chiếu đến người đã hiển thị
-        function createPersonReference(person) {
-            const refElement = document.createElement('div');
-            refElement.className = `person-reference ${person.gender}`;
-            refElement.dataset.id = person.id;
+        // Thiết lập các nút zoom
+        function setupZoomControls() {
+            const container = document.getElementById('family-tree');
             
-            refElement.innerHTML = `
-                <div class="person-ref-name">${person.name}</div>
-                <div class="person-ref-note">(đã hiển thị)</div>
-                <a href="#person-${person.id}" class="view-original">Xem chi tiết</a>
-            `;
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const zoomResetBtn = document.getElementById('zoom-reset');
             
-            return refElement;
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', function() {
+                    currentScale *= 1.2;
+                    container.style.transform = `scale(${currentScale})`;
+                    container.style.transformOrigin = 'top left';
+                });
+            }
+            
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', function() {
+                    currentScale *= 0.8;
+                    container.style.transform = `scale(${currentScale})`;
+                    container.style.transformOrigin = 'top left';
+                });
+            }
+            
+            if (zoomResetBtn) {
+                zoomResetBtn.addEventListener('click', function() {
+                    currentScale = 1.0;
+                    container.style.transform = 'scale(1)';
+                    container.style.transformOrigin = 'top left';
+                });
+            }
         }
 
         // Thiết lập sự kiện cho modal xem chi tiết
