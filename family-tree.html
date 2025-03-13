@@ -860,9 +860,7 @@
 
                 // Thiết lập sự kiện cho modal và cập nhật kết nối khi cửa sổ thay đổi kích thước
                 setupModalEvents();
-                window.addEventListener('resize', function() {
-                    setupFamilyConnections();
-                });
+                observeTreeContainer();
             } catch (error) {
                 console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -981,7 +979,23 @@
                 treeContainer.appendChild(genContainer);
             });
 
-            // Thiết lập các kết nối kiểu mindmap cho quan hệ bố con
+            // Sau khi thêm tất cả thế hệ vào tree, đặt chiều rộng tối thiểu
+            const allGenerations = document.querySelectorAll('.generation-members');
+            let maxWidth = 0;
+            
+            allGenerations.forEach(gen => {
+                const width = gen.scrollWidth;
+                if (width > maxWidth) {
+                    maxWidth = width;
+                }
+            });
+            
+            // Đặt chiều rộng tối thiểu cho tree
+            if (maxWidth > 0) {
+                treeContainer.style.minWidth = (maxWidth + 80) + 'px'; // thêm padding
+            }
+            
+            // Thiết lập các kết nối
             setTimeout(setupFamilyConnections, 300);
         }
 
@@ -1004,8 +1018,7 @@
             svgContainer.style.zIndex = "2";
             treeContainer.appendChild(svgContainer);
             
-            // Thiết lập kích thước SVG dựa trên kích thước container
-            const containerRect = treeContainer.getBoundingClientRect();
+            // Cập nhật kích thước SVG để phù hợp với toàn bộ cây
             svgContainer.setAttribute("width", treeContainer.scrollWidth);
             svgContainer.setAttribute("height", treeContainer.scrollHeight);
             
@@ -1027,17 +1040,17 @@
             });
         }
 
-        // Hàm tạo kết nối bằng SVG
+        // Cải thiện hàm tạo kết nối cha mẹ-con
         function createSvgConnector(svgContainer, parentElement, childElements, treeContainer) {
-            const containerRect = treeContainer.getBoundingClientRect();
+            const treeRect = treeContainer.getBoundingClientRect();
             const scrollTop = treeContainer.scrollTop;
             const scrollLeft = treeContainer.scrollLeft;
             
             const parentRect = parentElement.getBoundingClientRect();
             
-            // Vị trí của cha mẹ
-            const parentX = parentRect.left + parentRect.width / 2 - containerRect.left + scrollLeft;
-            const parentY = parentRect.bottom - containerRect.top + scrollTop;
+            // Vị trí của cha mẹ - lấy vị trí ở chính giữa phía dưới của thẻ
+            const parentX = parentRect.left + parentRect.width / 2 - treeRect.left + scrollLeft;
+            const parentY = parentRect.bottom - treeRect.top + scrollTop;
             
             // Tìm vị trí của tất cả con
             let childPositions = [];
@@ -1046,8 +1059,8 @@
             
             childElements.forEach(childElement => {
                 const childRect = childElement.getBoundingClientRect();
-                const childX = childRect.left + childRect.width / 2 - containerRect.left + scrollLeft;
-                const childY = childRect.top - containerRect.top + scrollTop;
+                const childX = childRect.left + childRect.width / 2 - treeRect.left + scrollLeft;
+                const childY = childRect.top - treeRect.top + scrollTop;
                 
                 childPositions.push({ x: childX, y: childY });
                 minChildX = Math.min(minChildX, childX);
@@ -1093,7 +1106,7 @@
             svgContainer.appendChild(middleVerticalLine);
             
             // Vẽ các đường nối từ trung tâm đến từng người con
-            childPositions.forEach(childPos => {
+            childPositions.forEach((childPos, index) => {
                 // Đường ngang từ trung tâm đến con
                 const horizontalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 horizontalToChild.setAttribute("x1", centerX);
@@ -1116,13 +1129,64 @@
             });
         }
 
-        // Thêm hàm cập nhật SVG khi container thay đổi kích thước hoặc cuộn
+        // Thêm hàm theo dõi pinch-to-zoom để cập nhật các kết nối
+        function setupZoomHandlers() {
+            let lastTouchDistance = 0;
+            let isZooming = false;
+            
+            // Theo dõi sự kiện zoom bằng cử chỉ
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    lastTouchDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                }
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    // Tính toán khoảng cách pinch
+                    const touchDistance = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    
+                    // Nếu khoảng cách thay đổi đáng kể, coi là đang zoom
+                    if (Math.abs(touchDistance - lastTouchDistance) > 10) {
+                        isZooming = true;
+                    }
+                    
+                    lastTouchDistance = touchDistance;
+                }
+            });
+            
+            document.addEventListener('touchend', function() {
+                if (isZooming) {
+                    // Cập nhật các kết nối sau khi zoom
+                    setTimeout(setupFamilyConnections, 300);
+                    isZooming = false;
+                }
+            });
+            
+            // Theo dõi sự kiện zoom bằng bánh xe hoặc phím tắt
+            window.addEventListener('wheel', function(e) {
+                if (e.ctrlKey) {
+                    // Người dùng đang zoom bằng ctrl+wheel
+                    setTimeout(setupFamilyConnections, 300);
+                }
+            });
+        }
+
+        // Cập nhật hàm observeTreeContainer
         function observeTreeContainer() {
             const treeContainer = document.getElementById('family-tree-container');
             
             // Cập nhật khi cuộn
             treeContainer.addEventListener('scroll', function() {
-                setupFamilyConnections();
+                requestAnimationFrame(function() {
+                    setupFamilyConnections();
+                });
             });
             
             // Tạo ResizeObserver để theo dõi thay đổi kích thước
@@ -1134,30 +1198,11 @@
                 resizeObserver.observe(treeContainer);
             }
             
-            // Theo dõi thay đổi vị trí của các thẻ người
-            const mutationObserver = new MutationObserver(function(mutations) {
-                let shouldUpdate = false;
-                
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList' || 
-                        (mutation.type === 'attributes' && 
-                         (mutation.attributeName === 'style' || 
-                          mutation.attributeName === 'class'))) {
-                        shouldUpdate = true;
-                    }
-                });
-                
-                if (shouldUpdate) {
-                    setupFamilyConnections();
-                }
-            });
+            // Thêm theo dõi zoom
+            setupZoomHandlers();
             
-            mutationObserver.observe(treeContainer, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['style', 'class']
-            });
+            // Cập nhật ban đầu
+            setupFamilyConnections();
         }
 
         // Hàm tìm chi của một người
