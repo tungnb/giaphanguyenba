@@ -708,16 +708,16 @@
                     field_3: "spouseBirth",
                     img_1: "spouseImg"
                 },
-                // Cấu hình collapse
+                // Cấu hình collapse - điều chỉnh để phù hợp với database
                 collapse: {
-                    level: 1, // Hiển thị 2 thế hệ đầu (0=gốc, 1=thế hệ con)
-                    allChildren: false // Chỉ collapse thế hệ con trực tiếp, không collapse tất cả con cháu
+                    level: 2, // Hiển thị đến thế hệ 2 (vì thế hệ gốc là 1 trong database)
+                    allChildren: false
                 },
                 // Thêm nút mở rộng/thu gọn nhánh
                 enableCollapsing: true,
-                // Cấu hình hiển thị nút mở rộng/thu gọn
-                plusVisibility: [2, 3, 4, 5], // Hiển thị nút + cho các thế hệ 2 trở đi
-                minusVisibility: [2, 3, 4, 5], // Hiển thị nút - cho các thế hệ 2 trở đi
+                // Cấu hình hiển thị nút mở rộng/thu gọn - điều chỉnh theo thế hệ trong database
+                plusVisibility: [3, 4, 5, 6], // Hiển thị nút + cho các thế hệ 3 trở đi
+                minusVisibility: [3, 4, 5, 6], // Hiển thị nút - cho các thế hệ 3 trở đi
                 // Thêm kiểu di chuột vào nút mở rộng
                 mouseScroolBehaviour: OrgChart.action.ctrlZoom,
                 // Cho phép xử lý thao tác với nút +/-
@@ -786,35 +786,26 @@
             chart.on('load', function() {
                 console.log("Biểu đồ gia phả đã tải xong");
                 
-                // Thu gọn nhánh từ thế hệ thứ 3 trở đi (giữ lại 2 thế hệ đầu)
-                const roots = chart.roots;
-                if (roots && roots.length > 0) {
-                    // Lấy các node ở thế hệ đầu tiên (có thể là node gốc và vợ/chồng)
-                    const firstGenNodes = chart.getNode(roots[0]);
+                // Thu gọn các nhánh từ thế hệ 3 trở đi để hiển thị đúng 2 thế hệ đầu tiên (thế hệ 1 và 2)
+                // Lặp qua tất cả các node và thu gọn các node có generation > 2
+                let nodesToCollapse = [];
+                
+                // Thu thập tất cả các node trong chart
+                for (let id in chart.nodes) {
+                    const node = chart.nodes[id];
+                    const originalData = formattedChartData.nodes.find(n => n.id === id);
                     
-                    if (firstGenNodes) {
-                        console.log("Node gốc được giữ mở:", firstGenNodes.id);
-                        
-                        // Lấy danh sách các nhánh con của node gốc (thế hệ 2)
-                        const childrenNodes = chart.getChildrenIds(firstGenNodes.id);
-                        
-                        // Với mỗi node ở thế hệ 2, thu gọn các nhánh con của nó (thế hệ 3)
-                        if (childrenNodes && childrenNodes.length > 0) {
-                            childrenNodes.forEach(childId => {
-                                // Lấy các node con của thế hệ 2 (tức là thế hệ 3)
-                                const grandChildrenNodes = chart.getChildrenIds(childId);
-                                
-                                // Thu gọn các node ở thế hệ 3
-                                if (grandChildrenNodes && grandChildrenNodes.length > 0) {
-                                    grandChildrenNodes.forEach(grandChildId => {
-                                        chart.collapse(grandChildId, true);
-                                        console.log("Thu gọn node thế hệ 3:", grandChildId);
-                                    });
-                                }
-                            });
-                        }
+                    // Nếu là thế hệ 3 trở đi (tức là > 2), thì thu gọn
+                    if (originalData && originalData.generation && originalData.generation > 2) {
+                        nodesToCollapse.push(id);
                     }
                 }
+                
+                // Thu gọn tất cả các node thế hệ 3 trở đi
+                nodesToCollapse.forEach(id => {
+                    chart.collapse(id, true);
+                    console.log("Thu gọn node thế hệ > 2:", id);
+                });
             });
 
             // Xử lý sự kiện mở rộng và thu gọn nhánh
