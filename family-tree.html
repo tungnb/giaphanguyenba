@@ -238,6 +238,17 @@
         let familyData = [];
         let familyChart = null;
 
+        // Thêm polyfill cho phương thức addPartnerAndParentNodes nếu nó không tồn tại trong OrgChart
+        if (OrgChart && !OrgChart.prototype.addPartnerAndParentNodes) {
+            OrgChart.prototype.addPartnerAndParentNodes = function(nodeId, childrenIds, partnerData) {
+                console.log("Polyfill cho addPartnerAndParentNodes được gọi");
+                // Đây chỉ là một hàm giả để tránh lỗi
+                // Chúng ta không cần thực hiện gì cả vì việc này đã được xử lý trong 
+                // hàm convertToOrgChartFormat của chúng ta
+                return;
+            };
+        }
+
         // Lấy dữ liệu gia phả từ API hoặc dữ liệu mẫu
         async function getFamilyData() {
             try {
@@ -507,37 +518,37 @@
 
             // Bước 2: Thiết lập quan hệ cha mẹ - con
             familyDataArray.forEach(person => {
-                if (person.parents && person.parents.length > 0) {
-                    // Tìm node tương ứng
-                    let personNode = nodes.find(n => n.id === person.id);
-                    
-                    // Nếu không tìm thấy node riêng, tìm node vợ chồng chứa người này
-                    if (!personNode) {
-                        personNode = nodes.find(n => 
-                            (n.personId === person.id) || (n.spouseId === person.id)
-                        );
-                    }
-                    
-                    if (!personNode) return;
+                if (!person.parents || person.parents.length === 0) return;
+                
+                // Tìm node tương ứng của người này
+                let personNode = nodes.find(n => n.id === person.id);
+                
+                // Nếu không tìm thấy node riêng, tìm node vợ chồng chứa người này
+                if (!personNode) {
+                    personNode = nodes.find(n => 
+                        (n.personId === person.id) || (n.spouseId === person.id)
+                    );
+                }
+                
+                if (!personNode) return;
 
-                    // Nếu có cả cha và mẹ
-                    if (person.parents.length >= 2) {
-                        const parentIds = person.parents.sort();
-                        const coupleId = parentIds.join('_');
-                        
-                        // Tìm node cha mẹ
-                        const parentNode = nodes.find(n => n.id === coupleId);
-                        
-                        if (parentNode) {
-                            personNode.pid = coupleId;
-                        } else {
-                            // Nếu không tìm thấy node chung, sử dụng cha làm pid
-                            personNode.pid = person.parents[0];
-                        }
+                // Nếu có cả cha và mẹ
+                if (person.parents.length >= 2) {
+                    const parentIds = person.parents.sort();
+                    const coupleId = parentIds.join('_');
+                    
+                    // Tìm node cha mẹ
+                    const parentNode = nodes.find(n => n.id === coupleId);
+                    
+                    if (parentNode) {
+                        personNode.pid = coupleId;
                     } else {
-                        // Nếu chỉ có một người làm cha/mẹ
+                        // Nếu không tìm thấy node chung, sử dụng cha làm pid
                         personNode.pid = person.parents[0];
                     }
+                } else if (person.parents.length === 1) {
+                    // Nếu chỉ có một người làm cha/mẹ
+                    personNode.pid = person.parents[0];
                 }
             });
 
@@ -834,5 +845,4 @@
         });
     </script>
 </body>
-</html>
 </html>
