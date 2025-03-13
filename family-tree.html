@@ -665,11 +665,11 @@
                 h: 120
             };
             OrgChart.templates.single.plus = 
-                '<circle cx="140" cy="110" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="140" y="116">+</text>';
+                '<circle cx="30" cy="100" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="106">+</text>';
             OrgChart.templates.single.minus = 
-                '<circle cx="140" cy="110" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="140" y="116">-</text>';
+                '<circle cx="30" cy="100" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="106">-</text>';
 
             // Sao chép cấu hình nút mở rộng/thu gọn cho tất cả các template khác
             OrgChart.templates.single_male.plus = OrgChart.templates.single.plus;
@@ -680,17 +680,22 @@
             OrgChart.templates.single_female.minus = OrgChart.templates.single.minus;
             OrgChart.templates.single_female.min = OrgChart.templates.single.min;
             
-            OrgChart.templates.couple.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.couple.minus = OrgChart.templates.single.minus;
+            // Tạo template riêng cho couple để đặt nút ở góc dưới bên trái của phần vợ/chồng
+            OrgChart.templates.couple.plus = 
+                '<circle cx="30" cy="100" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="106">+</text>';
+            OrgChart.templates.couple.minus = 
+                '<circle cx="30" cy="100" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="106">-</text>';
             OrgChart.templates.couple.min = OrgChart.templates.single.min;
             
-            OrgChart.templates.couple_male.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.couple_male.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.couple_male.min = OrgChart.templates.single.min;
+            OrgChart.templates.couple_male.plus = OrgChart.templates.couple.plus;
+            OrgChart.templates.couple_male.minus = OrgChart.templates.couple.minus;
+            OrgChart.templates.couple_male.min = OrgChart.templates.couple.min;
             
-            OrgChart.templates.couple_female.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.couple_female.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.couple_female.min = OrgChart.templates.single.min;
+            OrgChart.templates.couple_female.plus = OrgChart.templates.couple.plus;
+            OrgChart.templates.couple_female.minus = OrgChart.templates.couple.minus;
+            OrgChart.templates.couple_female.min = OrgChart.templates.couple.min;
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
