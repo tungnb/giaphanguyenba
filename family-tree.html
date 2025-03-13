@@ -587,6 +587,8 @@
             OrgChart.templates.single.size = [280, 120];
             OrgChart.templates.single.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>';
+            OrgChart.templates.single.nodeMenuButton = 
+                '<g style="display:none"></g>';
             OrgChart.templates.single.field_0 = 
                 '<text style="font-size:14px;" fill="#2D2D2D" x="140" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.single.field_1 = 
@@ -599,11 +601,15 @@
             OrgChart.templates.single_male = Object.assign({}, OrgChart.templates.single);
             OrgChart.templates.single_male.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>';
+            OrgChart.templates.single_male.nodeMenuButton = 
+                '<g style="display:none"></g>';
 
             // Tùy chỉnh template cho node nữ
             OrgChart.templates.single_female = Object.assign({}, OrgChart.templates.single);
             OrgChart.templates.single_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>';
+            OrgChart.templates.single_female.nodeMenuButton = 
+                '<g style="display:none"></g>';
 
             // Tạo template tùy chỉnh cho node vợ chồng - ĐƠN GIẢN HÓA TOÀN BỘ
             OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
@@ -611,6 +617,8 @@
             OrgChart.templates.couple.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            OrgChart.templates.couple.nodeMenuButton = 
+                '<g style="display:none"></g>';
             
             // Tên ở trên, avatar ở dưới - giống template single
             OrgChart.templates.couple.field_0 = 
@@ -636,17 +644,24 @@
             OrgChart.templates.couple_male.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            OrgChart.templates.couple_male.nodeMenuButton = 
+                '<g style="display:none"></g>';
             
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
             OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
             OrgChart.templates.couple_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            OrgChart.templates.couple_female.nodeMenuButton = 
+                '<g style="display:none"></g>';
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
                 enableSearch: false,
                 enableDragDrop: false,
+                showXScroll: false,
+                showYScroll: false,
+                enableMenu: false,
                 orientation: OrgChart.orientation.top,
                 nodeBinding: {
                     field_0: "name",
@@ -656,24 +671,59 @@
                     field_3: "spouseBirth",
                     img_1: "spouseImg"
                 },
-                nodeMenu: {},
+                nodeMenu: {
+                    pdf: null,
+                    png: null,
+                    svg: null,
+                    csv: null,
+                    json: null,
+                    details: null
+                },
                 nodes: formattedData.nodes,
                 tags: {
                     male: {
                         template: "single_male",
-                        nodeMenu: {}
+                        nodeMenu: {
+                            pdf: null,
+                            png: null,
+                            svg: null,
+                            csv: null,
+                            json: null,
+                            details: null
+                        }
                     },
                     female: {
                         template: "single_female",
-                        nodeMenu: {}
+                        nodeMenu: {
+                            pdf: null,
+                            png: null,
+                            svg: null,
+                            csv: null,
+                            json: null,
+                            details: null
+                        }
                     },
                     couple_male: {
                         template: "couple_male",
-                        nodeMenu: {}
+                        nodeMenu: {
+                            pdf: null,
+                            png: null,
+                            svg: null,
+                            csv: null,
+                            json: null,
+                            details: null
+                        }
                     },
                     couple_female: {
                         template: "couple_female",
-                        nodeMenu: {}
+                        nodeMenu: {
+                            pdf: null,
+                            png: null,
+                            svg: null,
+                            csv: null,
+                            json: null,
+                            details: null
+                        }
                     }
                 },
                 // Cấu hình hiển thị
@@ -692,9 +742,20 @@
             // Xử lý sự kiện khi click vào node
             chart.on('click', function(sender, args) {
                 if (args.node) {
-                    // Nếu là node vợ chồng, luôn hiển thị thông tin của người nội tộc
-                    if (args.node.tags && (args.node.tags.indexOf('couple_male') != -1 || args.node.tags.indexOf('couple_female') != -1)) {
-                        // Chỉ hiển thị thông tin của người nội tộc (personId)
+                    // Log thông tin node để debug
+                    console.log("Node clicked:", args.node.id);
+                    
+                    // Kiểm tra nếu là node vợ chồng
+                    let isCouple = false;
+                    if (args.node.tags) {
+                        isCouple = args.node.tags.includes('couple_male') || 
+                                  args.node.tags.includes('couple_female') ||
+                                  args.node.tags.indexOf('couple_male') !== -1 || 
+                                  args.node.tags.indexOf('couple_female') !== -1;
+                    }
+                    
+                    if (isCouple) {
+                        // Hiển thị thông tin của người nội tộc
                         showPersonDetail(args.node.personId);
                     } else {
                         // Nếu là node đơn, sử dụng personId nếu có, không thì dùng id
