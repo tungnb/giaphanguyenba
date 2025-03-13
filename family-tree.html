@@ -501,7 +501,7 @@
                         const coupleNode = {
                             id: coupleId,
                             personId: person.id,
-                            name: person.name,
+                            name: `<div style="display:flex; flex-direction:column; align-items:center;"><img src="${photoUrl}" style="width:45px; height:45px; border-radius:50%; margin-bottom:5px; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${person.name}</div>`,
                             img: photoUrl,
                             birth: lifespan,
                             personGender: person.gender,
@@ -756,75 +756,17 @@
             chart.on('load', function(sender) {
                 console.log("Biểu đồ đã được tải:", sender);
                 
-                // Hàm thêm hoặc cập nhật avatar
-                function addOrUpdateAvatars() {
-                    // Xóa tất cả avatar hiện có để tránh trùng lặp
-                    document.querySelectorAll('.couple-person-avatar').forEach(el => el.remove());
-                    
-                    // Tìm tất cả các node couple (có chứa dấu "_" trong ID)
-                    const coupleElements = document.querySelectorAll('[data-id]');
-                    
-                    coupleElements.forEach(element => {
-                        const nodeId = element.getAttribute('data-id');
-                        
-                        // Nếu là node cặp vợ chồng (có dấu "_")
-                        if (nodeId && nodeId.includes('_')) {
-                            // Tìm node trong dữ liệu
-                            const node = sender.nodes.find(n => n.id === nodeId);
-                            
-                            if (node && node.data) {
-                                console.log(`Thêm avatar HTML cho node ${nodeId}, img:`, node.data.img);
-                                
-                                // Lấy vị trí của node
-                                const rect = element.getBoundingClientRect();
-                                const svgRect = document.querySelector('#family-tree svg').getBoundingClientRect();
-                                
-                                // Tạo thẻ img
-                                const img = document.createElement('img');
-                                img.className = 'couple-person-avatar';
-                                img.src = node.data.img || '';
-                                img.alt = node.data.name || 'Avatar';
-                                img.setAttribute('data-node-id', nodeId);
-                                
-                                // Tính toán vị trí chính xác dựa trên vị trí node
-                                const svgElement = document.querySelector('#family-tree svg');
-                                // Lấy ma trận biến đổi hiện tại của SVG (để xử lý zoom và pan)
-                                const transform = svgElement.querySelector('g').getAttribute('transform');
-                                const transformMatch = transform ? transform.match(/matrix\((.*?)\)/) : null;
-                                
-                                // Tính toán vị trí dựa trên ma trận biến đổi nếu có
-                                let x, y;
-                                if (transformMatch && transformMatch[1]) {
-                                    const matrix = transformMatch[1].split(',').map(Number);
-                                    // Áp dụng ma trận biến đổi để tính toán vị trí chính xác
-                                    x = node.x * matrix[0] + node.y * matrix[2] + matrix[4] + 45;
-                                    y = node.x * matrix[1] + node.y * matrix[3] + matrix[5] + 55;
-                                } else {
-                                    // Fallback nếu không có ma trận biến đổi
-                                    x = rect.left - svgRect.left + 45;
-                                    y = rect.top - svgRect.top + 55;
-                                }
-                                
-                                img.style.left = x + 'px';
-                                img.style.top = y + 'px';
-                                
-                                // Thêm ảnh vào chart container
-                                document.getElementById('family-tree').appendChild(img);
-                                
-                                console.log(`Đã thêm avatar HTML cho node ${nodeId} tại vị trí (${x}, ${y})`);
-                            }
-                        }
-                    });
-                }
+                // Kiểm tra các node couple
+                const coupleNodes = sender.nodes.filter(node => 
+                    node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)
+                );
                 
-                // Thêm avatar sau khi chart đã được vẽ
-                setTimeout(addOrUpdateAvatars, 1000);
+                console.log("Các node couple:", coupleNodes);
                 
-                // Cập nhật vị trí avatar khi chart thay đổi (zoom, pan, resize)
-                chart.on('redraw', addOrUpdateAvatars);
-                
-                // Cập nhật vị trí khi cửa sổ thay đổi kích thước
-                window.addEventListener('resize', addOrUpdateAvatars);
+                // Kiểm tra template của node
+                coupleNodes.forEach(node => {
+                    console.log(`Node ${node.id} sử dụng template:`, node.templateName);
+                });
             });
 
             return chart;
