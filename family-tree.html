@@ -62,9 +62,7 @@
             </div>
 
             <div id="family-tree-container" class="family-tree-container" style="display: none">
-                <div id="tree" class="tree">
-                    <!-- Dữ liệu gia phả sẽ được thêm vào đây -->
-                </div>
+                <div id="org-chart-container"></div>
             </div>
 
             <div id="empty-state" class="empty-state" style="display: none">
@@ -289,7 +287,7 @@
             });
 
             // Tạo cây gia phả
-            const treeContainer = document.getElementById('tree');
+            const treeContainer = document.getElementById('org-chart-container');
             treeContainer.innerHTML = '';
             
             // Theo dõi các người đã hiển thị để tránh lặp
@@ -405,7 +403,7 @@
         // Thay thế hàm setupFamilyConnections để sử dụng SVG
         function setupFamilyConnections() {
             // Xóa tất cả đường kết nối hiện có
-            const treeContainer = document.getElementById('family-tree-container');
+            const treeContainer = document.getElementById('org-chart-container');
             const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector, .svg-container, .spouse-connector');
             existingConnectors.forEach(conn => conn.remove());
             
@@ -659,7 +657,7 @@
 
         // Cập nhật hàm observeTreeContainer
         function observeTreeContainer() {
-            const treeContainer = document.getElementById('family-tree-container');
+            const treeContainer = document.getElementById('org-chart-container');
             
             // Cập nhật khi cuộn
             treeContainer.addEventListener('scroll', function() {
@@ -894,4 +892,30 @@
                         let marriageInfo = '';
                         spousesHTML += `
                             <div class="relation-item">
-                                ${spouseData.name} ${marriageInfo ? `
+                                ${spouseData.name} ${marriageInfo ? `(${marriageInfo})` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                spousesHTML += '</div>';
+            }
+
+            contentContainer.innerHTML = `
+                <div class="person-detail">
+                    <img src="${photoUrl}" alt="${person.name}" class="person-photo">
+                    <div class="person-info">
+                        <h2>${person.name}</h2>
+                        <div class="person-dates">${lifespan}</div>
+                        <div class="relation-list">
+                            ${parentsHTML}
+                        </div>
+                        <div class="relation-list">
+                            ${spousesHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
