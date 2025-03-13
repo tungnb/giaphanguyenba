@@ -76,6 +76,97 @@
         .node p {
             margin: 5px 0;
         }
+        
+        /* Cải thiện hiển thị trong Treant */
+        .Treant .node,
+        .Treant .pseudo {
+            position: absolute;
+            width: 220px; /* Cố định chiều rộng node */
+            text-align: center;
+        }
+        
+        .Treant .node.male {
+            border-left: 5px solid #0066cc;
+        }
+        
+        .Treant .node.female {
+            border-left: 5px solid #e91e63;
+        }
+        
+        .Treant .pseudo {
+            width: 0px;
+            height: 30px;
+            border: none;
+            box-shadow: none;
+            background-color: transparent;
+        }
+        
+        /* Tạo hiệu ứng "kết nối" giữa các cặp vợ chồng */
+        .Treant .couple-connector {
+            position: absolute;
+            height: 2px;
+            background-color: #ccc;
+            z-index: 0;
+        }
+        
+        /* Cải thiện hiển thị trong container */
+        #family-tree-container {
+            width: 100%;
+            height: 700px;
+            overflow: auto;
+            position: relative;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        #family-tree {
+            min-width: 1500px; /* Bảo đảm cây có không gian đủ rộng */
+            min-height: 800px;
+            position: relative;
+        }
+        
+        /* Thiết lập hiển thị chi tiết nút */
+        .node {
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            background-color: white;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+        
+        .node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        
+        /* Cài đặt zoom controls để luôn hiển thị rõ nét */
+        .zoom-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        /* Thêm style cho nút zoom */
+        .zoom-btn {
+            padding: 8px 12px;
+            margin: 0 3px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -472,29 +563,26 @@
             return {
                 chart: {
                     container: "#family-tree",
-                    connectors: {
-                        type: 'step',
-                        style: {
-                            'stroke': '#bbb',
-                            'stroke-width': 2
-                        }
-                    },
-                    nodeAlign: "BOTTOM",
+                    nodeAlign: "CENTER",
                     scrollbar: "native",
-                    padding: 50,
-                    siblingSeparation: 80,
-                    levelSeparation: 150,
-                    subtreeSeparation: 100,
+                    padding: 80,
+                    siblingSeparation: 100,
+                    levelSeparation: 200,
+                    subtreeSeparation: 150,
                     connectors: {
-                        type: 'step',
+                        type: 'curved',
                         style: {
-                            'stroke': '#bbb',
+                            'stroke': '#888',
                             'stroke-width': 2
                         }
                     },
                     animateOnInit: false,
                     node: {
                         collapsable: false
+                    },
+                    animation: {
+                        nodeSpeed: 300,
+                        connectorsSpeed: 300,
                     }
                 },
                 nodeStructure: rootNode
@@ -550,42 +638,54 @@
 
         // Hàm đệ quy thêm con vào node
         function addChildrenNodes(parentNode, parentPerson) {
-            // Nếu người này có vợ/chồng, thêm vợ/chồng trước
+            // Nếu người này có vợ/chồng, thêm cùng cấp (sibling) thay vì cấp dưới (children)
             if (parentPerson.spouses && parentPerson.spouses.length > 0) {
-                parentNode.children = [];
+                // Tạo một node ảo để chứa con của cặp vợ chồng
+                let coupleChildrenNode = null;
+                let hasChildren = false;
                 
-                // Thêm vợ/chồng
+                // Duyệt qua từng vợ/chồng để tạo node phù hợp
                 for (const spouseId of parentPerson.spouses) {
                     const spouse = familyData.find(p => p.id === spouseId);
-                    if (spouse) {
-                        const spouseNode = createNodeFromPerson(spouse);
+                    if (!spouse) continue;
+                    
+                    // Tìm con chung giữa người hiện tại và vợ/chồng
+                    const childrenWithSpouse = familyData.filter(p => 
+                        p.parents && 
+                        p.parents.includes(parentPerson.id) && 
+                        p.parents.includes(spouseId)
+                    );
+                    
+                    if (childrenWithSpouse.length > 0) {
+                        hasChildren = true;
                         
-                        // Nếu vợ/chồng này có con với người hiện tại
-                        const childrenWithSpouse = familyData.filter(p => 
-                            p.parents && 
-                            p.parents.includes(parentPerson.id) && 
-                            p.parents.includes(spouseId)
-                        );
-                        
-                        if (childrenWithSpouse.length > 0) {
-                            spouseNode.children = [];
-                            
-                            // Sắp xếp con theo thứ tự sinh
-                            childrenWithSpouse.sort((a, b) => {
-                                if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
-                                return 0;
-                            });
-                            
-                            // Thêm từng người con
-                            for (const child of childrenWithSpouse) {
-                                const childNode = createNodeFromPerson(child);
-                                addChildrenNodes(childNode, child);
-                                spouseNode.children.push(childNode);
-                            }
+                        // Tạo node ảo cho các con
+                        if (!coupleChildrenNode) {
+                            // Chỉ tạo node ảo nếu chưa có
+                            coupleChildrenNode = {
+                                pseudo: true,
+                                children: []
+                            };
                         }
                         
-                        parentNode.children.push(spouseNode);
+                        // Sắp xếp con theo thứ tự sinh
+                        childrenWithSpouse.sort((a, b) => {
+                            if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                            return 0;
+                        });
+                        
+                        // Thêm từng người con vào node ảo
+                        for (const child of childrenWithSpouse) {
+                            const childNode = createNodeFromPerson(child);
+                            addChildrenNodes(childNode, child);
+                            coupleChildrenNode.children.push(childNode);
+                        }
                     }
+                }
+                
+                // Sau khi xử lý tất cả các vợ/chồng và con cái, thêm vào cấu trúc cây
+                if (hasChildren) {
+                    parentNode.children = [coupleChildrenNode];
                 }
             } 
             // Nếu không có vợ/chồng nhưng có con (hiếm gặp)
