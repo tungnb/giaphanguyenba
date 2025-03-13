@@ -503,6 +503,9 @@
                             children: [...(person.children || []), ...(spouse.children || [])]
                         };
 
+                        // Thêm debug để kiểm tra thông tin node
+                        console.log("Tạo coupleNode:", coupleNode);
+                        
                         // Thêm node vợ chồng vào mảng
                         nodes.push(coupleNode);
                         coupleNodes.set(coupleId, coupleNode);
@@ -628,7 +631,7 @@
             OrgChart.templates.couple.img_1 = 
                 '<clipPath id="spouseClip_{id}"><circle cx="210" cy="80" r="25"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="55" width="50" height="50"></image>';
-
+                
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
             OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
             OrgChart.templates.couple_male.node = 
@@ -726,6 +729,23 @@
                 const personId = args.node.personId || args.node.id;
                 showPersonDetail(personId);
                 return false;
+            });
+            
+            // Thêm sự kiện load để kiểm tra các node sau khi biểu đồ được vẽ
+            chart.on('load', function(sender) {
+                console.log("Biểu đồ đã được tải:", sender);
+                
+                // Kiểm tra các node couple
+                const coupleNodes = sender.nodes.filter(node => 
+                    node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)
+                );
+                
+                console.log("Các node couple:", coupleNodes);
+                
+                // Kiểm tra template của node
+                coupleNodes.forEach(node => {
+                    console.log(`Node ${node.id} sử dụng template:`, node.templateName);
+                });
             });
 
             return chart;
