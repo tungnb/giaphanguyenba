@@ -898,6 +898,164 @@
             
             modal.style.display = 'block';
         }
+
+        // Thêm hàm renderFamilyTree
+        function renderFamilyTree() {
+            console.log("Bắt đầu render cây gia phả");
+            
+            // Hiện loading indicator
+            document.getElementById('loading-indicator').style.display = 'block';
+            
+            // Kiểm tra thư viện Treant
+            if (typeof Treant === 'undefined') {
+                console.error('Treant không được định nghĩa. Vui lòng kiểm tra thư viện.');
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                const errorMessage = document.createElement('p');
+                errorMessage.style.textAlign = 'center';
+                errorMessage.style.padding = '40px 0';
+                errorMessage.style.color = '#e74c3c';
+                errorMessage.textContent = 'Lỗi: Thư viện Treant không được tải. Vui lòng kiểm tra kết nối internet.';
+                document.getElementById('family-tree-container').appendChild(errorMessage);
+                document.getElementById('family-tree-container').style.display = 'block';
+                return;
+            }
+            
+            // Thiết lập timeout để hiển thị thông báo nếu loading quá lâu
+            setTimeout(function() {
+                if (document.getElementById('loading-indicator').style.display !== 'none') {
+                    console.log("Quá trình tải mất nhiều thời gian. Hiển thị thông báo...");
+                    
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    const loadingText = loadingIndicator.querySelector('p');
+                    if (loadingText) {
+                        loadingText.innerHTML = 'Đang tải dữ liệu gia phả... <br><small>Có vẻ như quá trình này đang mất nhiều thời gian hơn dự kiến.</small>';
+                    }
+                    
+                    setTimeout(function() {
+                        if (document.getElementById('loading-indicator').style.display !== 'none') {
+                            console.log("Ẩn loading indicator sau 8 giây dù chưa tải xong");
+                            document.getElementById('loading-indicator').style.display = 'none';
+                            document.getElementById('family-tree-container').style.display = 'block';
+                            
+                            if (!document.querySelector('#family-tree .node')) {
+                                const errorMessage = document.createElement('p');
+                                errorMessage.style.textAlign = 'center';
+                                errorMessage.style.padding = '40px 0';
+                                errorMessage.style.color = '#e74c3c';
+                                errorMessage.innerHTML = 'Không thể hiển thị cây gia phả. Vui lòng làm mới trang và thử lại.<br>Nếu lỗi vẫn tiếp tục, vui lòng kiểm tra dữ liệu gia phả.';
+                                document.getElementById('family-tree').appendChild(errorMessage);
+                            }
+                        }
+                    }, 5000);
+                }
+            }, 3000);
+            
+            try {
+                console.log("Đang chuyển đổi dữ liệu...");
+                let treeConfig;
+                
+                try {
+                    treeConfig = createTreeStructure();
+                    console.log("Đã chuyển đổi dữ liệu thành công");
+                } catch (structError) {
+                    console.error('Lỗi khi tạo cấu trúc cây:', structError);
+                    throw new Error(`Lỗi khi tạo cấu trúc cây: ${structError.message}`);
+                }
+                
+                if (!treeConfig) {
+                    throw new Error('Không thể tạo cấu trúc cây gia phả - treeConfig là null');
+                }
+                
+                console.log("Đang khởi tạo Treant với cấu hình:", JSON.stringify(treeConfig.chart));
+                
+                try {
+                    treeChart = new Treant(treeConfig, function() {
+                        console.log("Treant đã được khởi tạo thành công");
+                        
+                        // Thiết lập sự kiện sau khi cây được tạo
+                        setTimeout(() => {
+                            setupTreeClickEvents();
+                        }, 500);
+                        
+                        // Thêm đường kết nối cho vợ chồng
+                        setTimeout(addSpouseConnections, 800);
+                    });
+                } catch (treantError) {
+                    console.error('Lỗi khi khởi tạo Treant:', treantError);
+                    throw new Error(`Lỗi khi khởi tạo Treant: ${treantError.message}`);
+                }
+                
+                // Hiển thị cây gia phả
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('family-tree-container').style.display = 'block';
+                
+                // Thiết lập zoom controls
+                setupZoomControls();
+                
+            } catch (error) {
+                console.error('Lỗi khi khởi tạo cây gia phả:', error);
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                const errorMessage = document.createElement('p');
+                errorMessage.style.textAlign = 'center';
+                errorMessage.style.padding = '40px 0';
+                errorMessage.style.color = '#e74c3c';
+                errorMessage.innerHTML = `<strong>Lỗi khi khởi tạo biểu đồ gia phả:</strong><br>${error.message}<br><br>
+                    <button onclick="location.reload()" style="padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Tải lại trang
+                    </button>`;
+                document.getElementById('family-tree-container').appendChild(errorMessage);
+                document.getElementById('family-tree-container').style.display = 'block';
+            }
+        }
+
+        // Thêm hàm addSpouseConnections để tạo đường kết nối giữa vợ chồng
+        function addSpouseConnections() {
+            console.log("Thêm kết nối giữa vợ chồng");
+            
+            const chart = document.getElementById('family-tree');
+            const nodes = chart.querySelectorAll('.node:not(.pseudo)');
+            
+            // Kiểm tra các node có thể là vợ chồng (cùng cha mẹ trong DOM)
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const node1 = nodes[i];
+                    const node2 = nodes[j];
+                    
+                    if (node1.parentElement === node2.parentElement) {
+                        const parent = node1.parentElement;
+                        
+                        // Chỉ kết nối nếu là node thông thường (không phải pseudo)
+                        if (!parent.classList.contains('pseudo') && 
+                            parent.childNodes.length >= 2) {
+                            
+                            // Tạo connector
+                            const connector = document.createElement('div');
+                            connector.className = 'couple-connector';
+                            
+                            // Tính toán vị trí
+                            const rect1 = node1.getBoundingClientRect();
+                            const rect2 = node2.getBoundingClientRect();
+                            const left = Math.min(rect1.left, rect2.left);
+                            const right = Math.max(rect1.right, rect2.right);
+                            const width = right - left;
+                            
+                            connector.style.width = width + 'px';
+                            connector.style.left = (left - parent.getBoundingClientRect().left) + 'px';
+                            connector.style.top = Math.min(rect1.top, rect2.top) + 'px';
+                            
+                            // Thêm vào DOM
+                            parent.appendChild(connector);
+                            console.log("Đã thêm kết nối giữa", 
+                                node1.querySelector('.node-name')?.textContent, 
+                                "và", 
+                                node2.querySelector('.node-name')?.textContent);
+                        }
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>
