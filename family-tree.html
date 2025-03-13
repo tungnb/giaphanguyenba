@@ -642,7 +642,7 @@
             return familyTree;
         }
 
-        // Sửa lại hàm createFamilySubtree để hiển thị cặp vợ chồng đúng thế hệ
+        // Sửa lỗi cặp vợ chồng bị hiển thị lùi thế hệ
         function createFamilySubtree(person) {
             if (!person) {
                 console.error("createFamilySubtree được gọi với person là null hoặc undefined");
@@ -666,15 +666,13 @@
                     return personNode;
                 }
                 
-                // Xử lý trường hợp có vợ/chồng - CÁCH MỚI KHẮC PHỤC LỖI
-                // Tạo node cho người hiện tại
-                const spouses = [];
-                
-                // Thu thập thông tin vợ/chồng
+                // Xử lý trường hợp có vợ/chồng - CÁCH MỚI KHẮC PHỤC LỖI THẾ HỆ
+                // Thu thập vợ/chồng và tạo node cho họ
+                const spouseNodes = [];
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
-                        spouses.push(createNodeFromPerson(spouse));
+                        spouseNodes.push(createNodeFromPerson(spouse));
                     }
                 }
                 
@@ -690,36 +688,34 @@
                     self.findIndex(c => c.id === child.id) === index
                 );
                 
-                // Tạo cây cho từng đứa con
-                const childrenNodes = uniqueChildren.map(child => createFamilySubtree(child));
+                // Tạo cây con cho từng đứa con
+                const childrenSubtrees = uniqueChildren.map(child => createFamilySubtree(child));
                 
-                // CẢI TIẾN: Đưa con cái vào đúng thế hệ nhưng vẫn giữ vợ chồng ngang hàng
-                if (spouses.length > 0) {
-                    // Trường hợp có vợ/chồng và có con
-                    if (childrenNodes.length > 0) {
-                        // Tiếp tục sử dụng node giả cho cặp vợ chồng
-                        const coupleNode = {
-                            pseudo: true,
-                            children: [personNode, ...spouses]
-                        };
-                        
-                        // Thêm con vào personNode (không phải coupleNode)
-                        personNode.children = childrenNodes;
-                        
-                        return coupleNode;
-                    } 
-                    // Trường hợp có vợ/chồng nhưng không có con
-                    else {
-                        const coupleNode = {
-                            pseudo: true,
-                            children: [personNode, ...spouses]
-                        };
-                        return coupleNode;
-                    }
+                // PHẦN QUAN TRỌNG: tạo cấu trúc cây ngăn nắp hơn
+                // Tạo một node gia đình (không phải pseudo) để hiển thị ở đúng thế hệ
+                const familyNode = {
+                    innerHTML: "", // Node vô hình
+                    HTMLclass: "family-node", // Class tùy chỉnh
+                    children: [] // Sẽ chứa vợ chồng và con cái
+                };
+                
+                // Tạo một node giả chỉ để giữ cặp vợ chồng ngang hàng
+                const coupleNode = {
+                    pseudo: true,
+                    children: [personNode, ...spouseNodes]
+                };
+                
+                // Thêm coupleNode vào familyNode
+                familyNode.children.push(coupleNode);
+                
+                // Nếu có con, thêm từng con vào familyNode
+                if (childrenSubtrees.length > 0) {
+                    childrenSubtrees.forEach(childSubtree => {
+                        familyNode.children.push(childSubtree);
+                    });
                 }
                 
-                // Nếu không có vợ/chồng, chỉ trả về personNode
-                return personNode;
+                return familyNode;
                 
             } catch (error) {
                 console.error(`Lỗi khi tạo cây con cho ${person.name}:`, error);
