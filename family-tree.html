@@ -485,7 +485,7 @@
                             }
                         }
 
-                        // Tạo node chung cho cặp vợ chồng
+                        // Tạo node chung cho cặp vợ chồng với template dựa trên giới tính
                         const coupleNode = {
                             id: coupleId,
                             personId: person.id,
@@ -499,7 +499,7 @@
                             spouseBirth: spouseLifespan,
                             spouseGender: spouse.gender,
                             generation: person.generation,
-                            tags: ['couple'],
+                            tags: [person.gender === 'male' ? 'couple_male' : 'couple_female'],
                             children: [...(person.children || []), ...(spouse.children || [])]
                         };
 
@@ -674,8 +674,14 @@
                             details: { text: "Chi tiết" }
                         }
                     },
-                    couple: {
-                        template: "couple",
+                    couple_male: {
+                        template: "couple_male",
+                        nodeMenu: {
+                            details: { text: "Chi tiết" }
+                        }
+                    },
+                    couple_female: {
+                        template: "couple_female",
                         nodeMenu: {
                             details: { text: "Chi tiết" }
                         }
@@ -691,7 +697,7 @@
             chart.on('click', function(sender, args) {
                 if (args.node) {
                     // Nếu là node vợ chồng, xác định vị trí click để quyết định hiển thị ai
-                    if (args.node.tags && args.node.tags.indexOf('couple') != -1) {
+                    if (args.node.tags && (args.node.tags.indexOf('couple_male') != -1 || args.node.tags.indexOf('couple_female') != -1)) {
                         const x = args.event.offsetX;
                         const nodeX = args.node.x;
                         
@@ -720,17 +726,6 @@
                 const personId = args.node.personId || args.node.id;
                 showPersonDetail(personId);
                 return false;
-            });
-
-            // Loại bỏ sự kiện redraw và thêm cách xử lý khác
-            formattedData.nodes.forEach(node => {
-                if (node.tags && node.tags.includes('couple')) {
-                    if (node.personGender === 'male') {
-                        node.templateName = 'couple_male';
-                    } else if (node.personGender === 'female') {
-                        node.templateName = 'couple_female';
-                    }
-                }
             });
 
             return chart;
