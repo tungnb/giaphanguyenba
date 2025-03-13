@@ -532,33 +532,89 @@
         function processFamily() {
             console.log("Đang tìm người gốc cho cây gia phả...");
             
+            // Kiểm tra dữ liệu nhận được
+            console.log("Số lượng người trong dữ liệu:", familyData.length);
+            console.log("Dữ liệu đầu tiên:", familyData[0]);
+            
+            // Kiểm tra kiểu dữ liệu của trường generation
+            const generationTypes = {};
+            familyData.forEach(person => {
+                const type = typeof person.generation;
+                generationTypes[type] = (generationTypes[type] || 0) + 1;
+            });
+            console.log("Kiểu dữ liệu của trường generation:", generationTypes);
+            
+            // Chuyển đổi generation thành số nếu là chuỗi
+            familyData.forEach(person => {
+                if (typeof person.generation === 'string') {
+                    person.generation = parseInt(person.generation, 10);
+                }
+            });
+            
             // 1. Tìm người nam ở thế hệ 1
             let rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            console.log("Người nam ở thế hệ 1:", rootPersons.length, rootPersons.map(p => p.name));
             
             // 2. Nếu không có, tìm người nữ ở thế hệ 1
             if (rootPersons.length === 0) {
                 console.log("Không tìm thấy người nam ở thế hệ 1, tìm người nữ...");
                 rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'female');
+                console.log("Người nữ ở thế hệ 1:", rootPersons.length, rootPersons.map(p => p.name));
             }
             
             // 3. Nếu vẫn không có, tìm người có thế hệ thấp nhất
             if (rootPersons.length === 0) {
                 console.log("Không tìm thấy người ở thế hệ 1, tìm người ở thế hệ thấp nhất...");
-                const minGeneration = Math.min(...familyData.map(person => person.generation));
+                
+                // Tìm thế hệ thấp nhất
+                let minGeneration = Infinity;
+                familyData.forEach(person => {
+                    if (person.generation && person.generation < minGeneration) {
+                        minGeneration = person.generation;
+                    }
+                });
+                console.log("Thế hệ thấp nhất tìm thấy:", minGeneration);
+                
+                if (minGeneration === Infinity) {
+                    console.error("Không thể xác định thế hệ thấp nhất, có thể dữ liệu bị lỗi");
+                    // Gán mặc định thế hệ 1 cho người đầu tiên
+                    if (familyData.length > 0) {
+                        familyData[0].generation = 1;
+                        minGeneration = 1;
+                        console.log("Đã gán thế hệ 1 cho người đầu tiên:", familyData[0].name);
+                    }
+                }
+                
                 rootPersons = familyData.filter(person => person.generation === minGeneration);
+                console.log("Người ở thế hệ thấp nhất:", rootPersons.length, rootPersons.map(p => p.name));
                 
                 // Ưu tiên người nam
                 const maleRoots = rootPersons.filter(person => person.gender === 'male');
                 if (maleRoots.length > 0) {
                     rootPersons = maleRoots;
+                    console.log("Ưu tiên người nam:", maleRoots.length, maleRoots.map(p => p.name));
                 }
+            }
+            
+            // 4. Nếu vẫn không tìm thấy, sử dụng người đầu tiên trong danh sách
+            if (rootPersons.length === 0 && familyData.length > 0) {
+                console.log("Không tìm thấy người gốc theo thế hệ, sử dụng người đầu tiên trong danh sách");
+                rootPersons = [familyData[0]];
+                // Đặt generation = 1 cho người này
+                rootPersons[0].generation = 1;
             }
             
             // Nếu vẫn không tìm thấy, trả về node thông báo lỗi
             if (rootPersons.length === 0) {
                 console.error("Không thể tìm thấy người gốc trong dữ liệu");
                 return {
-                    innerHTML: "Không có dữ liệu người gốc",
+                    innerHTML: `
+                        <div style="padding: 15px; text-align: center;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #e74c3c;"></i>
+                            <p style="margin-top: 10px;">Không tìm thấy dữ liệu người gốc</p>
+                            <p style="font-size: 12px; color: #777;">Vui lòng kiểm tra API hoặc dữ liệu mẫu</p>
+                        </div>
+                    `,
                     HTMLclass: "error-node"
                 };
             }
@@ -573,10 +629,26 @@
             
             // Lấy người đầu tiên làm gốc
             const rootPerson = rootPersons[0];
-            console.log(`Đang xây dựng cây từ gốc: ${rootPerson.name} (ID: ${rootPerson.id}, Giới tính: ${rootPerson.gender}, Thế hệ: ${rootPerson.generation})`);
+            console.log(`Đã chọn người gốc: ${rootPerson.name} (ID: ${rootPerson.id}, Giới tính: ${rootPerson.gender}, Thế hệ: ${rootPerson.generation})`);
             
             // Tạo cấu trúc cây
-            return createFamilySubtree(rootPerson);
+            const familyTree = createFamilySubtree(rootPerson);
+            
+            if (!familyTree) {
+                console.error("createFamilySubtree trả về null cho người gốc:", rootPerson);
+                return {
+                    innerHTML: `
+                        <div style="padding: 15px; text-align: center;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #e74c3c;"></i>
+                            <p style="margin-top: 10px;">Lỗi khi tạo cây gia phả</p>
+                            <p style="font-size: 12px; color: #777;">Không thể tạo cấu trúc cây từ người gốc</p>
+                        </div>
+                    `,
+                    HTMLclass: "error-node"
+                };
+            }
+            
+            return familyTree;
         }
 
         // Tạo cây con cho một người và gia đình của họ
