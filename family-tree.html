@@ -325,6 +325,8 @@
 
         // Thay thế hàm renderFamilyTree() và setupOrgChartZoomControls()
         function renderFamilyTree() {
+            console.log("Bắt đầu render cây gia phả");
+            
             // Kiểm tra xem OrgChart có tồn tại không
             if (typeof OrgChart === 'undefined') {
                 console.error('OrgChart không được định nghĩa. Vui lòng kiểm tra thư viện.');
@@ -342,11 +344,14 @@
             
             try {
                 // Chuyển đổi dữ liệu
+                console.log("Đang chuyển đổi dữ liệu...");
                 const nodes = convertFamilyDataToOrgChartFormat();
+                console.log("Đã chuyển đổi dữ liệu thành công:", nodes);
                 
                 // Tạo và cấu hình chart
+                console.log("Đang khởi tạo OrgChart...");
                 orgChart = new OrgChart(document.getElementById('org-chart-container'), {
-                    template: "olivia", // Sử dụng template có sẵn
+                    template: "olivia",
                     nodeBinding: {
                         field_0: "name",
                         field_1: "dates",
@@ -375,13 +380,15 @@
                     showYScroll: OrgChart.scroll.visible,
                     tags: {
                         male: {
-                            template: "belinda" // Template cho nam
+                            template: "belinda"
                         },
                         female: {
-                            template: "diva" // Template cho nữ
+                            template: "diva"
                         }
                     }
                 });
+                
+                console.log("OrgChart đã được khởi tạo");
                 
                 // Xử lý sự kiện chi tiết
                 orgChart.on('click', function(sender, args) {
@@ -391,6 +398,7 @@
                 
                 // Xử lý khi chart đã sẵn sàng
                 orgChart.on('ready', function() {
+                    console.log("OrgChart đã sẵn sàng");
                     // Ẩn loading và hiển thị family tree
                     document.getElementById('loading-indicator').style.display = 'none';
                     document.getElementById('family-tree-container').style.display = 'block';
@@ -467,15 +475,23 @@
                     }
                 }
                 
+                // Thêm thông tin chi vào tên nếu là nam
+                let displayName = person.name;
+                if (person.gender === 'male' && person.generation > 1) {
+                    const branch = findPersonBranch(person);
+                    if (branch > 0) {
+                        displayName = `Chi ${branch} - ${person.name}`;
+                    }
+                }
+                
                 // Tạo node cho OrgChart
                 const node = {
                     id: person.id,
-                    name: person.name,
+                    name: displayName,
                     dates: lifespan,
                     photo: photoUrl,
                     gender: person.gender,
-                    tags: [person.gender],
-                    generation: person.generation
+                    tags: [person.gender]
                 };
                 
                 // Thiết lập quan hệ với cha mẹ
@@ -492,18 +508,10 @@
                 
                 // Thiết lập quan hệ vợ/chồng
                 if (person.spouses && person.spouses.length > 0) {
-                    for (let i = 0; i < person.spouses.length; i++) {
-                        const spouseId = person.spouses[i];
-                        const spouse = familyData.find(p => p.id === spouseId);
-                        
-                        // Chỉ thiết lập quan hệ một lần để tránh lặp lại
-                        if (spouse && person.id < spouse.id) {
-                            if (!node.pids) node.pids = [];
-                            if (spouse.gender === 'female') {
-                                node.pids.push(spouseId);
-                            }
-                        }
-                    }
+                    node.pids = [];
+                    person.spouses.forEach(spouseId => {
+                        node.pids.push(spouseId);
+                    });
                 }
                 
                 nodes.push(node);
