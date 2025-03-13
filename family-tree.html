@@ -219,6 +219,7 @@
         .generation {
             margin-bottom: 60px;
             text-align: center;
+            width: 100%;
         }
 
         .generation-title {
@@ -229,9 +230,13 @@
 
         .generation-members {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: row !important;
+            justify-content: center;
+            flex-wrap: nowrap !important;
             gap: 40px;
+            overflow-x: auto;
+            padding: 20px 0;
+            min-width: 100%;
         }
 
         .branch-container {
@@ -378,6 +383,7 @@
             background-color: #ff9800;
             margin-top: 60px;
             position: relative;
+            display: inline-block;
         }
 
         .spouse-connector::before,
@@ -549,17 +555,24 @@
             opacity: 0.8;
         }
 
-        /* Responsive design */
+        /* Style cho kết nối kiểu mindmap */
+        .family-connector {
+            position: absolute;
+            background-color: #0066cc;
+            z-index: 1;
+        }
+
+        /* Bỏ responsive để hiển thị luôn ngang */
         @media (max-width: 768px) {
             .branch-container {
-                flex-direction: column;
-                align-items: center;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
             }
 
             .spouse-connector {
-                width: 2px;
-                height: 30px;
-                margin: 0 auto;
+                width: 30px !important;
+                height: 2px !important;
+                margin-top: 60px !important;
             }
 
             .author-info {
@@ -572,21 +585,6 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
-        }
-
-        /* New styles for mindmap */
-        .mindmap-connector {
-            position: absolute;
-            background-color: #0066cc;
-            z-index: 1;
-        }
-        
-        .generation-members {
-            display: flex;
-            flex-direction: row !important;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 40px;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -794,8 +792,11 @@
                 document.getElementById('loading-indicator').style.display = 'none';
                 document.getElementById('family-tree-container').style.display = 'block';
 
-                // Thiết lập sự kiện cho modal
+                // Thiết lập sự kiện cho modal và cập nhật kết nối khi cửa sổ thay đổi kích thước
                 setupModalEvents();
+                window.addEventListener('resize', function() {
+                    setupFamilyConnections();
+                });
             } catch (error) {
                 console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -823,15 +824,26 @@
             // Tạo cây gia phả
             const treeContainer = document.getElementById('tree');
             treeContainer.innerHTML = '';
+            
+            // Theo dõi các người đã hiển thị để tránh lặp
+            const displayedPersons = new Set();
 
             // Hiển thị từng thế hệ
             Object.keys(generations).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gen => {
-                // Sắp xếp thành viên trong thế hệ
+                // Sắp xếp thành viên trong thế hệ theo chi và theo thứ tự sinh
                 const genMembers = generations[gen];
-
-                // Sắp xếp theo thứ tự sinh
                 genMembers.sort((a, b) => {
-                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                    // Sắp xếp theo chi trước
+                    const branchA = findPersonBranch(a);
+                    const branchB = findPersonBranch(b);
+                    
+                    if (branchA !== branchB) {
+                        return branchA - branchB;
+                    }
+                    
+                    // Trong cùng chi thì sắp xếp theo ngày sinh
+                    if (a.birthDate && b.birthDate) 
+                        return new Date(a.birthDate) - new Date(b.birthDate);
                     return 0;
                 });
 
@@ -851,26 +863,67 @@
                 membersContainer.className = 'generation-members';
                 genContainer.appendChild(membersContainer);
 
-                // Hiển thị từng người trong thế hệ
+                // Tạo mảng các gia đình (người + vợ/chồng) để hiển thị theo nhóm
+                const families = [];
+                
                 genMembers.forEach(person => {
-                    // Tạo element cho người này
-                    const personElement = createPersonElement(person);
-                    personElement.id = `person-${person.id}`;
+                    // Nếu người này đã được hiển thị, bỏ qua
+                    if (displayedPersons.has(person.id)) return;
+                    
+                    // Tạo đơn vị gia đình
+                    const family = {
+                        main: person,
+                        spouses: []
+                    };
+                    
+                    // Thêm vợ/chồng vào gia đình nếu có
+                    if (person.spouses && person.spouses.length > 0) {
+                        person.spouses.forEach(spouseId => {
+                            const spouse = findPersonById(spouseId);
+                            if (spouse && spouse.generation === parseInt(gen) && !displayedPersons.has(spouseId)) {
+                                family.spouses.push(spouse);
+                                displayedPersons.add(spouseId);
+                            }
+                        });
+                    }
+                    
+                    families.push(family);
+                    displayedPersons.add(person.id);
+                });
+                
+                // Hiển thị từng gia đình
+                families.forEach(family => {
+                    // Hiển thị người chính
+                    const personElement = createPersonElement(family.main);
+                    personElement.id = `person-${family.main.id}`;
                     membersContainer.appendChild(personElement);
+                    
+                    // Hiển thị vợ/chồng cùng với đường kết nối
+                    family.spouses.forEach(spouse => {
+                        // Tạo kết nối vợ chồng
+                        const spouseConnector = document.createElement('div');
+                        spouseConnector.className = 'spouse-connector';
+                        membersContainer.appendChild(spouseConnector);
+                        
+                        // Hiển thị vợ/chồng
+                        const spouseElement = createPersonElement(spouse);
+                        spouseElement.id = `person-${spouse.id}`;
+                        membersContainer.appendChild(spouseElement);
+                    });
                 });
 
                 treeContainer.appendChild(genContainer);
             });
 
-            // Thiết lập các kết nối kiểu mindmap
-            setTimeout(setupMindmapConnections, 300);
+            // Thiết lập các kết nối kiểu mindmap cho quan hệ bố con
+            setTimeout(setupFamilyConnections, 300);
         }
 
-        // Thêm hàm mới để tạo kết nối mindmap
-        function setupMindmapConnections() {
+        // Cập nhật hàm setupFamilyConnections để tạo cả kết nối bố con
+        function setupFamilyConnections() {
             // Xóa tất cả đường kết nối hiện có
             const treeContainer = document.getElementById('family-tree-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line');
+            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector');
             existingConnectors.forEach(conn => conn.remove());
             
             // Tạo kết nối từ cha mẹ đến con
@@ -885,14 +938,14 @@
                         .filter(el => el);
                     
                     if (childElements.length > 0) {
-                        createMindmapConnector(parentElement, childElements);
+                        createFamilyConnector(parentElement, childElements);
                     }
                 }
             });
         }
 
-        // Thêm hàm mới tạo kết nối mindmap
-        function createMindmapConnector(parentElement, childElements) {
+        // Hàm tạo kết nối bố con kiểu mindmap 
+        function createFamilyConnector(parentElement, childElements) {
             const treeContainer = document.getElementById('family-tree-container');
             
             const parentRect = parentElement.getBoundingClientRect();
@@ -927,7 +980,7 @@
             
             // Tạo đường dọc từ cha xuống
             const verticalLine = document.createElement('div');
-            verticalLine.className = 'mindmap-connector';
+            verticalLine.className = 'family-connector';
             verticalLine.style.left = `${parentX}px`;
             verticalLine.style.top = `${parentY}px`;
             verticalLine.style.width = '2px';
@@ -937,7 +990,7 @@
             // Tạo đường ngang nối giữa
             if (Math.abs(parentX - centerX) > 2) {
                 const horizontalLine = document.createElement('div');
-                horizontalLine.className = 'mindmap-connector';
+                horizontalLine.className = 'family-connector';
                 horizontalLine.style.top = `${parentY + 29}px`;
                 horizontalLine.style.left = `${Math.min(parentX, centerX)}px`;
                 horizontalLine.style.width = `${Math.abs(centerX - parentX)}px`;
@@ -947,7 +1000,7 @@
             
             // Tạo đường dọc xuống giữa các con
             const middleVerticalLine = document.createElement('div');
-            middleVerticalLine.className = 'mindmap-connector';
+            middleVerticalLine.className = 'family-connector';
             middleVerticalLine.style.left = `${centerX}px`;
             middleVerticalLine.style.top = `${parentY + 29}px`;
             middleVerticalLine.style.width = '2px';
@@ -962,7 +1015,7 @@
                 
                 // Đường ngang từ trung tâm đến con
                 const horizontalToChild = document.createElement('div');
-                horizontalToChild.className = 'mindmap-connector';
+                horizontalToChild.className = 'family-connector';
                 horizontalToChild.style.top = `${parentY + 49}px`;
                 horizontalToChild.style.left = `${Math.min(centerX, childX)}px`;
                 horizontalToChild.style.width = `${Math.abs(childX - centerX)}px`;
@@ -971,7 +1024,7 @@
                 
                 // Đường dọc xuống đến con
                 const verticalToChild = document.createElement('div');
-                verticalToChild.className = 'mindmap-connector';
+                verticalToChild.className = 'family-connector';
                 verticalToChild.style.left = `${childX}px`;
                 verticalToChild.style.top = `${parentY + 49}px`;
                 verticalToChild.style.width = '2px';
@@ -1101,95 +1154,6 @@
             `;
             
             return refElement;
-        }
-
-        // Thiết lập các đường kết nối giữa các thế hệ
-        function setupConnections() {
-            // Xóa tất cả đường kết nối hiện có
-            const treeContainer = document.getElementById('family-tree-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line');
-            existingConnectors.forEach(conn => conn.remove());
-            
-            // Tạo kết nối cha mẹ - con
-            familyData.forEach(person => {
-                if (person.parents && person.parents.length > 0) {
-                    const childElement = document.querySelector(`.person[data-id="${person.id}"], .person-reference[data-id="${person.id}"]`);
-                    
-                    if (!childElement) return;
-                    
-                    person.parents.forEach(parentId => {
-                        const parentElement = document.querySelector(`.person[data-id="${parentId}"], .person-reference[data-id="${parentId}"]`);
-                        
-                        if (parentElement) {
-                            createConnector(parentElement, childElement);
-                        }
-                    });
-                }
-            });
-        }
-
-        // Tạo đường kết nối giữa hai phần tử
-        function createConnector(element1, element2) {
-            const treeContainer = document.getElementById('family-tree-container');
-            
-            setTimeout(() => {
-                // Lấy vị trí với offset cuộn
-                const rect1 = element1.getBoundingClientRect();
-                const rect2 = element2.getBoundingClientRect();
-                const containerRect = treeContainer.getBoundingClientRect();
-                
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-                
-                // Tính toán vị trí thực tế
-                const startX = rect1.left + rect1.width / 2 + scrollLeft - containerRect.left;
-                const startY = rect1.bottom + scrollTop - containerRect.top;
-                const endX = rect2.left + rect2.width / 2 + scrollLeft - containerRect.left;
-                const endY = rect2.top + scrollTop - containerRect.top;
-                
-                // Điểm giữa
-                const midY = startY + (endY - startY) / 2;
-                
-                // Tạo container cho đường kết nối
-                const connectorContainer = document.createElement('div');
-                connectorContainer.className = 'connector-container';
-                connectorContainer.style.position = 'absolute';
-                connectorContainer.style.zIndex = '1';
-                treeContainer.appendChild(connectorContainer);
-                
-                // Đường dọc từ cha mẹ
-                const vLine1 = document.createElement('div');
-                vLine1.className = 'connector-line';
-                vLine1.style.position = 'absolute';
-                vLine1.style.left = `${startX}px`;
-                vLine1.style.top = `${startY}px`;
-                vLine1.style.width = '2px';
-                vLine1.style.height = `${midY - startY}px`;
-                vLine1.style.backgroundColor = '#0066cc';
-                connectorContainer.appendChild(vLine1);
-                
-                // Đường ngang
-                const hLine = document.createElement('div');
-                hLine.className = 'connector-line';
-                hLine.style.position = 'absolute';
-                hLine.style.top = `${midY}px`;
-                hLine.style.left = `${Math.min(startX, endX)}px`;
-                hLine.style.width = `${Math.abs(endX - startX)}px`;
-                hLine.style.height = '2px';
-                hLine.style.backgroundColor = '#0066cc';
-                connectorContainer.appendChild(hLine);
-                
-                // Đường dọc đến con
-                const vLine2 = document.createElement('div');
-                vLine2.className = 'connector-line';
-                vLine2.style.position = 'absolute';
-                vLine2.style.left = `${endX}px`;
-                vLine2.style.top = `${midY}px`;
-                vLine2.style.width = '2px';
-                vLine2.style.height = `${endY - midY}px`;
-                vLine2.style.backgroundColor = '#0066cc';
-                connectorContainer.appendChild(vLine2);
-            }, 100);
         }
 
         // Thiết lập sự kiện cho modal xem chi tiết
