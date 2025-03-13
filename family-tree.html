@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gia phả dòng họ Nguyễn Bá - xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reset CSS */
         * {
@@ -13,30 +11,30 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
             background-color: #f8f9fa;
         }
-        
+
         .container {
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        
+
         a {
             text-decoration: none;
             color: #0066cc;
         }
-        
+
         a:hover {
             text-decoration: underline;
         }
-        
+
         /* Header Styles */
         header {
             background-color: #fff;
@@ -44,19 +42,39 @@
             text-align: center;
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
-        
+
         .header-content {
             max-width: 900px;
             margin: 0 auto;
         }
-        
-        .blog-title {
-            font-size: 2.8rem;
-            font-weight: 700;
+
+        .navigation-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             margin-bottom: 30px;
-            color: #333;
         }
-        
+
+        .nav-item {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #555;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background-color: #f0f5ff;
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background-color: #0066cc;
+            color: white;
+        }
+
         .author-info {
             margin-bottom: 20px;
             display: flex;
@@ -66,7 +84,7 @@
             gap: 30px;
             text-align: left;
         }
-        
+
         .avatar-container {
             width: 120px;
             height: 120px;
@@ -76,62 +94,32 @@
             border: 4px solid #f0f5ff;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        
+
         .author-text-content {
             display: flex;
             flex-direction: column;
         }
-        
+
         .avatar-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
-        .author-name {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
+
         .author-title {
             font-size: 1rem;
             color: #666;
             margin-bottom: 10px;
             font-style: italic;
         }
-        
-        .author-description {
-            font-size: 1rem;
-            color: #555;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            padding: 0;
-            display: none;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            opacity: 0;
-            max-height: 0;
-            text-align: left;
-            width: 100%;
-        }
-        
-        .author-description.active {
-            display: block;
-            opacity: 1;
-            max-height: 500px;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        
+
         .social-links {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .social-btn {
             display: inline-flex;
             align-items: center;
@@ -144,7 +132,7 @@
             transition: all 0.3s ease;
             font-size: 1.2rem;
         }
-        
+
         .social-btn:hover {
             background-color: #0066cc;
             color: #fff;
@@ -152,11 +140,11 @@
             box-shadow: 0 5px 10px rgba(0,0,0,0.1);
             text-decoration: none;
         }
-        
+
         .social-tooltip {
             position: relative;
         }
-        
+
         .social-tooltip .tooltip-text {
             visibility: hidden;
             width: auto;
@@ -175,7 +163,7 @@
             transition: opacity 0.3s;
             font-size: 0.85rem;
         }
-        
+
         .social-tooltip .tooltip-text::after {
             content: "";
             position: absolute;
@@ -186,69 +174,27 @@
             border-style: solid;
             border-color: #333 transparent transparent transparent;
         }
-        
+
         .social-tooltip:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
         }
-        
-        /* Navigation menu styles */
-        .navigation-menu {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .nav-item {
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            color: #555;
-            text-decoration: none;
-        }
-        
-        .nav-item:hover {
-            background-color: #f0f5ff;
-            color: #0066cc;
-            text-decoration: none;
-        }
-        
-        .nav-item.active {
-            background-color: #0066cc;
-            color: white;
-        }
-        
-        /* Responsive styles for navigation */
-        @media (max-width: 768px) {
-            .navigation-menu {
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            
-            .author-info {
-                flex-direction: column;
-                text-align: center;
-                gap: 15px;
-            }
-        }
-        
+
         /* Content Styles */
         .content {
             padding: 60px 0;
         }
-        
+
         .back-link {
             display: inline-block;
             margin-bottom: 30px;
             color: #0066cc;
         }
-        
+
         .back-link i {
             margin-right: 5px;
         }
-        
+
         .section-title {
             font-size: 2rem;
             font-weight: 700;
@@ -256,37 +202,38 @@
             margin-bottom: 40px;
             color: #333;
         }
-        
+
         /* Family Tree Styles */
         .family-tree-container {
             overflow-x: auto;
             padding: 20px 0;
+            position: relative;
         }
-        
+
         .tree {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        
+
         .generation {
             margin-bottom: 60px;
             text-align: center;
         }
-        
+
         .generation-title {
             margin-bottom: 20px;
             color: #333;
             font-size: 1.4rem;
         }
-        
+
         .generation-members {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 40px;
         }
-        
+
         .branch-container {
             display: flex;
             flex-direction: row;
@@ -295,16 +242,18 @@
             gap: 30px;
             flex-wrap: wrap;
         }
-        
+
         .branch-title {
             width: 100%;
             text-align: center;
-            color: #0066cc;
+            color: #666;
             margin-bottom: 15px;
             padding-bottom: 5px;
             border-bottom: 1px dashed #ccc;
+            font-size: 0.9rem;
+            font-style: italic;
         }
-        
+
         .person {
             width: 180px;
             background-color: #fff;
@@ -314,18 +263,18 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
             position: relative;
-            z-index: 1;
+            z-index: 2;
             padding: 15px;
         }
-        
+
         .person.male {
             border-left: 4px solid #0066cc;
         }
-        
+
         .person.female {
             border-left: 4px solid #e91e63;
         }
-        
+
         .person-photo {
             width: 80px;
             height: 80px;
@@ -334,19 +283,19 @@
             margin: 0 auto 10px;
             border: 3px solid #f0f5ff;
         }
-        
+
         .person-name {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
-        
+
         .person-dates {
             font-size: 0.8rem;
             color: #666;
             margin-bottom: 10px;
         }
-        
+
         .view-details {
             display: inline-block;
             padding: 5px 10px;
@@ -356,27 +305,100 @@
             font-size: 0.8rem;
             transition: all 0.2s ease;
         }
-        
+
         .view-details:hover {
             background-color: #0066cc;
             color: white;
             text-decoration: none;
         }
-        
-        .connector {
+
+        /* Styles cho người đã hiển thị (reference) */
+        .person-reference {
+            width: 150px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            margin: 5px;
+            border: 2px dashed #ccc;
+            z-index: 2;
+        }
+
+        .person-reference.male {
+            border-left: 4px solid #0066cc;
+        }
+
+        .person-reference.female {
+            border-left: 4px solid #e91e63;
+        }
+
+        .person-ref-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .person-ref-note {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        .view-original {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #f0f5ff;
+            color: #0066cc;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        .view-original:hover {
+            background-color: #0066cc;
+            color: white;
+        }
+
+        /* Connector Styles */
+        .connector-container, .spouse-connector-line {
             position: absolute;
-            background-color: #ccc;
-            z-index: 0;
+            pointer-events: none;
+            z-index: 1;
         }
-        
-        .h-connector {
+
+        .connector-line {
+            position: absolute;
+        }
+
+        .spouse-connector {
+            width: 30px;
             height: 2px;
+            background-color: #ff9800;
+            margin-top: 60px;
+            position: relative;
         }
-        
-        .v-connector {
-            width: 2px;
+
+        .spouse-connector::before,
+        .spouse-connector::after {
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ff9800;
+            top: -2px;
         }
-        
+
+        .spouse-connector::before {
+            left: -3px;
+        }
+
+        .spouse-connector::after {
+            right: -3px;
+        }
+
         /* Person Details Modal */
         .modal {
             display: none;
@@ -389,7 +411,7 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.4);
         }
-        
+
         .modal-content {
             background-color: #fff;
             margin: 5% auto;
@@ -400,7 +422,7 @@
             max-width: 600px;
             position: relative;
         }
-        
+
         .close-modal {
             position: absolute;
             right: 20px;
@@ -409,7 +431,7 @@
             cursor: pointer;
             color: #666;
         }
-        
+
         .person-detail-header {
             display: flex;
             align-items: center;
@@ -418,33 +440,33 @@
             padding-bottom: 20px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .person-detail-photo {
             width: 100px;
             height: 100px;
             border-radius: 50%;
             object-fit: cover;
         }
-        
+
         .person-detail-info {
             flex-grow: 1;
         }
-        
+
         .person-detail-name {
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
-        
+
         .person-detail-dates {
             color: #666;
             margin-bottom: 5px;
         }
-        
+
         .person-detail-section {
             margin-bottom: 20px;
         }
-        
+
         .person-detail-section h3 {
             font-size: 1.1rem;
             color: #555;
@@ -452,27 +474,27 @@
             padding-bottom: 5px;
             border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .relation-list {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
         }
-        
+
         .relation-item {
             background-color: #f5f5f5;
             padding: 5px 10px;
             border-radius: 15px;
             font-size: 0.9rem;
         }
-        
+
         /* Loading indicator */
         .loading-indicator {
             text-align: center;
             padding: 40px;
         }
-        
+
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -482,32 +504,32 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
-        
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
-        
+
         /* Empty state */
         .empty-state {
             text-align: center;
             padding: 40px 0;
             color: #666;
         }
-        
+
         .empty-state i {
             font-size: 3rem;
             color: #ccc;
             margin-bottom: 20px;
         }
-        
+
         .empty-state h3 {
             font-size: 1.5rem;
             margin-bottom: 10px;
             color: #555;
         }
-        
+
         /* Footer */
         footer {
             background-color: #333;
@@ -516,128 +538,43 @@
             text-align: center;
             margin-top: 60px;
         }
-        
+
         .footer-content {
             max-width: 800px;
             margin: 0 auto;
         }
-        
+
         .copyright {
             font-size: 0.9rem;
             opacity: 0.8;
         }
-        
-        /* Styles for generations and branches */
-        .generation {
-            margin-bottom: 60px;
-            text-align: center;
-        }
-        
-        .generation-title {
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.4rem;
-        }
-        
-        .generation-members {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
-        }
-        
-        .branch-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .branch-title {
-            width: 100%;
-            text-align: center;
-            color: #0066cc;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed #ccc;
-        }
-        
-        /* Spouse connector */
-        .spouse-connector {
-            width: 30px;
-            height: 2px;
-            background-color: #ff9800;
-            margin-top: 60px; /* Điều chỉnh vị trí để phù hợp với thẻ person */
-            position: relative;
-        }
-        
-        .spouse-connector::before,
-        .spouse-connector::after {
-            content: "";
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ff9800;
-            top: -2px;
-        }
-        
-        .spouse-connector::before {
-            left: -3px;
-        }
-        
-        .spouse-connector::after {
-            right: -3px;
-        }
-        
+
         /* Responsive design */
         @media (max-width: 768px) {
             .branch-container {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .spouse-connector {
                 width: 2px;
                 height: 30px;
                 margin: 0 auto;
             }
-        }
-        
-        /* Styles for parent-child connectors */
-        .parent-child-connector {
-            position: absolute;
-            z-index: 0;
-        }
-        
-        .v-connector {
-            position: absolute;
-            width: 2px;
-            background-color: #0066cc;
-            z-index: 0;
-        }
-        
-        .h-connector {
-            position: absolute;
-            height: 2px;
-            background-color: #0066cc;
-            z-index: 0;
-        }
-        
-        /* Sửa lại styles cho branch-title để không hiển thị trùng */
-        .branch-title {
-            width: 100%;
-            text-align: center;
-            color: #666;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed #ccc;
-            font-size: 0.9rem;
-            font-style: italic;
+
+            .author-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .navigation-menu {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
@@ -648,26 +585,25 @@
                     <a href="family-tree.html" class="nav-item active">Gia phả</a>
                     <a href="all-posts.html" class="nav-item">Tất cả bài viết</a>
                 </div>
-                
+
                 <div class="author-info">
                     <div class="avatar-container">
-                       <img src="profile3.jpg" alt="Avatar" class="avatar-img"> 
+                        <img src="profile3.jpg" alt="Avatar" class="avatar-img">
                     </div>
                     <div class="author-text-content">
                         <p class="author-title">Chào mừng bạn đến với website gia phả họ Nguyễn Bá</p>
-                        
-                        <p id="author-description" class="author-description">
-                        </p>
-                        
+
                         <div class="social-links">
                             <a href="https://www.facebook.com/tungnb/" class="social-btn social-tooltip" title="Facebook">
                                 <i class="fab fa-facebook-f"></i>
                                 <span class="tooltip-text">Facebook</span>
                             </a>
+
                             <a href="mailto:tungnguyen@mayhoangtung.com" class="social-btn social-tooltip" title="Email">
                                 <i class="fas fa-envelope"></i>
                                 <span class="tooltip-text">tungnguyen@mayhoangtung.com</span>
                             </a>
+
                             <a href="tel:0983887485" class="social-btn social-tooltip" title="Điện thoại">
                                 <i class="fas fa-phone"></i>
                                 <span class="tooltip-text">0983887485</span>
@@ -682,20 +618,20 @@
     <section class="content">
         <div class="container">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
-            
+
             <h2 class="section-title">Gia phả gia đình Nguyễn Bá</h2>
-            
+
             <div id="loading-indicator" class="loading-indicator">
                 <div class="loading-spinner"></div>
                 <p>Đang tải dữ liệu gia phả...</p>
             </div>
-            
+
             <div id="family-tree-container" class="family-tree-container" style="display: none">
                 <div id="tree" class="tree">
                     <!-- Dữ liệu gia phả sẽ được thêm vào đây -->
                 </div>
             </div>
-            
+
             <div id="empty-state" class="empty-state" style="display: none">
                 <i class="fas fa-users-slash"></i>
                 <h3>Chưa có dữ liệu gia phả</h3>
@@ -703,7 +639,7 @@
             </div>
         </div>
     </section>
-    
+
     <div id="person-detail-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-modal">&times;</span>
@@ -724,206 +660,55 @@
     <script>
         // Thiết lập cấu trúc dữ liệu cho gia phả
         let familyData = [];
-        
+
         // Lấy dữ liệu gia phả từ localStorage hoặc API
         async function getFamilyData() {
             try {
                 const response = await fetch('/api/family');
-                
+
                 if (!response.ok) {
                     throw new Error(`Lỗi khi lấy dữ liệu: ${response.status}`);
                 }
-                
+
                 return await response.json();
             } catch (error) {
-                console.error('Error fetching family data:', error);
-                
+                console.error('Lỗi khi lấy dữ liệu gia phả:', error);
+
                 // Fallback sử dụng localStorage nếu API bị lỗi
                 const data = JSON.parse(localStorage.getItem('family-tree') || '[]');
                 return data;
             }
         }
-        
+
         // Hiển thị dữ liệu gia phả
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 // Hiển thị loading indicator
                 document.getElementById('loading-indicator').style.display = 'block';
-                
+
                 // Lấy dữ liệu gia phả
                 familyData = await getFamilyData();
-                
+
                 // Kiểm tra xem có dữ liệu không
                 if (familyData.length === 0) {
                     document.getElementById('loading-indicator').style.display = 'none';
                     document.getElementById('empty-state').style.display = 'block';
                     return;
                 }
-                
-                // Nhóm theo thế hệ
-                const generations = {};
-                familyData.forEach(person => {
-                    if (!generations[person.generation]) {
-                        generations[person.generation] = [];
-                    }
-                    generations[person.generation].push(person);
-                });
-                
-                // Tạo danh sách các cặp vợ chồng đã hiển thị để tránh lặp
-                const displayedCouples = new Set();
-                
-                // Tạo cây gia phả
-                const treeContainer = document.getElementById('tree');
-                treeContainer.innerHTML = '';
-                
-                // Phân tích và xác định các "chi" dựa trên con trai đầu trong thế hệ 2 (giả sử thế hệ 1 là gốc)
-                const branches = [];
-                if (generations['2'] && generations['2'].length > 0) {
-                    // Lọc ra các con trai thế hệ 2
-                    const sons = generations['2'].filter(person => person.gender === 'male');
-                    
-                    // Sắp xếp theo thứ tự (giả sử có trường order hoặc sử dụng ID để sắp xếp)
-                    sons.sort((a, b) => {
-                        // Nếu có trường order thì sắp xếp theo đó
-                        if (a.order && b.order) return a.order - b.order;
-                        // Nếu không thì sắp xếp theo ngày sinh
-                        if (a.birthDate && b.birthDate) 
-                            return new Date(a.birthDate) - new Date(b.birthDate);
-                        return 0;
-                    });
-                    
-                    // Đánh dấu chi
-                    sons.forEach((son, index) => {
-                        son.branch = `Chi ${index + 1}`;
-                        branches.push({
-                            id: son.id,
-                            name: `Chi ${index + 1}`,
-                            founder: son.name
-                        });
-                    });
-                }
-                
-                // Hiển thị từng thế hệ
-                Object.keys(generations).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gen => {
-                    // Sắp xếp thành viên trong thế hệ
-                    const genMembers = generations[gen];
-                    
-                    // Sắp xếp theo chi và thứ tự trong chi
-                    genMembers.sort((a, b) => {
-                        // Nếu là thế hệ 1 thì không cần sắp xếp chi
-                        if (gen === '1') return 0;
-                        
-                        // Tìm chi của mỗi người
-                        const branchA = findBranch(a);
-                        const branchB = findBranch(b);
-                        
-                        // So sánh chi
-                        if (branchA !== branchB) {
-                            return branchA - branchB;
-                        }
-                        
-                        // Trong cùng chi thì sắp xếp theo thứ tự
-                        if (a.order && b.order) return a.order - b.order;
-                        
-                        // Nếu không có order thì sắp xếp theo ngày sinh
-                        if (a.birthDate && b.birthDate) 
-                            return new Date(a.birthDate) - new Date(b.birthDate);
-                        
-                        return 0;
-                    });
-                    
-                    // Tạo container cho thế hệ
-                    const genContainer = document.createElement('div');
-                    genContainer.className = 'generation';
-                    genContainer.dataset.generation = gen;
-                    
-                    // Thêm tiêu đề thế hệ
-                    const genTitle = document.createElement('h3');
-                    genTitle.className = 'generation-title';
-                    genTitle.textContent = `Thế hệ ${gen}`;
-                    genContainer.appendChild(genTitle);
-                    
-                    // Tạo container cho các thành viên trong thế hệ
-                    const membersContainer = document.createElement('div');
-                    membersContainer.className = 'generation-members';
-                    
-                    // Nhóm theo chi và hiển thị
-                    let currentBranch = null;
-                    let branchContainer = null;
-                    
-                    genMembers.forEach(person => {
-                        // Xác định chi của người này
-                        const personBranch = findPersonBranch(person);
-                        
-                        // Nếu là chi mới thì tạo container mới
-                        if (personBranch !== currentBranch && gen !== '1') {
-                            currentBranch = personBranch;
-                            branchContainer = document.createElement('div');
-                            branchContainer.className = 'branch-container';
-                            
-                            // Thêm tiêu đề chi
-                            const branchTitle = document.createElement('h4');
-                            branchTitle.className = 'branch-title';
-                            branchTitle.textContent = `Chi ${personBranch}`;
-                            branchContainer.appendChild(branchTitle);
-                            
-                            membersContainer.appendChild(branchContainer);
-                        } else if (gen === '1') {
-                            // Thế hệ 1 không có chi
-                            if (!branchContainer) {
-                                branchContainer = document.createElement('div');
-                                branchContainer.className = 'branch-container';
-                                membersContainer.appendChild(branchContainer);
-                            }
-                        }
-                        
-                        const personElement = createPersonElement(person);
-                        branchContainer.appendChild(personElement);
-                        
-                        // Nếu có vợ/chồng thì hiển thị ngay bên cạnh và thêm đường kết nối
-                        if (person.spouses && person.spouses.length > 0) {
-                            person.spouses.forEach(spouseId => {
-                                // Tạo khóa duy nhất cho cặp vợ chồng (luôn sử dụng ID nhỏ hơn trước)
-                                const coupleKey = [person.id, spouseId].sort().join('-');
-                                
-                                // Kiểm tra xem cặp này đã hiển thị chưa
-                                if (!displayedCouples.has(coupleKey)) {
-                                    displayedCouples.add(coupleKey);
-                                    
-                                    const spouse = findPersonById(spouseId);
-                                    if (spouse && spouse.generation == person.generation) {
-                                        // Thêm đường kết nối vợ chồng
-                                        const spouseConnector = document.createElement('div');
-                                        spouseConnector.className = 'spouse-connector';
-                                        branchContainer.appendChild(spouseConnector);
-                                        
-                                        // Thêm thông tin vợ/chồng
-                                        const spouseElement = createPersonElement(spouse);
-                                        branchContainer.appendChild(spouseElement);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    
-                    genContainer.appendChild(membersContainer);
-                    treeContainer.appendChild(genContainer);
-                });
-                
-                // Thiết lập các kết nối giữa các thế hệ
-                setupConnections();
-                
+
+                // Render cây gia phả
+                await renderFamilyTree();
+
                 // Ẩn loading và hiển thị cây gia phả
                 document.getElementById('loading-indicator').style.display = 'none';
                 document.getElementById('family-tree-container').style.display = 'block';
-                
-                // Xử lý sự kiện xem chi tiết
+
+                // Thiết lập sự kiện cho modal
                 setupModalEvents();
-                
             } catch (error) {
-                console.error('Error rendering family tree:', error);
+                console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
-                
+
                 const errorMessage = document.createElement('p');
                 errorMessage.style.textAlign = 'center';
                 errorMessage.style.padding = '40px 0';
@@ -932,11 +717,218 @@
                 document.getElementById('family-tree-container').appendChild(errorMessage);
             }
         });
-        
+
+        // Hàm render cây gia phả
+        async function renderFamilyTree() {
+            // Nhóm theo thế hệ
+            const generations = {};
+            familyData.forEach(person => {
+                if (!generations[person.generation]) {
+                    generations[person.generation] = [];
+                }
+                generations[person.generation].push(person);
+            });
+
+            // Tạo danh sách các người đã hiển thị để tránh lặp
+            const displayedPersons = new Set();
+
+            // Tạo cây gia phả
+            const treeContainer = document.getElementById('tree');
+            treeContainer.innerHTML = '';
+
+            // Phân tích và xác định các "chi" dựa trên con trai đầu trong thế hệ 2
+            const branches = [];
+            if (generations['2'] && generations['2'].length > 0) {
+                // Lọc ra các con trai thế hệ 2
+                const sons = generations['2'].filter(person => person.gender === 'male');
+
+                // Sắp xếp theo thứ tự
+                sons.sort((a, b) => {
+                    // Nếu có trường order thì sắp xếp theo đó
+                    if (a.order && b.order) return a.order - b.order;
+                    // Nếu không thì sắp xếp theo ngày sinh
+                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                    return 0;
+                });
+
+                // Đánh dấu chi
+                sons.forEach((son, index) => {
+                    son.branch = `Chi ${index + 1}`;
+                    branches.push({
+                        id: son.id,
+                        name: `Chi ${index + 1}`,
+                        founder: son.name
+                    });
+                });
+            }
+
+            // Hiển thị từng thế hệ
+            Object.keys(generations).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gen => {
+                // Sắp xếp thành viên trong thế hệ
+                const genMembers = generations[gen];
+
+                // Sắp xếp theo chi và thứ tự trong chi
+                genMembers.sort((a, b) => {
+                    // Nếu là thế hệ 1 thì không cần sắp xếp chi
+                    if (gen === '1') return 0;
+
+                    // Tìm chi của mỗi người
+                    const branchA = findBranch(a);
+                    const branchB = findBranch(b);
+
+                    // So sánh chi
+                    if (branchA !== branchB) {
+                        return branchA - branchB;
+                    }
+
+                    // Trong cùng chi thì sắp xếp theo thứ tự
+                    if (a.order && b.order) return a.order - b.order;
+
+                    // Nếu không có order thì sắp xếp theo ngày sinh
+                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+
+                    return 0;
+                });
+
+                // Tạo container cho thế hệ
+                const genContainer = document.createElement('div');
+                genContainer.className = 'generation';
+                genContainer.dataset.generation = gen;
+
+                // Thêm tiêu đề thế hệ
+                const genTitle = document.createElement('h3');
+                genTitle.className = 'generation-title';
+                genTitle.textContent = `Thế hệ ${gen}`;
+                genContainer.appendChild(genTitle);
+
+                // Tạo container cho các thành viên trong thế hệ
+                const membersContainer = document.createElement('div');
+                membersContainer.className = 'generation-members';
+
+                // Nhóm theo chi và hiển thị
+                let currentBranch = null;
+                let branchContainer = null;
+                
+                // Tạo các đơn vị gia đình (family units) để tránh hiển thị trùng lặp
+                const familyUnits = [];
+                const processedInGeneration = new Set();
+                
+                genMembers.forEach(person => {
+                    if (processedInGeneration.has(person.id)) return;
+                    
+                    // Tạo đơn vị gia đình mới
+                    const unit = {
+                        mainPerson: person,
+                        spouses: []
+                    };
+                    
+                    processedInGeneration.add(person.id);
+                    
+                    // Tìm vợ/chồng
+                    if (person.spouses && person.spouses.length > 0) {
+                        person.spouses.forEach(spouseId => {
+                            const spouse = findPersonById(spouseId);
+                            if (spouse && spouse.generation == person.generation) {
+                                unit.spouses.push(spouse);
+                                processedInGeneration.add(spouseId);
+                            }
+                        });
+                    }
+                    
+                    familyUnits.push(unit);
+                });
+                
+                // Nhóm các đơn vị gia đình theo chi
+                const branchUnits = {};
+                
+                familyUnits.forEach(unit => {
+                    const personBranch = findPersonBranch(unit.mainPerson);
+                    if (!branchUnits[personBranch]) {
+                        branchUnits[personBranch] = [];
+                    }
+                    branchUnits[personBranch].push(unit);
+                });
+                
+                // Hiển thị từng chi
+                Object.keys(branchUnits).sort((a, b) => parseInt(a) - parseInt(b)).forEach(branchId => {
+                    branchContainer = document.createElement('div');
+                    branchContainer.className = 'branch-container';
+                    
+                    // Thêm tiêu đề chi (chỉ cho thế hệ > 1 và nếu có nhiều chi)
+                    if (gen !== '1' && Object.keys(branchUnits).length > 1) {
+                        const branchTitle = document.createElement('h4');
+                        branchTitle.className = 'branch-title';
+                        branchTitle.textContent = `Chi ${branchId}`;
+                        branchContainer.appendChild(branchTitle);
+                    }
+                    
+                    // Hiển thị các đơn vị gia đình trong chi
+                    branchUnits[branchId].forEach(unit => {
+                        // Hiển thị người chính
+                        if (!displayedPersons.has(unit.mainPerson.id)) {
+                            displayedPersons.add(unit.mainPerson.id);
+                            const personElement = createPersonElement(unit.mainPerson);
+                            personElement.id = `person-${unit.mainPerson.id}`;
+                            branchContainer.appendChild(personElement);
+                            
+                            // Hiển thị vợ/chồng
+                            unit.spouses.forEach(spouse => {
+                                // Thêm đường kết nối vợ chồng
+                                const spouseConnector = document.createElement('div');
+                                spouseConnector.className = 'spouse-connector';
+                                branchContainer.appendChild(spouseConnector);
+                                
+                                // Thêm vợ/chồng
+                                if (!displayedPersons.has(spouse.id)) {
+                                    displayedPersons.add(spouse.id);
+                                    const spouseElement = createPersonElement(spouse);
+                                    spouseElement.id = `person-${spouse.id}`;
+                                    branchContainer.appendChild(spouseElement);
+                                } else {
+                                    const refElement = createPersonReference(spouse);
+                                    branchContainer.appendChild(refElement);
+                                }
+                            });
+                        } else {
+                            // Hiển thị reference nếu người đã được hiển thị ở nơi khác
+                            const refElement = createPersonReference(unit.mainPerson);
+                            branchContainer.appendChild(refElement);
+                            
+                            // Hiển thị vợ/chồng
+                            unit.spouses.forEach(spouse => {
+                                // Thêm đường kết nối vợ chồng
+                                const spouseConnector = document.createElement('div');
+                                spouseConnector.className = 'spouse-connector';
+                                branchContainer.appendChild(spouseConnector);
+                                
+                                if (!displayedPersons.has(spouse.id)) {
+                                    displayedPersons.add(spouse.id);
+                                    const spouseElement = createPersonElement(spouse);
+                                    spouseElement.id = `person-${spouse.id}`;
+                                    branchContainer.appendChild(spouseElement);
+                                } else {
+                                    const refElement = createPersonReference(spouse);
+                                    branchContainer.appendChild(refElement);
+                                }
+                            });
+                        }
+                    });
+                    
+                    membersContainer.appendChild(branchContainer);
+                });
+
+                genContainer.appendChild(membersContainer);
+                treeContainer.appendChild(genContainer);
+            });
+
+            // Thiết lập các kết nối giữa các thế hệ
+            setTimeout(setupConnections, 300);
+        }
+
         // Hàm tìm chi của một người
         function findPersonBranch(person) {
             if (person.generation === 1) return 0;
-            
+
             // Tìm cha mẹ
             if (person.parents && person.parents.length > 0) {
                 for (let parentId of person.parents) {
@@ -951,14 +943,13 @@
                                 p.parents && 
                                 p.parents.includes(parent.id)
                             );
-                            
+
                             // Sắp xếp theo thứ tự sinh
                             sons.sort((a, b) => {
-                                if (a.birthDate && b.birthDate) 
-                                    return new Date(a.birthDate) - new Date(b.birthDate);
+                                if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
                                 return 0;
                             });
-                            
+
                             // Tìm vị trí của chi
                             for (let i = 0; i < sons.length; i++) {
                                 if (person.id === sons[i].id || isDescendantOf(person, sons[i].id)) {
@@ -972,40 +963,40 @@
                     }
                 }
             }
-            
+
             return 0;
         }
-        
+
         // Hàm kiểm tra một người có phải là hậu duệ của một người khác không
         function isDescendantOf(person, ancestorId) {
             if (!person.parents || person.parents.length === 0) return false;
-            
+
             for (let parentId of person.parents) {
                 if (parentId === ancestorId) return true;
-                
+
                 const parent = findPersonById(parentId);
                 if (parent && isDescendantOf(parent, ancestorId)) return true;
             }
-            
+
             return false;
         }
-        
+
         // Hàm tìm người theo ID
         function findPersonById(id) {
             return familyData.find(person => person.id === id);
         }
-        
+
         // Hàm tìm chi theo ID người
         function findBranch(person) {
             return findPersonBranch(person);
         }
-        
+
         // Tạo phần tử hiển thị một người trong gia phả
         function createPersonElement(person) {
             const personElement = document.createElement('div');
             personElement.className = `person ${person.gender}`;
             personElement.dataset.id = person.id;
-            
+
             // Tính tuổi hoặc năm sống
             let lifespan = '';
             if (person.birthDate) {
@@ -1017,132 +1008,188 @@
                     lifespan = `Sinh năm ${birthYear}`;
                 }
             }
-            
+
             // Ảnh đại diện theo giới tính
             let photoUrl = person.photo;
             if (!photoUrl) {
                 if (person.gender === 'male') {
                     photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
                 } else {
-                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png'; // Hình ảnh phù hợp hơn cho nữ
+                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
                 }
             }
-            
+
             // Thêm thông tin chi vào tên nếu là nam và có chi
             let displayName = person.name;
             if (person.gender === 'male' && person.generation > 1) {
                 const branch = findPersonBranch(person);
                 if (branch > 0) {
-                    // Chỉ hiển thị chi cho các con trai
-                    displayName = `Chi ${branch} - ${person.name}`;
+                    // Chỉ hiển thị chi cho các con trai đầu tiên
+                    const isFounder = familyData.some(p => 
+                        p.generation === 2 && 
+                        p.gender === 'male' && 
+                        p.id === person.id && 
+                        findPersonBranch(p) === branch
+                    );
+                    
+                    if (isFounder) {
+                        displayName = `Chi ${branch} - ${person.name}`;
+                    }
                 }
             }
-            
+
             personElement.innerHTML = `
                 <img src="${photoUrl}" alt="${person.name}" class="person-photo">
                 <div class="person-name">${displayName}</div>
                 <div class="person-dates">${lifespan}</div>
                 <a href="#" class="view-details" data-id="${person.id}">Xem chi tiết</a>
             `;
-            
+
             return personElement;
         }
-        
+
+        // Tạo phần tử tham chiếu đến người đã hiển thị
+        function createPersonReference(person) {
+            const refElement = document.createElement('div');
+            refElement.className = `person-reference ${person.gender}`;
+            refElement.dataset.id = person.id;
+            
+            refElement.innerHTML = `
+                <div class="person-ref-name">${person.name}</div>
+                <div class="person-ref-note">(đã hiển thị)</div>
+                <a href="#person-${person.id}" class="view-original">Xem chi tiết</a>
+            `;
+            
+            return refElement;
+        }
+
         // Thiết lập các đường kết nối giữa các thế hệ
         function setupConnections() {
-            // Tạo các kết nối giữa cha mẹ và con cái
+            // Xóa tất cả đường kết nối hiện có
+            const treeContainer = document.getElementById('family-tree-container');
+            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line');
+            existingConnectors.forEach(conn => conn.remove());
+            
+            // Tạo kết nối cha mẹ - con
             familyData.forEach(person => {
                 if (person.parents && person.parents.length > 0) {
-                    // Tìm phần tử HTML của người con
-                    const childElement = document.querySelector(`.person[data-id="${person.id}"]`);
+                    const childElement = document.querySelector(`.person[data-id="${person.id}"], .person-reference[data-id="${person.id}"]`);
                     
                     if (!childElement) return;
                     
                     person.parents.forEach(parentId => {
-                        const parentElement = document.querySelector(`.person[data-id="${parentId}"]`);
+                        const parentElement = document.querySelector(`.person[data-id="${parentId}"], .person-reference[data-id="${parentId}"]`);
                         
                         if (parentElement) {
-                            // Tạo đường kết nối từ cha/mẹ đến con
-                            createParentChildConnector(parentElement, childElement);
+                            createConnector(parentElement, childElement);
                         }
                     });
                 }
             });
         }
-        
-        // Hàm tạo đường kết nối từ cha mẹ đến con
-        function createParentChildConnector(parentElement, childElement) {
-            // Lấy vị trí của cha mẹ và con
-            const parentRect = parentElement.getBoundingClientRect();
-            const childRect = childElement.getBoundingClientRect();
+
+        // Tạo đường kết nối giữa hai phần tử
+        function createConnector(element1, element2) {
+            const treeContainer = document.getElementById('family-tree-container');
             
-            // Tạo container cho đường kết nối
-            const connector = document.createElement('div');
-            connector.className = 'parent-child-connector';
-            
-            // Tính toán vị trí và kích thước của đường kết nối
-            const startX = parentRect.left + parentRect.width / 2;
-            const startY = parentRect.bottom;
-            const endX = childRect.left + childRect.width / 2;
-            const endY = childRect.top;
-            
-            // Tạo đường kết nối dọc từ cha mẹ xuống
-            const verticalLine = document.createElement('div');
-            verticalLine.className = 'v-connector';
-            document.body.appendChild(verticalLine);
-            
-            // Tạo đường kết nối ngang nếu cần
-            if (startX !== endX) {
-                const horizontalLine = document.createElement('div');
-                horizontalLine.className = 'h-connector';
-                document.body.appendChild(horizontalLine);
-            }
-            
-            // Tạo đường kết nối dọc xuống đến con
-            const verticalLine2 = document.createElement('div');
-            verticalLine2.className = 'v-connector';
-            document.body.appendChild(verticalLine2);
+            setTimeout(() => {
+                // Lấy vị trí với offset cuộn
+                const rect1 = element1.getBoundingClientRect();
+                const rect2 = element2.getBoundingClientRect();
+                const containerRect = treeContainer.getBoundingClientRect();
+                
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+                
+                // Tính toán vị trí thực tế
+                const startX = rect1.left + rect1.width / 2 + scrollLeft - containerRect.left;
+                const startY = rect1.bottom + scrollTop - containerRect.top;
+                const endX = rect2.left + rect2.width / 2 + scrollLeft - containerRect.left;
+                const endY = rect2.top + scrollTop - containerRect.top;
+                
+                // Điểm giữa
+                const midY = startY + (endY - startY) / 2;
+                
+                // Tạo container cho đường kết nối
+                const connectorContainer = document.createElement('div');
+                connectorContainer.className = 'connector-container';
+                connectorContainer.style.position = 'absolute';
+                connectorContainer.style.zIndex = '1';
+                treeContainer.appendChild(connectorContainer);
+                
+                // Đường dọc từ cha mẹ
+                const vLine1 = document.createElement('div');
+                vLine1.className = 'connector-line';
+                vLine1.style.position = 'absolute';
+                vLine1.style.left = `${startX}px`;
+                vLine1.style.top = `${startY}px`;
+                vLine1.style.width = '2px';
+                vLine1.style.height = `${midY - startY}px`;
+                vLine1.style.backgroundColor = '#0066cc';
+                connectorContainer.appendChild(vLine1);
+                
+                // Đường ngang
+                const hLine = document.createElement('div');
+                hLine.className = 'connector-line';
+                hLine.style.position = 'absolute';
+                hLine.style.top = `${midY}px`;
+                hLine.style.left = `${Math.min(startX, endX)}px`;
+                hLine.style.width = `${Math.abs(endX - startX)}px`;
+                hLine.style.height = '2px';
+                hLine.style.backgroundColor = '#0066cc';
+                connectorContainer.appendChild(hLine);
+                
+                // Đường dọc đến con
+                const vLine2 = document.createElement('div');
+                vLine2.className = 'connector-line';
+                vLine2.style.position = 'absolute';
+                vLine2.style.left = `${endX}px`;
+                vLine2.style.top = `${midY}px`;
+                vLine2.style.width = '2px';
+                vLine2.style.height = `${endY - midY}px`;
+                vLine2.style.backgroundColor = '#0066cc';
+                connectorContainer.appendChild(vLine2);
+            }, 100);
         }
-        
+
         // Thiết lập sự kiện cho modal xem chi tiết
         function setupModalEvents() {
             const modal = document.getElementById('person-detail-modal');
             const closeBtn = document.getElementById('close-modal');
-            
+
             // Đóng modal khi nhấp vào nút đóng
             closeBtn.addEventListener('click', function() {
                 modal.style.display = 'none';
             });
-            
+
             // Đóng modal khi nhấp vào bên ngoài
             window.addEventListener('click', function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             });
-            
+
             // Mở modal khi nhấp vào "Xem chi tiết"
-            const detailLinks = document.querySelectorAll('.view-details');
-            detailLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('view-details')) {
                     e.preventDefault();
-                    const personId = this.getAttribute('data-id');
+                    const personId = e.target.getAttribute('data-id');
                     showPersonDetail(personId);
-                });
+                }
             });
         }
-        
+
         // Hiển thị chi tiết một người
         function showPersonDetail(personId) {
             const person = familyData.find(p => p.id === personId);
-            
+
             if (!person) {
                 return;
             }
-            
+
             const modal = document.getElementById('person-detail-modal');
             const contentContainer = document.getElementById('person-detail-content');
-            
+
             // Tính tuổi hoặc năm sống
             let lifespan = '';
             if (person.birthDate) {
@@ -1154,17 +1201,17 @@
                     lifespan = `Sinh năm ${birthYear}`;
                 }
             }
-            
+
             // Ảnh đại diện theo giới tính
             let photoUrl = person.photo;
             if (!photoUrl) {
                 if (person.gender === 'male') {
                     photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
                 } else {
-                    photoUrl = 'https://cdn.pixabay.com/photo/2014/04/02/14/10/female-306407_1280.png';
+                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
                 }
             }
-            
+
             // Tìm thông tin cha mẹ
             let parentsHTML = '<p>Không có thông tin</p>';
             if (person.parents && person.parents.length > 0) {
@@ -1181,7 +1228,7 @@
                 });
                 parentsHTML += '</div>';
             }
-            
+
             // Tìm thông tin vợ/chồng
             let spousesHTML = '<p>Không có thông tin</p>';
             if (person.spouses && person.spouses.length > 0) {
@@ -1190,7 +1237,6 @@
                     const spouseData = familyData.find(p => p.id === spouseId);
                     if (spouseData) {
                         let marriageInfo = '';
-                        // Thông tin kết hôn nếu có
                         spousesHTML += `
                             <div class="relation-item">
                                 ${spouseData.name} ${marriageInfo ? `(${marriageInfo})` : ''}
@@ -1200,7 +1246,7 @@
                 });
                 spousesHTML += '</div>';
             }
-            
+
             // Tìm thông tin con cái
             let childrenHTML = '<p>Không có thông tin</p>';
             if (person.children && person.children.length > 0) {
@@ -1217,7 +1263,7 @@
                 });
                 childrenHTML += '</div>';
             }
-            
+
             // Tạo HTML chi tiết
             contentContainer.innerHTML = `
                 <div class="person-detail-header">
@@ -1228,32 +1274,32 @@
                         <p class="person-detail-gender">${person.gender === 'male' ? 'Nam' : 'Nữ'}</p>
                     </div>
                 </div>
-                
+
                 <div class="person-detail-section">
                     <h3>Tiểu sử</h3>
                     <p>${person.bio || 'Không có thông tin tiểu sử.'}</p>
                 </div>
-                
+
                 <div class="person-detail-section">
                     <h3>Cha mẹ</h3>
                     ${parentsHTML}
                 </div>
-                
+
                 <div class="person-detail-section">
                     <h3>Vợ/Chồng</h3>
                     ${spousesHTML}
                 </div>
-                
+
                 <div class="person-detail-section">
                     <h3>Con cái</h3>
                     ${childrenHTML}
                 </div>
             `;
-            
+
             // Hiển thị modal
             modal.style.display = 'block';
         }
-        
+
         // Định dạng ngày tháng
         function formatDate(dateString) {
             try {
@@ -1261,7 +1307,7 @@
                 if (isNaN(date.getTime())) {
                     return '';
                 }
-                
+
                 return date.toLocaleDateString('vi-VN', {
                     day: '2-digit',
                     month: '2-digit',
@@ -1273,4 +1319,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
