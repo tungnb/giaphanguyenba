@@ -744,22 +744,69 @@
             chart.on('load', function(sender) {
                 console.log("Biểu đồ đã được tải:", sender);
                 
-                // Kiểm tra các node couple
-                const coupleNodes = sender.nodes.filter(node => 
-                    node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)
-                );
-                
-                console.log("Các node couple:", coupleNodes);
-                
-                // Kiểm tra template của node
-                coupleNodes.forEach(node => {
-                    console.log(`Node ${node.id} sử dụng template:`, node.templateName);
-                    console.log(`Node ${node.id} dữ liệu img:`, node.data.img);
-                    console.log(`Node ${node.id} dữ liệu spouseImg:`, node.data.spouseImg);
-                });
-
-                // Ghi chú: Nếu muốn sửa vấn đề avatar, có thể thử chỉnh CSS hoặc sửa lại svg cụ thể
-                // của các node couple sau khi biểu đồ được vẽ.
+                // Chờ một chút để đảm bảo DOM đã được vẽ
+                setTimeout(() => {
+                    // Tìm tất cả các node couple (có chứa dấu "_" trong ID)
+                    const coupleElements = document.querySelectorAll('[data-id]');
+                    
+                    coupleElements.forEach(element => {
+                        const nodeId = element.getAttribute('data-id');
+                        
+                        // Nếu là node cặp vợ chồng (có dấu "_")
+                        if (nodeId && nodeId.includes('_')) {
+                            // Tìm node trong dữ liệu
+                            const node = sender.nodes.find(n => n.id === nodeId);
+                            
+                            if (node && node.data) {
+                                console.log(`Xử lý node ${nodeId}, img:`, node.data.img);
+                                
+                                // Kiểm tra nếu chưa có avatar của người chính
+                                const existingImage = element.querySelector(`[clip-path="url(#personClip_${nodeId})"]`);
+                                
+                                if (!existingImage) {
+                                    console.log(`Node ${nodeId} không có avatar người chính, đang thêm...`);
+                                    
+                                    // Tìm phần tử chứa node để thêm hình ảnh vào
+                                    const nodeContentElement = element.querySelector('g.node');
+                                    
+                                    if (nodeContentElement) {
+                                        // Tạo clipPath trước
+                                        const clipPathId = `personClip_${nodeId}`;
+                                        let clipPathExists = document.getElementById(clipPathId);
+                                        
+                                        if (!clipPathExists) {
+                                            const clipPathElement = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                                            clipPathElement.setAttribute("id", clipPathId);
+                                            
+                                            const circleElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                                            circleElement.setAttribute("cx", "70");
+                                            circleElement.setAttribute("cy", "80");
+                                            circleElement.setAttribute("r", "25");
+                                            
+                                            clipPathElement.appendChild(circleElement);
+                                            nodeContentElement.appendChild(clipPathElement);
+                                            
+                                            // Tạo thẻ image
+                                            const imageElement = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                                            imageElement.setAttribute("clip-path", `url(#${clipPathId})`);
+                                            imageElement.setAttribute("preserveAspectRatio", "xMidYMid slice");
+                                            imageElement.setAttribute("x", "45");
+                                            imageElement.setAttribute("y", "55");
+                                            imageElement.setAttribute("width", "50");
+                                            imageElement.setAttribute("height", "50");
+                                            imageElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", node.data.img || '');
+                                            
+                                            // Thêm image vào node
+                                            nodeContentElement.appendChild(imageElement);
+                                            
+                                            console.log(`Đã thêm avatar cho node ${nodeId}`);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 500);
             });
 
             return chart;
