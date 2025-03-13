@@ -955,14 +955,31 @@
             setTimeout(setupFamilyConnections, 300);
         }
 
-        // Cập nhật hàm setupFamilyConnections để tạo cả kết nối bố con
+        // Thay thế hàm setupFamilyConnections để sử dụng SVG
         function setupFamilyConnections() {
             // Xóa tất cả đường kết nối hiện có
             const treeContainer = document.getElementById('family-tree-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector');
+            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector, .svg-container');
             existingConnectors.forEach(conn => conn.remove());
             
-            // Tạo kết nối từ cha mẹ đến con
+            // Tạo container SVG cho các đường kết nối
+            const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svgContainer.setAttribute("class", "svg-container");
+            svgContainer.style.position = "absolute";
+            svgContainer.style.top = "0";
+            svgContainer.style.left = "0";
+            svgContainer.style.width = "100%";
+            svgContainer.style.height = "100%";
+            svgContainer.style.pointerEvents = "none";
+            svgContainer.style.zIndex = "2";
+            treeContainer.appendChild(svgContainer);
+            
+            // Thiết lập kích thước SVG dựa trên kích thước container
+            const containerRect = treeContainer.getBoundingClientRect();
+            svgContainer.setAttribute("width", treeContainer.scrollWidth);
+            svgContainer.setAttribute("height", treeContainer.scrollHeight);
+            
+            // Tạo kết nối từ cha mẹ đến con bằng SVG
             familyData.forEach(person => {
                 if (person.children && person.children.length > 0) {
                     const parentElement = document.getElementById(`person-${person.id}`);
@@ -974,39 +991,35 @@
                         .filter(el => el);
                     
                     if (childElements.length > 0) {
-                        createFamilyConnector(parentElement, childElements);
+                        createSvgConnector(svgContainer, parentElement, childElements, treeContainer);
                     }
                 }
             });
         }
 
-        // Hàm tạo kết nối bố con kiểu mindmap 
-        function createFamilyConnector(parentElement, childElements) {
-            const treeContainer = document.getElementById('family-tree-container');
+        // Hàm tạo kết nối bằng SVG
+        function createSvgConnector(svgContainer, parentElement, childElements, treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const scrollTop = treeContainer.scrollTop;
+            const scrollLeft = treeContainer.scrollLeft;
             
             const parentRect = parentElement.getBoundingClientRect();
-            const containerRect = treeContainer.getBoundingClientRect();
             
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-            
-            // Vị trí của cha mẹ - Điều chỉnh để đường kẻ bắt đầu từ chính giữa dưới cùng của thẻ
-            const parentX = parentRect.left + parentRect.width / 2 + scrollLeft - containerRect.left;
-            const parentY = parentRect.bottom + scrollTop - containerRect.top - 5; // -5px để đường kẻ đúng vị trí
-            
-            // Tạo container cho các kết nối
-            const connectorContainer = document.createElement('div');
-            connectorContainer.className = 'connector-container';
-            treeContainer.appendChild(connectorContainer);
+            // Vị trí của cha mẹ
+            const parentX = parentRect.left + parentRect.width / 2 - containerRect.left + scrollLeft;
+            const parentY = parentRect.bottom - containerRect.top + scrollTop;
             
             // Tìm vị trí của tất cả con
+            let childPositions = [];
             let minChildX = Infinity;
             let maxChildX = -Infinity;
             
             childElements.forEach(childElement => {
                 const childRect = childElement.getBoundingClientRect();
-                const childX = childRect.left + childRect.width / 2 + scrollLeft - containerRect.left;
+                const childX = childRect.left + childRect.width / 2 - containerRect.left + scrollLeft;
+                const childY = childRect.top - containerRect.top + scrollTop;
                 
+                childPositions.push({ x: childX, y: childY });
                 minChildX = Math.min(minChildX, childX);
                 maxChildX = Math.max(maxChildX, childX);
             });
@@ -1014,58 +1027,106 @@
             // Điểm trung tâm ngang giữa các con
             const centerX = (minChildX + maxChildX) / 2;
             
-            // Tạo đường dọc từ cha xuống
-            const verticalLine = document.createElement('div');
-            verticalLine.className = 'family-connector';
-            verticalLine.style.left = `${parentX}px`;
-            verticalLine.style.top = `${parentY}px`;
-            verticalLine.style.width = '2px';
-            verticalLine.style.height = '30px';
-            connectorContainer.appendChild(verticalLine);
+            // Khoảng cách dọc cho đường kết nối
+            const verticalGap = 30;
             
-            // Tạo đường ngang nối giữa
+            // Đường dọc từ cha xuống
+            const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            verticalLine.setAttribute("x1", parentX);
+            verticalLine.setAttribute("y1", parentY);
+            verticalLine.setAttribute("x2", parentX);
+            verticalLine.setAttribute("y2", parentY + verticalGap);
+            verticalLine.setAttribute("stroke", "#0066cc");
+            verticalLine.setAttribute("stroke-width", "2");
+            svgContainer.appendChild(verticalLine);
+            
+            // Đường ngang nối giữa nếu cần
             if (Math.abs(parentX - centerX) > 2) {
-                const horizontalLine = document.createElement('div');
-                horizontalLine.className = 'family-connector';
-                horizontalLine.style.top = `${parentY + 29}px`;
-                horizontalLine.style.left = `${Math.min(parentX, centerX)}px`;
-                horizontalLine.style.width = `${Math.abs(centerX - parentX)}px`;
-                horizontalLine.style.height = '2px';
-                connectorContainer.appendChild(horizontalLine);
+                const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                horizontalLine.setAttribute("x1", parentX);
+                horizontalLine.setAttribute("y1", parentY + verticalGap);
+                horizontalLine.setAttribute("x2", centerX);
+                horizontalLine.setAttribute("y2", parentY + verticalGap);
+                horizontalLine.setAttribute("stroke", "#0066cc");
+                horizontalLine.setAttribute("stroke-width", "2");
+                svgContainer.appendChild(horizontalLine);
             }
             
-            // Tạo đường dọc xuống giữa các con
-            const middleVerticalLine = document.createElement('div');
-            middleVerticalLine.className = 'family-connector';
-            middleVerticalLine.style.left = `${centerX}px`;
-            middleVerticalLine.style.top = `${parentY + 29}px`;
-            middleVerticalLine.style.width = '2px';
-            middleVerticalLine.style.height = '20px';
-            connectorContainer.appendChild(middleVerticalLine);
+            // Đường dọc xuống giữa từ đường ngang
+            const middleVerticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            middleVerticalLine.setAttribute("x1", centerX);
+            middleVerticalLine.setAttribute("y1", parentY + verticalGap);
+            middleVerticalLine.setAttribute("x2", centerX);
+            middleVerticalLine.setAttribute("y2", parentY + verticalGap * 2);
+            middleVerticalLine.setAttribute("stroke", "#0066cc");
+            middleVerticalLine.setAttribute("stroke-width", "2");
+            svgContainer.appendChild(middleVerticalLine);
             
-            // Tạo đường ngang tới các con
-            childElements.forEach(childElement => {
-                const childRect = childElement.getBoundingClientRect();
-                const childX = childRect.left + childRect.width / 2 + scrollLeft - containerRect.left;
-                const childY = childRect.top + scrollTop - containerRect.top;
-                
+            // Vẽ các đường nối từ trung tâm đến từng người con
+            childPositions.forEach(childPos => {
                 // Đường ngang từ trung tâm đến con
-                const horizontalToChild = document.createElement('div');
-                horizontalToChild.className = 'family-connector';
-                horizontalToChild.style.top = `${parentY + 49}px`;
-                horizontalToChild.style.left = `${Math.min(centerX, childX)}px`;
-                horizontalToChild.style.width = `${Math.abs(childX - centerX)}px`;
-                horizontalToChild.style.height = '2px';
-                connectorContainer.appendChild(horizontalToChild);
+                const horizontalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                horizontalToChild.setAttribute("x1", centerX);
+                horizontalToChild.setAttribute("y1", parentY + verticalGap * 2);
+                horizontalToChild.setAttribute("x2", childPos.x);
+                horizontalToChild.setAttribute("y2", parentY + verticalGap * 2);
+                horizontalToChild.setAttribute("stroke", "#0066cc");
+                horizontalToChild.setAttribute("stroke-width", "2");
+                svgContainer.appendChild(horizontalToChild);
                 
-                // Đường dọc xuống đến con - Điều chỉnh để kết nối chính xác với phần trên của thẻ con
-                const verticalToChild = document.createElement('div');
-                verticalToChild.className = 'family-connector';
-                verticalToChild.style.left = `${childX}px`;
-                verticalToChild.style.top = `${parentY + 49}px`;
-                verticalToChild.style.width = '2px';
-                verticalToChild.style.height = `${childY - (parentY + 49)}px`;
-                connectorContainer.appendChild(verticalToChild);
+                // Đường dọc xuống đến con
+                const verticalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                verticalToChild.setAttribute("x1", childPos.x);
+                verticalToChild.setAttribute("y1", parentY + verticalGap * 2);
+                verticalToChild.setAttribute("x2", childPos.x);
+                verticalToChild.setAttribute("y2", childPos.y);
+                verticalToChild.setAttribute("stroke", "#0066cc");
+                verticalToChild.setAttribute("stroke-width", "2");
+                svgContainer.appendChild(verticalToChild);
+            });
+        }
+
+        // Thêm hàm cập nhật SVG khi container thay đổi kích thước hoặc cuộn
+        function observeTreeContainer() {
+            const treeContainer = document.getElementById('family-tree-container');
+            
+            // Cập nhật khi cuộn
+            treeContainer.addEventListener('scroll', function() {
+                setupFamilyConnections();
+            });
+            
+            // Tạo ResizeObserver để theo dõi thay đổi kích thước
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(function() {
+                    setupFamilyConnections();
+                });
+                
+                resizeObserver.observe(treeContainer);
+            }
+            
+            // Theo dõi thay đổi vị trí của các thẻ người
+            const mutationObserver = new MutationObserver(function(mutations) {
+                let shouldUpdate = false;
+                
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList' || 
+                        (mutation.type === 'attributes' && 
+                         (mutation.attributeName === 'style' || 
+                          mutation.attributeName === 'class'))) {
+                        shouldUpdate = true;
+                    }
+                });
+                
+                if (shouldUpdate) {
+                    setupFamilyConnections();
+                }
+            });
+            
+            mutationObserver.observe(treeContainer, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['style', 'class']
             });
         }
 
