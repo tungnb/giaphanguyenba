@@ -651,57 +651,85 @@
             return familyTree;
         }
 
-        // Tạo cây con cho một người và gia đình của họ
+        // Tạo cây con cho một người
         function createFamilySubtree(person) {
             if (!person) {
                 console.error("createFamilySubtree được gọi với person là null hoặc undefined");
-            console.log(`Tạo cây con cho: ${person.name}`);
-            
-            // Tạo node cho người này
-            const personNode = createNodeFromPerson(person);
-            
-            // Nếu không có vợ/chồng, xử lý đơn giản - chỉ hiển thị con
-            if (!person.spouses || person.spouses.length === 0) {
-                const children = getChildrenOf(person.id);
-                if (children.length > 0) {
-                    personNode.children = children.map(child => createFamilySubtree(child));
-                }
-                return personNode;
+                return null;
             }
             
-            // Xử lý trường hợp có vợ/chồng - CHÚ Ý: PHƯƠNG PHÁP MỚI HOÀN TOÀN
-            // Tạo một node giả để chứa cặp vợ chồng
-            const familyNode = {
-                pseudo: true,
-                children: []
-            };
+            console.log(`Tạo cây con cho: ${person.name || 'Không rõ tên'}`);
             
-            // Thêm cả người hiện tại và vợ/chồng như anh chị em (siblings)
-            familyNode.children.push(personNode);
-            
-            // Thêm mỗi vợ/chồng như một anh chị em
-            for (const spouseId of person.spouses) {
-                const spouse = findPersonById(spouseId);
-                if (spouse) {
-                    const spouseNode = createNodeFromPerson(spouse);
-                    familyNode.children.push(spouseNode);
+            try {
+                // Tạo node cho người này
+                const personNode = createNodeFromPerson(person);
+                
+                // Nếu không có vợ/chồng, xử lý đơn giản - chỉ hiển thị con
+                if (!person.spouses || person.spouses.length === 0) {
+                    const children = getChildrenOf(person.id);
+                    console.log(`${person.name} có ${children.length} con trực tiếp`);
                     
-                    // Tạo node con chứa con cái của cặp vợ chồng này
-                    const commonChildren = getCommonChildren(person.id, spouseId);
-                    if (commonChildren.length > 0) {
-                        // Tạo một node giả để chứa tất cả con
-                        const childrenNode = {
-                            pseudo: true,
-                            children: commonChildren.map(child => createFamilySubtree(child))
-                        };
+                    if (children.length > 0) {
+                        personNode.children = children.map(child => createFamilySubtree(child));
+                    }
+                    return personNode;
+                }
+                
+                // Xử lý trường hợp có vợ/chồng - PHƯƠNG PHÁP CẢI TIẾN
+                // Không tạo node giả lồng nhau nữa, chỉ dùng 1 node giả duy nhất
+                const familyNode = {
+                    pseudo: true,
+                    children: [] 
+                };
+                
+                // Thêm người hiện tại và vợ/chồng cùng cấp
+                familyNode.children.push(personNode);
+                
+                // Thêm mỗi vợ/chồng
+                let allChildren = [];
+                for (const spouseId of person.spouses) {
+                    const spouse = findPersonById(spouseId);
+                    if (spouse) {
+                        const spouseNode = createNodeFromPerson(spouse);
+                        familyNode.children.push(spouseNode);
                         
-                        // Thêm node con vào cây
-                        familyNode.children.push(childrenNode);
+                        // Thu thập con chung
+                        const commonChildren = getCommonChildren(person.id, spouseId);
+                        allChildren = [...allChildren, ...commonChildren];
                     }
                 }
+                
+                // Thêm tất cả con cái vào cùng một cấp
+                if (allChildren.length > 0) {
+                    // Loại bỏ trùng lặp (nếu có)
+                    const uniqueChildren = allChildren.filter((child, index, self) => 
+                        self.findIndex(c => c.id === child.id) === index
+                    );
+                    
+                    // Tạo node con cho mỗi đứa con và thêm trực tiếp vào familyNode
+                    for (const child of uniqueChildren) {
+                        const childNode = createFamilySubtree(child);
+                        if (childNode) {
+                            // Thêm trực tiếp vào node con
+                            familyNode.children.push(childNode);
+                        }
+                    }
+                }
+                
+                return familyNode;
+                
+            } catch (error) {
+                console.error(`Lỗi khi tạo cây con cho ${person.name}:`, error);
+                return {
+                    innerHTML: `
+                        <div style="padding: 10px; text-align: center;">
+                            <p>${person.name || 'Không rõ tên'}</p>
+                            <p style="font-size: 11px; color: #e74c3c;">Lỗi khi tạo cây con</p>
+                        </div>
+                    `,
+                    HTMLclass: person.gender || "error-node"
+                };
             }
-            
-            return familyNode;
         }
 
         // Hàm lấy con cái của một người
@@ -728,7 +756,7 @@
             });
         }
 
-        // Sửa hàm createNodeFromPerson để tránh tạo thẻ div lồng nhau
+        // Sửa hàm createNodeFromPerson để bỏ chữ "Chi" trước tên
         function createNodeFromPerson(person) {
             // Tính tuổi hoặc năm sống
             let lifespan = '';
@@ -752,14 +780,8 @@
                 }
             }
             
-            // Thêm thông tin chi vào tên nếu là nam
+            // Bỏ thông tin chi vào tên, chỉ hiển thị tên gốc
             let displayName = person.name;
-            if (person.gender === 'male' && person.generation > 1) {
-                const branch = findPersonBranch(person);
-                if (branch > 0) {
-                    displayName = `Chi ${branch} - ${person.name}`;
-                }
-            }
             
             // Chỉ trả về nội dung bên trong, không bao gồm thẻ div.node
             return {
