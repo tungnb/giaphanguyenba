@@ -267,17 +267,41 @@
         // Lấy dữ liệu gia phả từ localStorage hoặc API
         async function getFamilyData() {
             try {
-                const response = await fetch('/api/family');
-
-                if (!response.ok) {
-                    throw new Error(`Lỗi khi lấy dữ liệu: ${response.status}`);
+                console.log("Đang gọi API để lấy dữ liệu gia phả...");
+                
+                // Thêm timeout cho API call để tránh chờ quá lâu
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
+                
+                try {
+                    const response = await fetch('/api/family', {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Lỗi khi lấy dữ liệu: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`Đã nhận ${data.length} người từ API`);
+                    return data;
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    
+                    // Nếu lỗi là do timeout hoặc network, hiển thị thông báo rõ ràng hơn
+                    if (fetchError.name === 'AbortError') {
+                        console.warn('API timeout sau 10 giây. Sử dụng dữ liệu mẫu.');
+                        throw new Error('Kết nối API quá chậm. Đang sử dụng dữ liệu mẫu.');
+                    } else {
+                        console.warn('Lỗi khi gọi API:', fetchError.message);
+                        throw fetchError;
+                    }
                 }
-
-                return await response.json();
             } catch (error) {
-                console.error('Lỗi khi lấy dữ liệu gia phả:', error);
+                console.warn('Sử dụng dữ liệu mẫu do lỗi:', error.message);
 
-                // Thêm dữ liệu mẫu để test khi API bị lỗi
+                // Trả về dữ liệu mẫu đã có
                 return [
                     {
                         id: '1',
@@ -638,64 +662,63 @@
 
         // Hàm đệ quy thêm con vào node
         function addChildrenNodes(parentNode, parentPerson) {
-            // Nếu người này có vợ/chồng, thêm cùng cấp (sibling) thay vì cấp dưới (children)
+            console.log(`Đang thêm con cho ${parentPerson.name} (ID: ${parentPerson.id})`);
+            
+            // Thiết lập để hiển thị con theo hàng ngang
+            parentNode.stackChildren = false;
+            
+            // Xử lý các trường hợp khác nhau
             if (parentPerson.spouses && parentPerson.spouses.length > 0) {
-                // Tạo một node ảo để chứa con của cặp vợ chồng
-                let coupleChildrenNode = null;
-                let hasChildren = false;
+                // Tạo một mảng để giữ các con
+                const childNodes = [];
                 
-                // Duyệt qua từng vợ/chồng để tạo node phù hợp
+                // Xử lý từng vợ/chồng
                 for (const spouseId of parentPerson.spouses) {
                     const spouse = familyData.find(p => p.id === spouseId);
                     if (!spouse) continue;
                     
-                    // Tìm con chung giữa người hiện tại và vợ/chồng
-                    const childrenWithSpouse = familyData.filter(p => 
+                    console.log(`Tìm con chung giữa ${parentPerson.name} và ${spouse.name}`);
+                    
+                    // Tìm con chung
+                    const commonChildren = familyData.filter(p => 
                         p.parents && 
                         p.parents.includes(parentPerson.id) && 
                         p.parents.includes(spouseId)
                     );
                     
-                    if (childrenWithSpouse.length > 0) {
-                        hasChildren = true;
-                        
-                        // Tạo node ảo cho các con
-                        if (!coupleChildrenNode) {
-                            // Chỉ tạo node ảo nếu chưa có
-                            coupleChildrenNode = {
-                                pseudo: true,
-                                children: []
-                            };
-                        }
+                    if (commonChildren.length > 0) {
+                        console.log(`Tìm thấy ${commonChildren.length} con chung`);
                         
                         // Sắp xếp con theo thứ tự sinh
-                        childrenWithSpouse.sort((a, b) => {
+                        commonChildren.sort((a, b) => {
                             if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
                             return 0;
                         });
                         
-                        // Thêm từng người con vào node ảo
-                        for (const child of childrenWithSpouse) {
+                        // Thêm con vào danh sách
+                        for (const child of commonChildren) {
                             const childNode = createNodeFromPerson(child);
                             addChildrenNodes(childNode, child);
-                            coupleChildrenNode.children.push(childNode);
+                            childNodes.push(childNode);
                         }
                     }
                 }
                 
-                // Sau khi xử lý tất cả các vợ/chồng và con cái, thêm vào cấu trúc cây
-                if (hasChildren) {
-                    parentNode.children = [coupleChildrenNode];
+                // Nếu có con, thêm vào node cha mẹ
+                if (childNodes.length > 0) {
+                    parentNode.children = childNodes;
                 }
             } 
-            // Nếu không có vợ/chồng nhưng có con (hiếm gặp)
+            // Nếu không có vợ/chồng nhưng có con
             else if (parentPerson.children && parentPerson.children.length > 0) {
-                parentNode.children = [];
+                const childNodes = [];
                 
-                // Lấy tất cả con của người này
+                // Lấy tất cả con
                 const children = familyData.filter(p => 
                     p.parents && p.parents.includes(parentPerson.id)
                 );
+                
+                console.log(`Tìm thấy ${children.length} con của ${parentPerson.name}`);
                 
                 // Sắp xếp con theo thứ tự sinh
                 children.sort((a, b) => {
@@ -703,11 +726,16 @@
                     return 0;
                 });
                 
-                // Thêm từng người con
+                // Thêm con vào danh sách
                 for (const child of children) {
                     const childNode = createNodeFromPerson(child);
                     addChildrenNodes(childNode, child);
-                    parentNode.children.push(childNode);
+                    childNodes.push(childNode);
+                }
+                
+                // Thêm con vào node cha mẹ
+                if (childNodes.length > 0) {
+                    parentNode.children = childNodes;
                 }
             }
         }
@@ -715,6 +743,9 @@
         // Hàm render cây gia phả
         function renderFamilyTree() {
             console.log("Bắt đầu render cây gia phả");
+            
+            // Hiện loading ngay lập tức
+            document.getElementById('loading-indicator').style.display = 'block';
             
             // Kiểm tra xem Treant có tồn tại không
             if (typeof Treant === 'undefined') {
@@ -731,37 +762,92 @@
                 return;
             }
             
+            // Đã thêm timeout để luôn hiển thị gì đó cho người dùng sau 3 giây
+            setTimeout(function() {
+                if (document.getElementById('loading-indicator').style.display !== 'none') {
+                    console.log("Quá trình tải mất nhiều thời gian. Hiển thị thông báo...");
+                    
+                    // Thêm thông báo vào loading indicator
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    const loadingText = loadingIndicator.querySelector('p');
+                    if (loadingText) {
+                        loadingText.innerHTML = 'Đang tải dữ liệu gia phả... <br><small>Có vẻ như quá trình này đang mất nhiều thời gian hơn dự kiến.</small>';
+                    }
+                    
+                    // Hiển thị cây gia phả dù có lỗi
+                    setTimeout(function() {
+                        if (document.getElementById('loading-indicator').style.display !== 'none') {
+                            console.log("Ẩn loading indicator sau 8 giây dù chưa tải xong");
+                            document.getElementById('loading-indicator').style.display = 'none';
+                            document.getElementById('family-tree-container').style.display = 'block';
+                            
+                            // Hiển thị thông báo lỗi nếu vẫn chưa có cây
+                            if (!document.querySelector('#family-tree .node')) {
+                                const errorMessage = document.createElement('p');
+                                errorMessage.style.textAlign = 'center';
+                                errorMessage.style.padding = '40px 0';
+                                errorMessage.style.color = '#e74c3c';
+                                errorMessage.innerHTML = 'Không thể hiển thị cây gia phả. Vui lòng làm mới trang và thử lại.<br>Nếu lỗi vẫn tiếp tục, vui lòng kiểm tra dữ liệu gia phả.';
+                                document.getElementById('family-tree').appendChild(errorMessage);
+                            }
+                        }
+                    }, 5000);
+                }
+            }, 3000);
+            
             try {
-                // Thêm timeout để ẩn loading nếu rendering quá lâu
-                const loadingTimeout = setTimeout(function() {
-                    console.log("Timeout - Ẩn loading indicator sau 5 giây");
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    document.getElementById('family-tree-container').style.display = 'block';
-                }, 5000);
-                
-                // Tạo cấu trúc cây
+                // Tạo cấu trúc cây với xử lý lỗi tốt hơn
                 console.log("Đang chuyển đổi dữ liệu...");
-                const treeConfig = createTreeStructure();
-                console.log("Đã chuyển đổi dữ liệu thành công");
+                let treeConfig;
                 
-                if (!treeConfig) {
-                    throw new Error('Không thể tạo cấu trúc cây gia phả');
+                try {
+                    treeConfig = createTreeStructure();
+                    console.log("Đã chuyển đổi dữ liệu thành công");
+                } catch (structError) {
+                    console.error('Lỗi khi tạo cấu trúc cây:', structError);
+                    throw new Error(`Lỗi khi tạo cấu trúc cây: ${structError.message}`);
                 }
                 
-                // Tạo và hiển thị cây
-                console.log("Đang khởi tạo Treant...");
-                treeChart = new Treant(treeConfig);
+                if (!treeConfig) {
+                    throw new Error('Không thể tạo cấu trúc cây gia phả - treeConfig là null');
+                }
                 
-                console.log("Treant đã được khởi tạo");
+                // Tạo và hiển thị cây với nhiều thông tin hơn
+                console.log("Đang khởi tạo Treant với cấu hình:", JSON.stringify(treeConfig.chart));
+                
+                // Thêm try-catch cho việc khởi tạo Treant
+                try {
+                    treeChart = new Treant(treeConfig);
+                    console.log("Treant đã được khởi tạo thành công");
+                } catch (treantError) {
+                    console.error('Lỗi khi khởi tạo Treant:', treantError);
+                    throw new Error(`Lỗi khi khởi tạo Treant: ${treantError.message}`);
+                }
                 
                 // Hiển thị cây gia phả
                 document.getElementById('loading-indicator').style.display = 'none';
                 document.getElementById('family-tree-container').style.display = 'block';
-                clearTimeout(loadingTimeout);
+                
+                // Kiểm tra xem cây có được tạo thành công không
+                setTimeout(() => {
+                    const nodesCreated = document.querySelectorAll('.node').length;
+                    console.log(`Số lượng node đã tạo: ${nodesCreated}`);
+                    
+                    if (nodesCreated === 0) {
+                        console.warn('Không tìm thấy node nào sau khi khởi tạo Treant!');
+                        const errorMessage = document.createElement('p');
+                        errorMessage.style.textAlign = 'center';
+                        errorMessage.style.padding = '40px 0';
+                        errorMessage.style.color = '#e74c3c';
+                        errorMessage.textContent = 'Lỗi: Cây gia phả được khởi tạo nhưng không có node nào được hiển thị.';
+                        document.getElementById('family-tree').appendChild(errorMessage);
+                    }
+                }, 1000);
                 
                 // Thiết lập zoom controls và sự kiện click
                 setupZoomControls();
                 setupTreeClickEvents();
+                
             } catch (error) {
                 console.error('Lỗi khi khởi tạo cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -770,7 +856,10 @@
                 errorMessage.style.textAlign = 'center';
                 errorMessage.style.padding = '40px 0';
                 errorMessage.style.color = '#e74c3c';
-                errorMessage.textContent = `Lỗi khi khởi tạo biểu đồ gia phả: ${error.message}`;
+                errorMessage.innerHTML = `<strong>Lỗi khi khởi tạo biểu đồ gia phả:</strong><br>${error.message}<br><br>
+                    <button onclick="location.reload()" style="padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Tải lại trang
+                    </button>`;
                 document.getElementById('family-tree-container').appendChild(errorMessage);
                 document.getElementById('family-tree-container').style.display = 'block';
             }
