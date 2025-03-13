@@ -1,36 +1,1395 @@
-<form id="post-form">
-    <!-- ... existing code ... -->
-    
-    <!-- Xóa phần chọn danh mục -->
-    <!-- <div class="form-group">
-        <label for="category">Danh mục:</label>
-        <select id="category" name="category" required>
-            <option value="life">Cuộc sống</option>
-            <option value="business">Kinh doanh</option>
-            <option value="tech">Công nghệ</option>
-        </select>
-    </div> -->
-    
-    <!-- ... existing code ... -->
-</form>
-
-<script>
-    // ... existing code ...
-    
-    // Trong hàm lưu bài viết, xóa tham chiếu đến danh mục
-    function savePost() {
-        // ... existing code ...
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biên tập bài viết - Blog Cá Nhân</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Thay đổi: Sử dụng CKEditor thay vì TinyMCE để tránh lỗi API key -->
+    <script src="https://cdn.ckeditor.com/4.16.2/standard-all/ckeditor.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <style>
+        .editor-container {
+            max-width: 800px;
+            margin: 30px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
         
-        const postData = {
-            title: document.getElementById('title').value,
-            // Loại bỏ category
-            // category: document.getElementById('category').value,
-            content: editor.getHTML(), // hoặc bất kỳ phương thức nào lấy nội dung
-            // ... các trường khác
+        .editor-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-save {
+            background-color: #0066cc;
+            color: #fff;
+            border: none;
+        }
+        
+        .btn-save:hover {
+            background-color: #0052a3;
+        }
+        
+        .btn-cancel {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* CSS cho phần upload hình ảnh */
+        .image-upload {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .image-upload:hover {
+            border-color: #0066cc;
+        }
+        
+        .image-upload p {
+            margin: 0;
+            color: #666;
+        }
+        
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .preview-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .insert-image-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .warning-message {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #856404;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #721c24;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        /* Tags input styling */
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            cursor: text;
+            background-color: #fff;
+        }
+        
+        .tags-input:focus-within {
+            border-color: #0066cc;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f0f1f2;
+            border-radius: 16px;
+            padding: 3px 8px;
+            margin: 2px;
+            font-size: 14px;
+        }
+        
+        .tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.5;
+        }
+        
+        .tag-remove:hover {
+            opacity: 1;
+        }
+        
+        .tags-input input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 5px;
+            min-width: 120px;
+        }
+        
+        /* Categories select styling */
+        .category-select {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h2 id="page-title">Viết bài mới</h2>
+        </div>
+        
+        <div id="warning-message" class="warning-message"></div>
+        <div id="error-message" class="error-message"></div>
+        
+        <form id="post-form">
+            <div class="form-group">
+                <label for="title">Tiêu đề:</label>
+                <input type="text" id="title" required>
+            </div>
+            
+            <!-- Tìm và xóa bỏ phần form chọn danh mục -->
+            <!-- <div class="form-group">
+                <label for="category">Danh mục:</label>
+                <select id="category" class="category-select">
+                    <option value="">-- Chọn danh mục --</option>
+                    <option value="life">Cuộc sống</option>
+                    <option value="business">Kinh doanh</option>
+                    <option value="tech">Công nghệ</option>
+                </select>
+            </div> -->
+            
+            <div class="form-group">
+                <label for="tags-input">Hashtag:</label>
+                <div class="tags-input" id="tags-container">
+                    <input type="text" id="tags-input" placeholder="Thêm hashtag và nhấn Enter...">
+                </div>
+                <input type="hidden" id="tags" name="tags">
+            </div>
+            
+            <div class="form-group">
+                <label for="featured-image">Ảnh đại diện:</label>
+                <div class="image-upload" id="featured-image-upload">
+                    <p>Nhấp để tải lên ảnh đại diện</p>
+                    <input type="file" id="featured-image" style="display: none;" accept="image/*">
+                    <div class="image-preview" id="featured-image-preview"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="editor">Nội dung:</label>
+                <textarea id="editor" name="editor"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Trạng thái:</label>
+                <select id="status">
+                    <option value="draft">Bản nháp</option>
+                    <option value="published">Xuất bản</option>
+                </select>
+            </div>
+            
+            <div class="btn-container">
+                <button type="button" id="cancel-btn" class="btn btn-cancel">Hủy</button>
+                <button type="submit" class="btn btn-save">Lưu bài viết</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Biến lưu trữ đường dẫn hình ảnh
+        let uploadedImages = {
+            featured: ''
         };
         
-        // ... existing code ...
+        // ID bài viết đang chỉnh sửa (nếu có)
+        let postId = null;
+        let editor = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                // Nếu chưa đăng nhập, chuyển hướng về trang login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Khởi tạo CKEditor
+            CKEDITOR.replace('editor', {
+                height: 400,
+                removePlugins: 'elementspath',
+                resize_enabled: false,
+                extraPlugins: 'uploadimage',
+                removeButtons: '',
+                format_tags: 'p;h1;h2;h3;h4;h5;h6;pre;div',
+                toolbar: [
+                    { name: 'document', items: ['Source'] },
+                    { name: 'clipboard', items: ['Undo', 'Redo'] },
+                    { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+                    { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'TextColor', 'BGColor', 'RemoveFormat'] },
+                    { name: 'paragraph', items: ['NumberedList', 'BulletedList', 'Blockquote', 'JustifyLeft', 'JustifyCenter', 'JustifyRight'] },
+                    { name: 'links', items: ['Link', 'Unlink'] },
+                    { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'Emoji'] },
+                    { name: 'tools', items: ['Maximize'] }
+                ],
+                // Vô hiệu hóa hoàn toàn chức năng upload base64
+                filebrowserUploadMethod: 'form',
+                filebrowserImageUploadUrl: '/api/upload-to-drive',
+                imageUploadUrl: '/api/upload-to-drive',
+                uploadUrl: '/api/upload-to-drive',
+                // Ngăn chặn auto embedding của base64 data URL
+                embed_provider: '/api/upload-to-drive',
+                // Vô hiệu hóa chức năng paste ảnh dưới dạng base64
+                pasteFilter: null,
+                on: {
+                    instanceReady: function(ev) {
+                        editor = ev.editor;
+                        
+                        // Xử lý upload ảnh
+                        editor.on('fileUploadRequest', function(evt) {
+                            evt.stop();
+                            const xhr = evt.data.fileLoader.xhr;
+                            const data = new FormData();
+                            const file = evt.data.fileLoader.file;
+                            
+                            data.append('file', file);
+                            data.append('filename', file.name);
+                            
+                            const token = localStorage.getItem('authToken');
+                            if (token) {
+                                data.append('token', token);
+                            }
+                            
+                            xhr.open('POST', '/api/upload-to-drive', true);
+                            xhr.send(data);
+                            
+                            xhr.onload = function() {
+                                if (xhr.status === 200) {
+                                    try {
+                                        const response = JSON.parse(xhr.responseText);
+                                        evt.data.fileLoader.url = response.imageUrl;
+                                        evt.data.fileLoader.changeStatus('uploaded');
+                                        evt.data.fileLoader.uploadTotal = evt.data.fileLoader.total;
+                                        evt.data.fileLoader.uploaded = evt.data.fileLoader.total;
+                                    } catch (e) {
+                                        console.error('Lỗi xử lý phản hồi từ server:', e);
+                                        evt.data.fileLoader.message = 'Lỗi khi tải ảnh lên';
+                                        evt.data.fileLoader.changeStatus('error');
+                                    }
+                                } else {
+                                    evt.data.fileLoader.message = `Lỗi khi tải ảnh lên: ${xhr.status}`;
+                                    evt.data.fileLoader.changeStatus('error');
+                                }
+                            };
+                            
+                            xhr.onerror = function() {
+                                evt.data.fileLoader.message = 'Lỗi kết nối khi tải ảnh lên';
+                                evt.data.fileLoader.changeStatus('error');
+                            };
+                        });
+                        
+                        // Xử lý khi paste nội dung có ảnh dạng base64
+                        editor.on('paste', function(evt) {
+                            const data = evt.data.dataValue || '';
+                            
+                            // Nếu nội dung paste có chứa base64 image
+                            if (data.includes('data:image')) {
+                                // Xử lý sau khi paste
+                                setTimeout(async function() {
+                                    // Lấy nội dung hiện tại của editor
+                                    const content = editor.getData();
+                                    // Xử lý các ảnh base64 trong nội dung
+                                    const processedContent = await processBase64ImagesInContent(content);
+                                    // Cập nhật nội dung editor
+                                    editor.setData(processedContent, {
+                                        callback: function() {
+                                            console.log('Đã chuyển đổi ảnh base64 sau paste thành URL Drive');
+                                        }
+                                    });
+                                }, 500);
+                            }
+                        });
+                    }
+                }
+            });
+            
+            // Khởi tạo xử lý hashtag
+            setupTagsInput();
+            
+            // Lấy thông tin bài viết từ tham số URL (nếu có)
+            const urlParams = new URLSearchParams(window.location.search);
+            postId = urlParams.get('id');
+            
+            // Nếu có ID, lấy thông tin bài viết để chỉnh sửa
+            if (postId) {
+                document.getElementById('page-title').textContent = 'Chỉnh sửa bài viết';
+                fetchPost(postId);
+            }
+            
+            // Xử lý tải lên ảnh đại diện
+            setupImageUpload('featured-image-upload', 'featured-image', 'featured-image-preview', true);
+            
+            // Xử lý nút hủy
+            document.getElementById('cancel-btn').addEventListener('click', function() {
+                window.location.href = 'dashboard.html';
+            });
+            
+            // Xử lý lưu bài viết
+            document.getElementById('post-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const title = document.getElementById('title').value;
+                let content = CKEDITOR.instances.editor.getData();
+                const status = document.getElementById('status').value;
+                const tags = document.getElementById('tags').value;
+                
+                // Hiển thị trạng thái đang lưu
+                const saveButton = document.querySelector('.btn-save');
+                const originalButtonText = saveButton.textContent;
+                saveButton.textContent = 'Đang kiểm tra nội dung...';
+                saveButton.disabled = true;
+                
+                // Kiểm tra độ dài nội dung
+                const contentLength = content.length;
+                const MAX_LENGTH = 150000;
+                
+                // Hiển thị cảnh báo nếu nội dung quá dài
+                if (contentLength > MAX_LENGTH) {
+                    document.getElementById('error-message').textContent = `Nội dung bài viết quá dài (${contentLength.toLocaleString()} ký tự). Giới hạn tối đa là ${MAX_LENGTH.toLocaleString()} ký tự. Vui lòng giảm số lượng hoặc kích thước hình ảnh.`;
+                    document.getElementById('error-message').style.display = 'block';
+                    window.scrollTo(0, 0);
+                    saveButton.textContent = originalButtonText;
+                    saveButton.disabled = false;
+                    return;
+                } else if (contentLength > 100000) {
+                    document.getElementById('warning-message').textContent = `Nội dung bài viết gần đạt giới hạn (${contentLength.toLocaleString()} / ${MAX_LENGTH.toLocaleString()} ký tự). Hãy cân nhắc giảm số lượng hoặc kích thước hình ảnh.`;
+                    document.getElementById('warning-message').style.display = 'block';
+                }
+                
+                try {
+                    // Ẩn thông báo lỗi nếu có
+                    document.getElementById('error-message').style.display = 'none';
+                    
+                    // Kiểm tra và xử lý tất cả ảnh base64 trong nội dung
+                    if (content.includes('data:image')) {
+                        saveButton.textContent = 'Đang xử lý ảnh...';
+                        document.getElementById('warning-message').textContent = 'Đang xử lý ảnh trong nội dung, vui lòng đợi...';
+                        document.getElementById('warning-message').style.display = 'block';
+                        
+                        // Xử lý tất cả ảnh base64 trong nội dung
+                        content = await processBase64ImagesInContent(content);
+                    }
+                    
+                    // Đảm bảo ảnh đại diện là chuỗi đơn giản chứ không phải đối tượng
+                    let featuredImage = uploadedImages.featured;
+                    if (featuredImage && typeof featuredImage === 'object') {
+                        if (featuredImage.primary) {
+                            // Nếu có URL chính, sử dụng nó
+                            featuredImage = featuredImage.primary;
+                        } else if (featuredImage.toString) {
+                            // Nếu có phương thức toString, sử dụng nó
+                            featuredImage = featuredImage.toString();
+                        }
+                    }
+                    
+                    // Tạo đối tượng bài viết
+                    const post = {
+                        id: postId || Date.now().toString(),
+                        title: title,
+                        content: content,
+                        featuredImage: featuredImage, // Đảm bảo đây là chuỗi đơn giản
+                        tags: tags,
+                        status: status,
+                        date: new Date().toISOString().split('T')[0]
+                    };
+                    
+                    console.log('Bài viết cần lưu:', post);
+                    saveButton.textContent = 'Đang lưu...';
+                    
+                    // Lưu bài viết vào localStorage (backup)
+                    savePostToLocalStorage(post);
+                    
+                    // Chuyển đổi post thành chuỗi JSON và sau đó phân tích lại
+                    // Việc này sẽ loại bỏ mọi đối tượng phức tạp không thể tuần tự hóa
+                    const cleanPost = JSON.parse(JSON.stringify(post));
+                    
+                    // Lưu bài viết qua API
+                    const response = await fetch('/api/posts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(cleanPost)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Lỗi HTTP: ${response.status}`);
+                    }
+                    
+                    const savedPost = await response.json();
+                    console.log('Bài viết đã lưu:', savedPost);
+                    
+                    // Thông báo lưu thành công
+                    alert('Bài viết đã được lưu thành công.');
+                    
+                    // Chuyển về trang dashboard
+                    window.location.href = 'dashboard.html';
+                } catch (error) {
+                    console.error('Error saving post:', error);
+                    document.getElementById('error-message').textContent = `Lỗi khi lưu bài viết: ${error.message}`;
+                    document.getElementById('error-message').style.display = 'block';
+                    window.scrollTo(0, 0);
+                    
+                    // Khôi phục trạng thái nút
+                    saveButton.textContent = originalButtonText;
+                    saveButton.disabled = false;
+                }
+            });
+        });
+        
+        // Thiết lập tags input
+        function setupTagsInput() {
+            const container = document.getElementById('tags-container');
+            const input = document.getElementById('tags-input');
+            const hiddenInput = document.getElementById('tags');
+            
+            const tags = [];
+            
+            // Cập nhật hidden input
+            function updateHiddenInput() {
+                hiddenInput.value = tags.join(',');
+            }
+            
+            // Thêm tag mới
+            function addTag(text) {
+                if (text && !tags.includes(text)) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.textContent = text;
+                    
+                    const removeBtn = document.createElement('span');
+                    removeBtn.className = 'tag-remove';
+                    removeBtn.textContent = '×';
+                    removeBtn.addEventListener('click', function() {
+                        // Xóa tag khỏi mảng
+                        const index = tags.indexOf(text);
+                        if (index !== -1) {
+                            tags.splice(index, 1);
+                        }
+                        
+                        // Xóa tag từ DOM
+                        tag.remove();
+                        
+                        // Cập nhật hidden input
+                        updateHiddenInput();
+                        
+                        // Focus vào input
+                        input.focus();
+                    });
+                    
+                    tag.appendChild(removeBtn);
+                    container.insertBefore(tag, input);
+                    
+                    // Thêm tag vào mảng
+                    tags.push(text);
+                    
+                    // Cập nhật hidden input
+                    updateHiddenInput();
+                    
+                    // Xóa input
+                    input.value = '';
+                }
+            }
+            
+            // Xử lý sự kiện input
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    
+                    const text = input.value.trim();
+                    if (text) {
+                        // Nếu nhập nhiều tag cách nhau bởi dấu phẩy
+                        if (text.includes(',')) {
+                            const tagList = text.split(',').map(t => t.trim()).filter(t => t);
+                            tagList.forEach(addTag);
+                        } else {
+                            addTag(text);
+                        }
+                    }
+                } else if (e.key === 'Backspace' && input.value === '') {
+                    // Nếu input trống và nhấn backspace, xóa tag cuối cùng
+                    if (tags.length > 0) {
+                        const lastTag = tags.pop();
+                        container.removeChild(container.querySelector('.tag:last-of-type'));
+                        updateHiddenInput();
+                    }
+                }
+            });
+            
+            // Khi click vào container, focus vào input
+            container.addEventListener('click', function() {
+                input.focus();
+            });
+        }
+        
+        // Set tags từ chuỗi
+        function setTagsFromString(tagsString) {
+            if (!tagsString) return;
+            
+            const container = document.getElementById('tags-container');
+            const input = document.getElementById('tags-input');
+            const hiddenInput = document.getElementById('tags');
+            
+            // Xóa tất cả tag hiện tại
+            const existingTags = container.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            // Đặt lại giá trị
+            hiddenInput.value = tagsString;
+            
+            // Thêm các tag mới
+            const tagList = tagsString.split(',').map(t => t.trim()).filter(t => t);
+            
+            tagList.forEach(text => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = text;
+                
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'tag-remove';
+                removeBtn.textContent = '×';
+                removeBtn.addEventListener('click', function() {
+                    // Xóa tag từ DOM
+                    tag.remove();
+                    
+                    // Cập nhật hidden input
+                    const tags = hiddenInput.value.split(',');
+                    const index = tags.indexOf(text);
+                    if (index !== -1) {
+                        tags.splice(index, 1);
+                    }
+                    hiddenInput.value = tags.join(',');
+                    
+                    // Focus vào input
+                    input.focus();
+                });
+                
+                tag.appendChild(removeBtn);
+                container.insertBefore(tag, input);
+            });
+        }
+        
+        // Lấy thông tin bài viết theo ID
+        async function fetchPost(id) {
+            try {
+                // Tạm thời hiển thị chỉ báo đang tải
+                document.getElementById('title').disabled = true;
+                
+                // Lấy từ API
+                const response = await fetch(`/api/post/${id}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Lỗi khi lấy dữ liệu: ${response.status}`);
+                }
+                
+                const post = await response.json();
+                
+                // Hiển thị dữ liệu bài viết
+                document.getElementById('title').value = post.title;
+                document.getElementById('status').value = post.status || 'draft';
+                
+                if (post.tags) {
+                    setTagsFromString(post.tags);
+                }
+                
+                // Hiển thị ảnh đại diện nếu có
+                if (post.featuredImage) {
+                    createImagePreview(post.featuredImage, 'featured-image-preview');
+                    uploadedImages.featured = post.featuredImage;
+                }
+                
+                // Đợi CKEditor khởi tạo xong
+                const checkEditor = setInterval(() => {
+                    if (CKEDITOR.instances.editor && CKEDITOR.instances.editor.status === 'ready') {
+                        clearInterval(checkEditor);
+                        // Đặt nội dung vào editor
+                        CKEDITOR.instances.editor.setData(post.content);
+                    }
+                }, 100);
+                
+                // Bỏ disabled
+                document.getElementById('title').disabled = false;
+            } catch (error) {
+                console.error('Error fetching post:', error);
+                
+                // Fallback sử dụng localStorage
+                try {
+                    const posts = JSON.parse(localStorage.getItem('blog-posts') || '[]');
+                    const post = posts.find(p => p.id === id);
+                    
+                    if (post) {
+                        // Hiển thị dữ liệu bài viết
+                        document.getElementById('title').value = post.title;
+                        document.getElementById('status').value = post.status || 'draft';
+                        
+                        if (post.tags) {
+                            setTagsFromString(post.tags);
+                        }
+                        
+                        // Hiển thị ảnh đại diện nếu có
+                        if (post.featuredImage) {
+                            createImagePreview(post.featuredImage, 'featured-image-preview');
+                            uploadedImages.featured = post.featuredImage;
+                        }
+                        
+                        // Đợi CKEditor khởi tạo xong
+                        const checkEditor = setInterval(() => {
+                            if (CKEDITOR.instances.editor && CKEDITOR.instances.editor.status === 'ready') {
+                                clearInterval(checkEditor);
+                                // Đặt nội dung vào editor
+                                CKEDITOR.instances.editor.setData(post.content);
+                            }
+                        }, 100);
+                    } else {
+                        document.getElementById('warning-message').textContent = 'Không tìm thấy bài viết. Đang tạo bài viết mới.';
+                        document.getElementById('warning-message').style.display = 'block';
+                    }
+                } catch (localError) {
+                    document.getElementById('error-message').textContent = `Lỗi khi lấy thông tin bài viết: ${error.message}`;
+                    document.getElementById('error-message').style.display = 'block';
+                }
+                
+                // Bỏ disabled
+                document.getElementById('title').disabled = false;
+            }
+        }
+        
+        // Thiết lập chức năng tải lên hình ảnh
+        function setupImageUpload(containerID, inputID, previewID, isFeatured) {
+            const container = document.getElementById(containerID);
+            const input = document.getElementById(inputID);
+            const preview = document.getElementById(previewID);
+            
+            container.addEventListener('click', function() {
+                input.click();
+            });
+            
+            input.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    for (let i = 0; i < this.files.length; i++) {
+                        const file = this.files[i];
+                        
+                        // Kiểm tra kích thước tệp (giới hạn 2MB)
+                        if (file.size > 2 * 1024 * 1024) {
+                            alert('Kích thước tệp quá lớn. Vui lòng chọn hình ảnh nhỏ hơn 2MB.');
+                            continue;
+                        }
+                        
+                        processAndResizeImage(file, function(resizedImageUrl) {
+                            if (isFeatured) {
+                                // Nếu là ảnh đại diện, xóa ảnh cũ và đặt ảnh mới
+                                preview.innerHTML = '';
+                                createImagePreview(resizedImageUrl, previewID);
+                                uploadedImages.featured = resizedImageUrl;
+                            }
+                        }, isFeatured);
+                    }
+                }
+            });
+        }
+        
+        // Hàm xử lý và nén hình ảnh
+        function processAndResizeImage(file, callback, isFeatured = false) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Tính toán kích thước mới để giữ tỷ lệ
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 600;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > MAX_WIDTH) {
+                        height = height * (MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+                    
+                    if (height > MAX_HEIGHT) {
+                        width = width * (MAX_HEIGHT / height);
+                        height = MAX_HEIGHT;
+                    }
+                    
+                    // Tạo canvas để nén hình ảnh
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Vẽ hình ảnh nén
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Chuyển đổi canvas thành Blob
+                    canvas.toBlob(async function(blob) {
+                        // Tạo file từ blob với tên phù hợp
+                        const filename = 'image_' + Date.now() + '.jpg';
+                        const imageFile = new File([blob], filename, {type: 'image/jpeg'});
+                        
+                        // Hiển thị thông báo đang tải lên
+                        const loadingIndicator = document.createElement('div');
+                        loadingIndicator.id = 'upload-loading';
+                        loadingIndicator.innerHTML = '<p>Đang tải ảnh lên Google Drive...</p>';
+                        loadingIndicator.style = 'position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; text-align: center; padding: 10px; z-index: 9999;';
+                        document.body.appendChild(loadingIndicator);
+                        
+                        try {
+                            // Tải lên Google Drive
+                            const driveImageUrl = await uploadImageToDrive(imageFile, isFeatured);
+                            
+                            if (driveImageUrl) {
+                                callback(driveImageUrl);
+                            } else {
+                                // Nếu upload thất bại, fallback về base64 như cũ
+                                const quality = 0.7; // 70% chất lượng
+                                const resizedImageUrl = canvas.toDataURL('image/jpeg', quality);
+                                callback(resizedImageUrl);
+                                alert('Không thể tải lên Google Drive. Đã sử dụng base64 (chất lượng thấp) thay thế.');
+                            }
+                        } catch (error) {
+                            console.error('Lỗi khi tải ảnh:', error);
+                            // Fallback về base64
+                            const quality = 0.7;
+                            const resizedImageUrl = canvas.toDataURL('image/jpeg', quality);
+                            callback(resizedImageUrl);
+                            alert('Lỗi khi tải lên Google Drive: ' + error.message);
+                        } finally {
+                            // Xóa thông báo loading
+                            const loadingEl = document.getElementById('upload-loading');
+                            if (loadingEl) loadingEl.remove();
+                        }
+                    }, 'image/jpeg', 0.9); // Chất lượng 90% cho blob
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file instanceof Blob ? file : file);
+        }
+        
+        // Tạo phần tử xem trước hình ảnh
+        function createImagePreview(imageUrl, previewID) {
+            const preview = document.getElementById(previewID);
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            
+            const img = document.createElement('img');
+            
+            // Kiểm tra nếu imageUrl là đối tượng chứa nhiều URL
+            if (typeof imageUrl === 'object') {
+                // Thứ tự ưu tiên: proxyUrl > directUrl > thumbnailUrl > fileViewUrl
+                if (imageUrl.proxyUrl) {
+                    img.src = imageUrl.proxyUrl;
+                    
+                    // Thiết lập chuỗi dự phòng khi tải ảnh thất bại
+                    let onerrorChain = "";
+                    
+                    if (imageUrl.directUrl) {
+                        onerrorChain = `this.onerror=function(){`;
+                        if (imageUrl.thumbnailUrl) {
+                            onerrorChain += `this.onerror=function(){`;
+                            if (imageUrl.fileViewUrl) {
+                                onerrorChain += `this.onerror=null;this.src='${imageUrl.fileViewUrl}';`;
+                            } else {
+                                onerrorChain += `this.onerror=null;`;
+                            }
+                            onerrorChain += `};this.src='${imageUrl.thumbnailUrl}';`;
+                        }
+                        onerrorChain += `};this.src='${imageUrl.directUrl}';`;
+                    }
+                    
+                    if (onerrorChain) {
+                        img.onerror = new Function(onerrorChain);
+                    }
+                } else if (imageUrl.directUrl) {
+                    img.src = imageUrl.directUrl;
+                } else if (imageUrl.primary) {
+                    // Hỗ trợ tương thích với cấu trúc cũ
+                    img.src = imageUrl.primary;
+                    
+                    if (imageUrl.backup) {
+                        img.onerror = function() {
+                            this.onerror = null;
+                            this.src = imageUrl.backup;
+                            
+                            if (imageUrl.backup2) {
+                                this.onerror = function() {
+                                    this.onerror = null;
+                                    this.src = imageUrl.backup2;
+                                    
+                                    if (imageUrl.backup3) {
+                                        this.onerror = function() {
+                                            this.onerror = null;
+                                            this.src = imageUrl.backup3;
+                                        };
+                                    }
+                                };
+                            }
+                        };
+                    }
+                } else {
+                    // Fallback nếu không tìm thấy URL nào
+                    img.src = imageUrl.toString();
+                }
+            } else {
+                // Nếu imageUrl là chuỗi đơn giản
+                img.src = imageUrl;
+            }
+            
+            img.alt = 'Preview';
+            img.setAttribute('loading', 'lazy');
+            
+            const removeBtn = document.createElement('div');
+            removeBtn.className = 'remove-btn';
+            removeBtn.innerHTML = '×';
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                if (previewID === 'featured-image-preview') {
+                    preview.innerHTML = '';
+                    uploadedImages.featured = '';
+                }
+            });
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            preview.appendChild(previewItem);
+        }
+        
+        // Lưu bài viết vào localStorage
+        function savePostToLocalStorage(post) {
+            let posts = JSON.parse(localStorage.getItem('blog-posts') || '[]');
+            
+            // Kiểm tra xem đã có bài viết này chưa
+            const existingIndex = posts.findIndex(p => p.id === post.id);
+            
+            if (existingIndex >= 0) {
+                // Cập nhật bài viết cũ
+                posts[existingIndex] = post;
+            } else {
+                // Thêm bài viết mới
+                posts.push(post);
+            }
+            
+            localStorage.setItem('blog-posts', JSON.stringify(posts));
+        }
+        
+        // Hàm upload ảnh lên Google Drive
+        async function uploadImageToDrive(file, isFeatureImage = false) {
+            try {
+                // Hiển thị thông báo đang xử lý
+                let loadingIndicator = document.getElementById('upload-loading');
+                if (!loadingIndicator) {
+                    loadingIndicator = document.createElement('div');
+                    loadingIndicator.id = 'upload-loading';
+                    loadingIndicator.style = 'position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; text-align: center; padding: 10px; z-index: 9999;';
+                    document.body.appendChild(loadingIndicator);
+                }
+                loadingIndicator.innerHTML = '<p>Đang xử lý và tải ảnh lên Google Drive...</p>';
+                
+                // Tạo biến lưu trữ URL ảnh base64 dự phòng
+                let fallbackBase64Url = '';
+                
+                // Đối với hình ảnh, tạo ngay base64 dự phòng với chất lượng giảm
+                if (file.type.startsWith('image/')) {
+                    try {
+                        const reader = new FileReader();
+                        fallbackBase64Url = await new Promise((resolve) => {
+                            reader.onload = (e) => {
+                                const img = new Image();
+                                img.onload = function() {
+                                    // Tính toán kích thước mới để giữ tỷ lệ
+                                    const MAX_WIDTH = 800;
+                                    const MAX_HEIGHT = 600;
+                                    let width = img.width;
+                                    let height = img.height;
+                                    
+                                    if (width > MAX_WIDTH) {
+                                        height = height * (MAX_WIDTH / width);
+                                        width = MAX_WIDTH;
+                                    }
+                                    
+                                    if (height > MAX_HEIGHT) {
+                                        width = width * (MAX_HEIGHT / height);
+                                        height = MAX_HEIGHT;
+                                    }
+                                    
+                                    // Tạo canvas để nén hình ảnh
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    
+                                    // Vẽ hình ảnh nén
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, width, height);
+                                    
+                                    // Tạo base64 với chất lượng thấp hơn
+                                    const quality = 0.5; // 50% chất lượng
+                                    resolve(canvas.toDataURL('image/jpeg', quality));
+                                };
+                                img.src = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    } catch (e) {
+                        console.warn('Không thể tạo base64 dự phòng:', e);
+                    }
+                }
+                
+                // Kiểm tra kích thước file
+                if (file.size > 5 * 1024 * 1024) {
+                    loadingIndicator.innerHTML = '<p>File quá lớn, đang nén...</p>';
+                    
+                    // Nếu là ảnh và quá lớn, thử nén lại trước khi upload
+                    if (file.type.startsWith('image/')) {
+                        try {
+                            const compressedFile = await compressImage(file, 0.7); // Nén với chất lượng 70%
+                            file = compressedFile; // Thay thế file gốc bằng file đã nén
+                        } catch (e) {
+                            console.warn('Không thể nén ảnh:', e);
+                            // Vẫn tiếp tục với file gốc
+                        }
+                    } else {
+                        throw new Error('File quá lớn (giới hạn 5MB)');
+                    }
+                }
+                
+                loadingIndicator.innerHTML = '<p>Đang tải ảnh lên Google Drive...</p>';
+                
+                // Tạo form data
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('filename', file.name || `image_${Date.now()}.jpg`);
+                
+                // Thêm thông tin xác thực nếu cần
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    formData.append('token', token);
+                }
+                
+                try {
+                    // Gọi API để upload lên Google Drive
+                    const response = await fetch('/api/upload-to-drive', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.warn('Lỗi upload Google Drive, chuyển sang phương án dự phòng:', errorData);
+                        loadingIndicator.innerHTML = '<p>Lỗi khi tải lên Google Drive, đang dùng phương án dự phòng...</p>';
+                        
+                        // Hiển thị thông báo lỗi nếu API chưa được kích hoạt
+                        if (errorData.message && errorData.message.includes('Google Drive API has not been used')) {
+                            const urlMatch = errorData.message.match(/https:\/\/console\.developers\.google\.com\/apis\/ap[^\s"]*/);
+                            if (urlMatch && urlMatch[0]) {
+                                const apiEnableUrl = urlMatch[0];
+                                
+                                // Hiển thị thông báo hướng dẫn kích hoạt API
+                                const message = `
+                                    <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 4px;">
+                                        <h3>Google Drive API chưa được kích hoạt</h3>
+                                        <p>Để tiếp tục sử dụng tính năng tải ảnh lên Google Drive, bạn cần kích hoạt API:</p>
+                                        <ol>
+                                            <li>Truy cập: <a href="${apiEnableUrl}" target="_blank">${apiEnableUrl}</a></li>
+                                            <li>Đăng nhập vào tài khoản Google của bạn</li>
+                                            <li>Nhấn nút "Enable" để kích hoạt API</li>
+                                            <li>Quay lại và thử lại</li>
+                                        </ol>
+                                <p>Hiện tại ảnh sẽ được lưu dưới dạng base64 (chất lượng thấp).</p>
+                                <button onclick="this.parentNode.style.display='none'" style="background: #721c24; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Đóng</button>
+                            </div>
+                        `;
+                        
+                        // Hiển thị thông báo
+                        const notificationDiv = document.createElement('div');
+                        notificationDiv.style = 'position: fixed; top: 10px; left: 50%; transform: translateX(-50%); max-width: 80%; z-index: 10000;';
+                        notificationDiv.innerHTML = message;
+                        document.body.appendChild(notificationDiv);
+                    }
+                }
+                
+                // Sử dụng URL base64 dự phòng
+                if (fallbackBase64Url) {
+                    console.log('Đang sử dụng base64 dự phòng sau khi Drive thất bại');
+                    return fallbackBase64Url;
+                }
+                throw new Error(errorData.message || 'Lỗi khi upload ảnh');
+            }
+            
+            const result = await response.json();
+            console.log('Ảnh đã được tải lên:', result);
+            
+            // Nếu là ảnh đại diện, trả về URL đơn giản (ưu tiên proxy URL)
+            if (isFeatureImage) {
+                // Đối với ảnh đại diện, sử dụng URL proxy nếu có
+                if (result.proxyUrl) {
+                    return result.proxyUrl;
+                } else if (result.directUrl) {
+                    return result.directUrl;
+                } else if (result.imageUrl) {
+                    return result.imageUrl;
+                } else {
+                    return fallbackBase64Url; // Fallback nếu không có URL nào
+                }
+            }
+            
+            // Đối với ảnh trong nội dung, trả về toàn bộ đối tượng URL
+            // Thêm phương thức toString để tương thích với mã cũ
+            result.toString = function() {
+                return this.proxyUrl || this.directUrl || this.imageUrl || '';
+            };
+            
+            return result;
+            
+        } catch (error) {
+            console.error('Lỗi upload ảnh:', error);
+            
+            // Hiển thị thông báo chi tiết
+            loadingIndicator.innerHTML = `<p>Lỗi: ${error.message}</p>`;
+            
+            if (fallbackBase64Url) {
+                console.log('Đang sử dụng base64 dự phòng sau khi gặp lỗi');
+                setTimeout(() => {
+                    loadingIndicator.innerHTML = '<p>Đang sử dụng base64 dự phòng...</p>';
+                }, 1000);
+                return fallbackBase64Url;
+            }
+            alert('Không thể upload ảnh: ' + error.message);
+            return null;
+        } finally {
+            // Xóa thông báo loading sau 1 giây
+            setTimeout(() => {
+                const loadingEl = document.getElementById('upload-loading');
+                if (loadingEl) loadingEl.remove();
+            }, 1000);
+        }
     }
     
-    // ... existing code ...
-</script> 
+    // Hàm nén ảnh với chất lượng tùy chỉnh
+    async function compressImage(file, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            try {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Tính toán kích thước mới để giữ tỷ lệ
+                        const MAX_WIDTH = 1200; // Kích thước tối đa lớn hơn
+                        const MAX_HEIGHT = 1200;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > MAX_WIDTH) {
+                            height = height * (MAX_WIDTH / width);
+                            width = MAX_WIDTH;
+                        }
+                        
+                        if (height > MAX_HEIGHT) {
+                            width = width * (MAX_HEIGHT / height);
+                            height = MAX_HEIGHT;
+                        }
+                        
+                        // Tạo canvas để nén hình ảnh
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Vẽ hình ảnh nén
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Chuyển đổi canvas thành blob
+                        canvas.toBlob(function(blob) {
+                            const compressedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(compressedFile);
+                        }, 'image/jpeg', quality);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    reject(new Error('Không thể đọc file'));
+                };
+                reader.readAsDataURL(file);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    // Hàm xử lý ảnh base64 trong nội dung
+    async function processBase64ImagesInContent(content) {
+        // Phát hiện và xử lý tất cả các ảnh base64 trong nội dung
+        // Regex cải tiến để bắt nhiều loại ảnh base64 khác nhau
+        const regexPatterns = [
+            /src="(data:image\/[^;]+;base64,[^"]+)"/g,  // Thông thường trong thẻ img
+            /url\(['"]?(data:image\/[^;]+;base64,[^'"]+)['"]?\)/g,  // Trong CSS
+            /background(-image)?:url\(['"]?(data:image\/[^;]+;base64,[^'"]+)['"]?\)/g,  // Trong inline style
+            /<img[^>]+src=['"](data:image\/[^;]+;base64,[^'"]+)['"]/g,  // Dạng khác của thẻ img
+            /"(data:image\/[^;]+;base64,[^"]+)"/g  // Dạng khác có thể có
+        ];
+        
+        let processedContent = content;
+        let allMatches = [];
+        
+        // Hiển thị thông báo tiến trình
+        const progressIndicator = document.createElement('div');
+        progressIndicator.id = 'process-progress';
+        progressIndicator.style = 'position: fixed; top: 50px; left: 0; right: 0; background: rgba(0,102,204,0.9); color: white; text-align: center; padding: 10px; z-index: 9998;';
+        progressIndicator.innerHTML = '<p>Đang phát hiện ảnh base64 trong nội dung...</p>';
+        document.body.appendChild(progressIndicator);
+        
+        // Thu thập tất cả matches từ các regex pattern
+        for (const regex of regexPatterns) {
+            let match;
+            while ((match = regex.exec(content)) !== null) {
+                // Lấy dữ liệu base64 từ match, thường là nhóm 1
+                const base64Data = match[1] || match[2] || match[0];
+                
+                // Kiểm tra xem có phải base64 image không
+                if (base64Data.startsWith('data:image')) {
+                    allMatches.push({
+                        fullMatch: match[0],
+                        base64Data: base64Data
+                    });
+                }
+            }
+        }
+        
+        // Cập nhật tiến trình
+        progressIndicator.innerHTML = `<p>Đã tìm thấy ${allMatches.length} ảnh base64. Đang xử lý...</p>`;
+        
+        // Xử lý từng base64 image
+        for (let i = 0; i < allMatches.length; i++) {
+            const matchInfo = allMatches[i];
+            
+            // Cập nhật tiến trình
+            progressIndicator.innerHTML = `<p>Đang xử lý ảnh ${i + 1}/${allMatches.length}...</p>`;
+            
+            try {
+                // Chuyển base64 thành blob
+                const res = await fetch(matchInfo.base64Data);
+                const blob = await res.blob();
+                const file = new File([blob], `inline_image_${Date.now()}.jpg`, { type: blob.type });
+                
+                // Upload lên Drive và lấy URL
+                const imageUrl = await uploadImageToDrive(file);
+                
+                if (imageUrl) {
+                    // Thay thế base64 bằng URL trong nội dung
+                    // Cần xử lý dựa trên loại match, không thể chỉ thay thế base64Data đơn giản
+                    if (matchInfo.fullMatch.includes('src=')) {
+                        // Trường hợp thẻ img
+                        let newImgTag;
+                        
+                        // Kiểm tra nếu imageUrl là đối tượng có proxyUrl
+                        if (typeof imageUrl === 'object' && imageUrl.proxyUrl) {
+                            // Ưu tiên sử dụng safe HTML từ API nếu có
+                            if (imageUrl.safeImageHtml) {
+                                newImgTag = imageUrl.safeImageHtml;
+                            } else {
+                                // Xây dựng thẻ img với chuỗi dự phòng
+                                const imgTagParts = matchInfo.fullMatch.split('src=');
+                                const beforeSrc = imgTagParts[0];
+                                let afterSrc = '';
+                                
+                                // Xử lý afterSrc an toàn
+                                if (imgTagParts.length > 1) {
+                                    const quoteChar = imgTagParts[1].charAt(0);
+                                    const endQuotePos = imgTagParts[1].indexOf(quoteChar, 1);
+                                    if (endQuotePos !== -1) {
+                                        afterSrc = imgTagParts[1].substring(endQuotePos + 1);
+                                    }
+                                }
+                            }
+                            
+                            // Xây dựng thẻ img với cơ chế dự phòng
+                            let onerrorAttr = "";
+                            
+                            if (imageUrl.directUrl) {
+                                onerrorAttr = `onerror="if(!this.fallbackTriggered){this.fallbackTriggered=true;this.src='${imageUrl.directUrl}'`;
+                                
+                                if (imageUrl.thumbnailUrl) {
+                                    onerrorAttr += `;this.onerror=function(){if(!this.fallbackTriggered2){this.fallbackTriggered2=true;this.src='${imageUrl.thumbnailUrl}'`;
+                                    
+                                    if (imageUrl.fileViewUrl) {
+                                        onerrorAttr += `;this.onerror=function(){this.onerror=null;}`;
+                                    }
+                                    
+                                    onerrorAttr += `}}`;
+                                }
+                                
+                                onerrorAttr += `}"`;
+                            }
+                            
+                            newImgTag = `${beforeSrc}src="${imageUrl.proxyUrl}" ${onerrorAttr} loading="lazy"${afterSrc}`;
+                        } else if (typeof imageUrl === 'object' && imageUrl.primary) {
+                            // Cấu trúc cũ - primary/backup
+                            const imgTagParts = matchInfo.fullMatch.split('src=');
+                            const beforeSrc = imgTagParts[0];
+                            let afterSrc = '';
+                            
+                            if (imgTagParts.length > 1) {
+                                const quoteChar = imgTagParts[1].charAt(0);
+                                const endQuotePos = imgTagParts[1].indexOf(quoteChar, 1);
+                                if (endQuotePos !== -1) {
+                                    afterSrc = imgTagParts[1].substring(endQuotePos + 1);
+                                }
+                            }
+                            
+                            // Tạo chuỗi onerror cho các backup URL
+                            let onerrorChain = "";
+                            if (imageUrl.backup) {
+                                onerrorChain = `onerror="this.onerror=null; this.src='${imageUrl.backup}';"`;
+                            }
+                            
+                            newImgTag = `${beforeSrc}src="${imageUrl.primary}" ${onerrorChain} loading="lazy"${afterSrc}`;
+                        } else {
+                            // Trường hợp thông thường - imageUrl là chuỗi đơn giản
+                            const urlToUse = typeof imageUrl === 'object' && imageUrl.toString ? 
+                                            imageUrl.toString() : imageUrl;
+                            newImgTag = matchInfo.fullMatch.replace(matchInfo.base64Data, urlToUse);
+                            
+                            // Thêm thuộc tính loading nếu là thẻ img và chưa có
+                            if (newImgTag.includes('<img') && !newImgTag.includes('loading=')) {
+                                newImgTag = newImgTag.replace('<img', '<img loading="lazy"');
+                            }
+                        }
+                        
+                        processedContent = processedContent.replace(matchInfo.fullMatch, newImgTag);
+                    } else if (matchInfo.fullMatch.includes('url(')) {
+                        // Trường hợp CSS url()
+                        const urlToUse = typeof imageUrl === 'object' ? 
+                                        (imageUrl.proxyUrl || imageUrl.directUrl || imageUrl.primary || imageUrl.toString()) : 
+                                        imageUrl;
+                        const newCssUrl = matchInfo.fullMatch.replace(matchInfo.base64Data, urlToUse);
+                        processedContent = processedContent.replace(matchInfo.fullMatch, newCssUrl);
+                    } else {
+                        // Trường hợp khác
+                        const urlToUse = typeof imageUrl === 'object' ? 
+                                        (imageUrl.proxyUrl || imageUrl.directUrl || imageUrl.primary || imageUrl.toString()) : 
+                                        imageUrl;
+                        processedContent = processedContent.replace(matchInfo.base64Data, urlToUse);
+                    }
+                }
+            } catch (imgError) {
+                console.error('Lỗi khi xử lý ảnh base64:', imgError);
+                // Nếu xử lý lỗi, vẫn giữ nguyên ảnh base64
+                progressIndicator.innerHTML = `<p>Lỗi khi xử lý ảnh ${i + 1}/${allMatches.length}: ${imgError.message}</p>`;
+                // Tạm dừng để hiển thị lỗi
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+        }
+        
+        // Xóa thông báo tiến trình
+        progressIndicator.innerHTML = '<p>Đã hoàn tất xử lý tất cả ảnh!</p>';
+        setTimeout(() => {
+            if (document.getElementById('process-progress')) {
+                document.getElementById('process-progress').remove();
+            }
+        }, 1500);
+        
+        return processedContent;
+    }
+    </script>
+</body>
+</html>
+
