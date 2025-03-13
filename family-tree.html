@@ -503,8 +503,9 @@
                             children: [...(person.children || []), ...(spouse.children || [])]
                         };
 
-                        // Thêm debug để kiểm tra thông tin node
-                        console.log("Tạo coupleNode:", coupleNode);
+                        // Debug để kiểm tra giá trị img
+                        console.log(`CoupleNode ${coupleId} - img (người chính):`, photoUrl);
+                        console.log(`CoupleNode ${coupleId} - spouseImg:`, spousePhotoUrl);
                         
                         // Thêm node vợ chồng vào mảng
                         nodes.push(coupleNode);
@@ -625,6 +626,8 @@
                 '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_3 = 
                 '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="50" text-anchor="middle">{val}</text>';
+                
+            // Đây là phần chính để sửa lỗi - định nghĩa lại img_0 và img_1
             OrgChart.templates.couple.img_0 = 
                 '<clipPath id="personClip_{id}"><circle cx="70" cy="80" r="25"></circle></clipPath>' +
                 '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="55" width="50" height="50"></image>';
@@ -637,12 +640,26 @@
             OrgChart.templates.couple_male.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            
+            // Đảm bảo template couple_male kế thừa đúng định nghĩa img_0 từ couple
+            OrgChart.templates.couple_male.img_0 = OrgChart.templates.couple.img_0;
+            OrgChart.templates.couple_male.img_1 = OrgChart.templates.couple.img_1;
 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
             OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
             OrgChart.templates.couple_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            
+            // Đảm bảo template couple_female kế thừa đúng định nghĩa img_0 từ couple
+            OrgChart.templates.couple_female.img_0 = OrgChart.templates.couple.img_0;
+            OrgChart.templates.couple_female.img_1 = OrgChart.templates.couple.img_1;
+
+            // Thêm debug để kiểm tra các template đã tạo
+            console.log("Template single:", OrgChart.templates.single);
+            console.log("Template couple:", OrgChart.templates.couple);
+            console.log("Template couple_male:", OrgChart.templates.couple_male);
+            console.log("Template couple_female:", OrgChart.templates.couple_female);
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
@@ -745,6 +762,9 @@
                 // Kiểm tra template của node
                 coupleNodes.forEach(node => {
                     console.log(`Node ${node.id} sử dụng template:`, node.templateName);
+                    // Kiểm tra dữ liệu avatar
+                    console.log(`Node ${node.id} - img:`, node.data.img);
+                    console.log(`Node ${node.id} - spouseImg:`, node.data.spouseImg);
                 });
             });
 
@@ -903,6 +923,10 @@
 
                 // Chuyển đổi dữ liệu cho OrgChart.js
                 const formattedData = convertToOrgChartFormat(familyData);
+                
+                // Debug thông tin formattedData
+                console.log("Formatted data:", formattedData);
+                console.log("Kiểm tra node couple:", formattedData.nodes.filter(n => n.id.includes('_')));
                 
                 // Khởi tạo OrgChart
                 document.getElementById('family-tree-container').style.display = 'block';
