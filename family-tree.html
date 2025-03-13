@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -574,6 +573,21 @@
                 gap: 10px;
             }
         }
+
+        /* New styles for mindmap */
+        .mindmap-connector {
+            position: absolute;
+            background-color: #0066cc;
+            z-index: 1;
+        }
+        
+        .generation-members {
+            display: flex;
+            flex-direction: row !important;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -675,9 +689,85 @@
             } catch (error) {
                 console.error('Lỗi khi lấy dữ liệu gia phả:', error);
 
-                // Fallback sử dụng localStorage nếu API bị lỗi
-                const data = JSON.parse(localStorage.getItem('family-tree') || '[]');
-                return data;
+                // Thêm dữ liệu mẫu để test khi API bị lỗi
+                return [
+                    {
+                        id: '1',
+                        name: 'Nguyễn Bá Cụ',
+                        gender: 'male',
+                        generation: 1,
+                        birthDate: '1900-01-01',
+                        deathDate: '1970-01-01',
+                        children: ['2', '3', '4']
+                    },
+                    {
+                        id: '2',
+                        name: 'Nguyễn Bá Trưởng',
+                        gender: 'male',
+                        generation: 2,
+                        birthDate: '1930-01-01',
+                        parents: ['1'],
+                        children: ['5', '6']
+                    },
+                    {
+                        id: '3',
+                        name: 'Nguyễn Bá Thứ',
+                        gender: 'male',
+                        generation: 2,
+                        birthDate: '1935-01-01',
+                        parents: ['1'],
+                        children: ['7']
+                    },
+                    {
+                        id: '4',
+                        name: 'Nguyễn Bá Út',
+                        gender: 'male',
+                        generation: 2,
+                        birthDate: '1940-01-01',
+                        parents: ['1'],
+                        children: ['8', '9']
+                    },
+                    {
+                        id: '5',
+                        name: 'Nguyễn Bá A',
+                        gender: 'male',
+                        generation: 3,
+                        birthDate: '1960-01-01',
+                        parents: ['2']
+                    },
+                    {
+                        id: '6',
+                        name: 'Nguyễn Thị B',
+                        gender: 'female',
+                        generation: 3,
+                        birthDate: '1965-01-01',
+                        parents: ['2']
+                    },
+                    {
+                        id: '7',
+                        name: 'Nguyễn Bá C',
+                        gender: 'male',
+                        generation: 3,
+                        birthDate: '1965-01-01',
+                        parents: ['3']
+                    },
+                    {
+                        id: '8',
+                        name: 'Nguyễn Bá D',
+                        gender: 'male',
+                        generation: 3,
+                        birthDate: '1970-01-01',
+                        parents: ['4']
+                    },
+                    {
+                        id: '9',
+                        name: 'Nguyễn Thị E',
+                        gender: 'female',
+                        generation: 3,
+                        birthDate: '1975-01-01',
+                        parents: ['4']
+                    }
+                ];
             }
         }
 
@@ -730,7 +820,69 @@
                 generations[person.generation].push(person);
             });
 
-            // Tạo tập hợp chứa ID của những người đã được hiển thị
+            // Tạo cây gia phả
+            const treeContainer = document.getElementById('tree');
+            treeContainer.innerHTML = '';
+
+            // Hiển thị từng thế hệ
+            Object.keys(generations).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gen => {
+                // Sắp xếp thành viên trong thế hệ
+                const genMembers = generations[gen];
+
+                // Sắp xếp theo thứ tự sinh
+                genMembers.sort((a, b) => {
+                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                    return 0;
+                });
+
+                // Tạo container cho thế hệ
+                const genContainer = document.createElement('div');
+                genContainer.className = 'generation';
+                genContainer.dataset.generation = gen;
+
+                // Thêm tiêu đề thế hệ
+                const genTitle = document.createElement('h3');
+                genTitle.className = 'generation-title';
+                genTitle.textContent = `Thế hệ ${gen}`;
+                genContainer.appendChild(genTitle);
+
+                // Tạo container cho các thành viên trong thế hệ - hiển thị ngang một dòng
+                const membersContainer = document.createElement('div');
+                membersContainer.className = 'generation-members';
+                genContainer.appendChild(membersContainer);
+
+                // Hiển thị từng người trong thế hệ
+                genMembers.forEach(person => {
+                    // Tạo element cho người này
+                    const personElement = createPersonElement(person);
+                    personElement.id = `person-${person.id}`;
+                    membersContainer.appendChild(personElement);
+                });
+
+                treeContainer.appendChild(genContainer);
+            });
+
+            // Thiết lập các kết nối kiểu mindmap
+            setTimeout(setupMindmapConnections, 300);
+        }
+
+        // Thêm hàm mới để tạo kết nối mindmap
+        function setupMindmapConnections() {
+            // Xóa tất cả đường kết nối hiện có
+            const treeContainer = document.getElementById('family-tree-container');
+            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line');
+            existingConnectors.forEach(conn => conn.remove());
+            
+            // Tạo kết nối từ cha mẹ đến con
+            familyData.forEach(person => {
+                if (person.children && person.children.length > 0) {
+                    const parentElement = document.getElementById(`person-${person.id}`);
+                    
+                    if (!parentElement) return;
+                    
+                    const childElements = person.children
+                        .map(childId => document.getElementById(`person-${childId}`))
+                        .filter(el => el);
                     
                     if (childElements.length > 0) {
                         createMindmapConnector(parentElement, childElements);
@@ -739,30 +891,25 @@
             });
         }
 
-        // Hàm tạo kết nối kiểu mindmap từ cha mẹ đến con cái
+        // Thêm hàm mới tạo kết nối mindmap
         function createMindmapConnector(parentElement, childElements) {
-            const displayedPersons = new Set();
             const treeContainer = document.getElementById('family-tree-container');
             
             const parentRect = parentElement.getBoundingClientRect();
-                const containerRect = treeContainer.getBoundingClientRect();
-                
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-                
+            const containerRect = treeContainer.getBoundingClientRect();
+            
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
             // Vị trí của cha mẹ
             const parentX = parentRect.left + parentRect.width / 2 + scrollLeft - containerRect.left;
-            // Vẫn giữ tập hợp displayedCouples
-            const displayedCouples = new Set();
-            
-            // Tạo cây gia phả
             const parentY = parentRect.bottom + scrollTop - containerRect.top;
             
             // Tạo container cho các kết nối
-                const connectorContainer = document.createElement('div');
-                connectorContainer.className = 'connector-container';
-                treeContainer.appendChild(connectorContainer);
-                
+            const connectorContainer = document.createElement('div');
+            connectorContainer.className = 'connector-container';
+            treeContainer.appendChild(connectorContainer);
+            
             // Tìm vị trí của tất cả con
             let minChildX = Infinity;
             let maxChildX = -Infinity;
@@ -783,14 +930,15 @@
             verticalLine.className = 'mindmap-connector';
             verticalLine.style.left = `${parentX}px`;
             verticalLine.style.top = `${parentY}px`;
-            verticalLine.style.height = '30px'; // Chiều dài đường dọc từ cha xuống
+            verticalLine.style.width = '2px';
+            verticalLine.style.height = '30px';
             connectorContainer.appendChild(verticalLine);
             
             // Tạo đường ngang nối giữa
-            if (Math.abs(parentX - centerX) > 2) { // Nếu cha không nằm giữa các con
+            if (Math.abs(parentX - centerX) > 2) {
                 const horizontalLine = document.createElement('div');
                 horizontalLine.className = 'mindmap-connector';
-                horizontalLine.style.top = `${parentY + 30}px`;
+                horizontalLine.style.top = `${parentY + 29}px`;
                 horizontalLine.style.left = `${Math.min(parentX, centerX)}px`;
                 horizontalLine.style.width = `${Math.abs(centerX - parentX)}px`;
                 horizontalLine.style.height = '2px';
@@ -801,7 +949,8 @@
             const middleVerticalLine = document.createElement('div');
             middleVerticalLine.className = 'mindmap-connector';
             middleVerticalLine.style.left = `${centerX}px`;
-            middleVerticalLine.style.top = `${parentY + 30}px`;
+            middleVerticalLine.style.top = `${parentY + 29}px`;
+            middleVerticalLine.style.width = '2px';
             middleVerticalLine.style.height = '20px';
             connectorContainer.appendChild(middleVerticalLine);
             
@@ -814,7 +963,7 @@
                 // Đường ngang từ trung tâm đến con
                 const horizontalToChild = document.createElement('div');
                 horizontalToChild.className = 'mindmap-connector';
-                horizontalToChild.style.top = `${parentY + 50}px`;
+                horizontalToChild.style.top = `${parentY + 49}px`;
                 horizontalToChild.style.left = `${Math.min(centerX, childX)}px`;
                 horizontalToChild.style.width = `${Math.abs(childX - centerX)}px`;
                 horizontalToChild.style.height = '2px';
@@ -824,8 +973,9 @@
                 const verticalToChild = document.createElement('div');
                 verticalToChild.className = 'mindmap-connector';
                 verticalToChild.style.left = `${childX}px`;
-                verticalToChild.style.top = `${parentY + 50}px`;
-                verticalToChild.style.height = `${childY - (parentY + 50)}px`;
+                verticalToChild.style.top = `${parentY + 49}px`;
+                verticalToChild.style.width = '2px';
+                verticalToChild.style.height = `${childY - (parentY + 49)}px`;
                 connectorContainer.appendChild(verticalToChild);
             });
         }
