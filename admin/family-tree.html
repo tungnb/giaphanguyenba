@@ -398,6 +398,84 @@
         .btn-action:hover {
             opacity: 0.9;
         }
+        
+        /* Thêm style cho upload ảnh */
+        .photo-upload-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-preview-placeholder {
+            color: #aaa;
+            font-size: 40px;
+        }
+        
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .upload-btn {
+            background-color: #e6f7ff;
+            color: #0066cc;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #0066cc;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .upload-btn:hover {
+            background-color: #d1e9ff;
+        }
+        
+        .upload-btn-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .upload-progress {
+            height: 5px;
+            width: 100%;
+            background-color: #f0f0f0;
+            margin-top: 10px;
+            border-radius: 3px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .upload-progress-bar {
+            height: 100%;
+            background-color: #0066cc;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -477,8 +555,27 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="photo">Ảnh đại diện (URL)</label>
-                    <input type="url" id="photo" class="form-control" placeholder="https://example.com/avatar.jpg">
+                    <label>Ảnh đại diện</label>
+                    <div class="photo-upload-container">
+                        <div class="photo-preview" id="photo-preview">
+                            <div class="photo-preview-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="upload-btn-wrapper">
+                                <button type="button" class="upload-btn">
+                                    <i class="fas fa-upload"></i> Tải ảnh lên
+                                </button>
+                                <input type="file" id="photo-upload" accept="image/*">
+                            </div>
+                            <input type="hidden" id="photo" class="form-control">
+                            <div class="upload-progress" id="upload-progress">
+                                <div class="upload-progress-bar" id="upload-progress-bar"></div>
+                            </div>
+                            <p id="upload-status" style="margin-top: 5px; font-size: 0.9em; color: #666;"></p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -532,7 +629,7 @@
             </div>
             <div class="form-group">
                 <button type="button" id="add-relation-btn" class="btn btn-primary">Thêm</button>
-                <button type="button" class="btn" onclick="closeRelationModal()">Hủy</button>
+                <button type="button" id="modal-cancel" class="btn">Hủy</button>
             </div>
         </div>
     </div>
@@ -543,8 +640,9 @@
     </div>
     
     <script>
-        // Google Sheets API URL (thay thế bằng URL thực của bạn sau khi triển khai)
-        const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+        // Thay thế URL API giả lập bằng URL API thực
+        const API_URL = '/api/family'; // API đọc/ghi dữ liệu gia phả
+        const UPLOAD_API_URL = '/api/upload-to-drive'; // API upload ảnh
         
         // Global variables
         let allMembers = [];
@@ -610,6 +708,11 @@
                 filterMembers();
             });
             
+            // Photo upload
+            document.getElementById('photo-upload').addEventListener('change', function(e) {
+                handlePhotoUpload(e);
+            });
+            
             // Relation buttons
             document.getElementById('add-parent').addEventListener('click', function() {
                 openRelationModal('parent');
@@ -625,6 +728,11 @@
             
             // Close modal on X click
             document.querySelector('.close').addEventListener('click', function() {
+                closeRelationModal();
+            });
+            
+            // Cancel modal
+            document.getElementById('modal-cancel').addEventListener('click', function() {
                 closeRelationModal();
             });
             
@@ -650,29 +758,20 @@
         async function loadMembers() {
             showLoading();
             try {
-                // Simulate API call for now
-                // In production, use the commented fetch code below
-                /*
-                const response = await fetch(`${API_URL}?operation=read`);
+                const response = await fetch(API_URL);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                if (data.status === 'success') {
-                    allMembers = data.data;
-                } else {
-                    throw new Error(data.message || 'Unknown error');
-                }
-                */
-                
-                // Simulate API response with sample data
-                setTimeout(() => {
-                    allMembers = getSampleMembers();
-                    renderMembers();
-                    hideLoading();
-                }, 1000);
+                allMembers = data || [];
+                renderMembers();
+                hideLoading();
             } catch (error) {
+                console.error('Error loading members:', error);
                 showError('Không thể tải dữ liệu thành viên: ' + error.message);
+                // Fallback to sample data if API fails
+                allMembers = getSampleMembers();
+                renderMembers();
                 hideLoading();
             }
         }
@@ -705,8 +804,8 @@
                         <div class="member-meta">
                             <i class="fas fa-${genderIcon}"></i> ${genderText} | 
                             Thế hệ: ${member.generation} | 
-                            ${member.birthDate ? 'Sinh: ' + formatDate(member.birthDate) : ''}
-                            ${member.deathDate ? ' | Mất: ' + formatDate(member.deathDate) : ''}
+                            ${member.birthdate ? 'Sinh: ' + formatDate(member.birthdate) : ''}
+                            ${member.deathdate ? ' | Mất: ' + formatDate(member.deathdate) : ''}
                         </div>
                         <div class="member-actions">
                             <button class="btn-action btn-edit" data-id="${member.id}">
@@ -755,6 +854,73 @@
             }
         }
         
+        // Thêm hàm upload ảnh thực tế
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Kiểm tra kích thước (giới hạn 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB.');
+                return;
+            }
+            
+            // Hiển thị ảnh đã chọn trước khi upload
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('photo-preview').innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                `;
+            };
+            reader.readAsDataURL(file);
+            
+            // Hiển thị thanh tiến trình
+            const progressBar = document.getElementById('upload-progress');
+            const progressBarFill = document.getElementById('upload-progress-bar');
+            const uploadStatus = document.getElementById('upload-status');
+            
+            progressBar.style.display = 'block';
+            progressBarFill.style.width = '0%';
+            uploadStatus.textContent = 'Đang tải ảnh lên...';
+            
+            try {
+                // Tạo FormData để upload
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('filename', `family_member_${Date.now()}_${file.name}`);
+                
+                // Gửi request upload
+                const response = await fetch(UPLOAD_API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Upload error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Lấy URL ảnh từ response
+                    document.getElementById('photo').value = data.proxyUrl;
+                    progressBarFill.style.width = '100%';
+                    uploadStatus.textContent = 'Tải lên thành công';
+                    
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Upload thất bại');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressBar.style.display = 'none';
+                uploadStatus.textContent = '';
+                showError('Không thể tải ảnh lên: ' + error.message);
+            }
+        }
+        
         // Edit member
         function editMember(id) {
             const member = allMembers.find(m => m.id === id);
@@ -770,10 +936,23 @@
             document.getElementById('name').value = member.name;
             document.getElementById('gender').value = member.gender;
             document.getElementById('generation').value = member.generation;
-            document.getElementById('birthDate').value = member.birthDate || '';
-            document.getElementById('deathDate').value = member.deathDate || '';
+            document.getElementById('birthDate').value = member.birthdate || '';
+            document.getElementById('deathDate').value = member.deathdate || '';
             document.getElementById('photo').value = member.photo || '';
             document.getElementById('bio').value = member.bio || '';
+            
+            // Hiển thị ảnh đại diện nếu có
+            if (member.photo) {
+                document.getElementById('photo-preview').innerHTML = `
+                    <img src="${member.photo}" alt="${member.name}">
+                `;
+            } else {
+                document.getElementById('photo-preview').innerHTML = `
+                    <div class="photo-preview-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+            }
             
             // Show the delete button
             document.getElementById('delete-member').style.display = 'inline-block';
@@ -795,7 +974,7 @@
             const container = document.getElementById(`${type}-container`);
             container.innerHTML = '';
             
-            if (relationIds.length === 0) {
+            if (!relationIds || relationIds.length === 0) {
                 container.innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
                 return;
             }
@@ -841,7 +1020,7 @@
         function openRelationModal(type) {
             currentRelationType = type;
             
-            // Set modal title
+            // Đặt tiêu đề cho modal
             let title = 'Thêm ';
             if (type === 'parent') title += 'cha/mẹ';
             else if (type === 'spouse') title += 'vợ/chồng';
@@ -849,42 +1028,53 @@
             
             document.getElementById('relation-modal-title').textContent = title;
             
-            // Populate available members
-            const select = document.getElementById('relation-member');
-            select.innerHTML = '<option value="">-- Chọn thành viên --</option>';
-            
+            // Lấy thành viên hiện tại
             const currentMember = allMembers.find(m => m.id === currentMemberId);
+            if (!currentMember) {
+                alert('Vui lòng chọn thành viên trước khi thêm quan hệ');
+                return;
+            }
+            
+            // Lọc danh sách thành viên phù hợp
             let filteredMembers = allMembers.filter(m => m.id !== currentMemberId);
             
-            // Additional filtering based on relation type
+            // Lọc theo loại quan hệ
             if (type === 'parent') {
-                // Parents should be from previous generation
+                // Cha mẹ nên thuộc thế hệ trước
                 filteredMembers = filteredMembers.filter(m => 
-                    m.generation < currentMember.generation &&
+                    parseInt(m.generation) < parseInt(currentMember.generation) &&
                     !(currentMember.parents || []).includes(m.id)
                 );
             } else if (type === 'child') {
-                // Children should be from next generation
+                // Con cái nên thuộc thế hệ sau
                 filteredMembers = filteredMembers.filter(m => 
-                    m.generation > currentMember.generation &&
+                    parseInt(m.generation) > parseInt(currentMember.generation) &&
                     !(currentMember.children || []).includes(m.id)
                 );
             } else if (type === 'spouse') {
-                // Spouses should be from same generation
+                // Vợ/chồng nên cùng thế hệ
                 filteredMembers = filteredMembers.filter(m => 
-                    m.generation === currentMember.generation &&
+                    parseInt(m.generation) === parseInt(currentMember.generation) &&
                     !(currentMember.spouses || []).includes(m.id)
                 );
             }
             
-            filteredMembers.forEach(member => {
-                const option = document.createElement('option');
-                option.value = member.id;
-                option.textContent = member.name;
-                select.appendChild(option);
-            });
+            // Cập nhật danh sách trong dropdown
+            const select = document.getElementById('relation-member');
+            select.innerHTML = '<option value="">-- Chọn thành viên --</option>';
             
-            // Show the modal
+            if (filteredMembers.length === 0) {
+                select.innerHTML += '<option value="" disabled>Không có thành viên phù hợp</option>';
+            } else {
+                filteredMembers.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.name;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Hiển thị modal
             document.getElementById('relation-modal').style.display = 'block';
         }
         
@@ -894,48 +1084,89 @@
         }
         
         // Add relation
-        function addRelation() {
-            const memberId = document.getElementById('relation-member').value;
-            if (!memberId) {
+        async function addRelation() {
+            const relationMemberId = document.getElementById('relation-member').value;
+            if (!relationMemberId) {
                 alert('Vui lòng chọn một thành viên');
                 return;
             }
             
             const currentMember = allMembers.find(m => m.id === currentMemberId);
-            const relatedMember = allMembers.find(m => m.id === memberId);
+            const relatedMember = allMembers.find(m => m.id === relationMemberId);
             
             if (!currentMember || !relatedMember) {
                 closeRelationModal();
                 return;
             }
             
-            // Add relation to current member
-            if (currentRelationType === 'parent') {
-                currentMember.parents = [...(currentMember.parents || []), memberId];
-                // Also add current member as child of the parent
-                relatedMember.children = [...(relatedMember.children || []), currentMemberId];
-            } else if (currentRelationType === 'spouse') {
-                currentMember.spouses = [...(currentMember.spouses || []), memberId];
-                // Also add current member as spouse of the spouse
-                relatedMember.spouses = [...(relatedMember.spouses || []), currentMemberId];
-            } else if (currentRelationType === 'child') {
-                currentMember.children = [...(currentMember.children || []), memberId];
-                // Also add current member as parent of the child
-                relatedMember.parents = [...(relatedMember.parents || []), currentMemberId];
-            }
+            showLoading();
             
-            // Update the allMembers array
-            allMembers = allMembers.map(m => {
-                if (m.id === currentMember.id) return currentMember;
-                if (m.id === relatedMember.id) return relatedMember;
-                return m;
+            try {
+                // Thêm quan hệ cho thành viên hiện tại
+                if (currentRelationType === 'parent') {
+                    if (!Array.isArray(currentMember.parents)) currentMember.parents = [];
+                    currentMember.parents.push(relationMemberId);
+                    
+                    // Thêm quan hệ ngược lại
+                    if (!Array.isArray(relatedMember.children)) relatedMember.children = [];
+                    relatedMember.children.push(currentMemberId);
+                } else if (currentRelationType === 'spouse') {
+                    if (!Array.isArray(currentMember.spouses)) currentMember.spouses = [];
+                    currentMember.spouses.push(relationMemberId);
+                    
+                    // Thêm quan hệ ngược lại
+                    if (!Array.isArray(relatedMember.spouses)) relatedMember.spouses = [];
+                    relatedMember.spouses.push(currentMemberId);
+                } else if (currentRelationType === 'child') {
+                    if (!Array.isArray(currentMember.children)) currentMember.children = [];
+                    currentMember.children.push(relationMemberId);
+                    
+                    // Thêm quan hệ ngược lại
+                    if (!Array.isArray(relatedMember.parents)) relatedMember.parents = [];
+                    relatedMember.parents.push(currentMemberId);
+                }
+                
+                // Cập nhật cả hai thành viên trong cơ sở dữ liệu
+                await Promise.all([
+                    updateMemberInDatabase(currentMember),
+                    updateMemberInDatabase(relatedMember)
+                ]);
+                
+                // Cập nhật danh sách trong bộ nhớ
+                allMembers = allMembers.map(m => {
+                    if (m.id === currentMember.id) return currentMember;
+                    if (m.id === relatedMember.id) return relatedMember;
+                    return m;
+                });
+                
+                // Cập nhật giao diện
+                populateRelations(currentRelationType + 's', currentMember[currentRelationType + 's'] || []);
+                
+                showSuccess('Đã thêm quan hệ thành công');
+                closeRelationModal();
+                hideLoading();
+            } catch (error) {
+                console.error('Error adding relation:', error);
+                showError('Không thể thêm quan hệ: ' + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Cập nhật thành viên trong cơ sở dữ liệu
+        async function updateMemberInDatabase(member) {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(member)
             });
             
-            // Update the UI
-            populateRelations(currentRelationType + 's', currentMember[currentRelationType + 's'] || []);
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
             
-            // Close the modal
-            closeRelationModal();
+            return response.json();
         }
         
         // Reset form
@@ -969,13 +1200,13 @@
                 name: name,
                 gender: document.getElementById('gender').value,
                 generation: parseInt(document.getElementById('generation').value),
-                birthDate: document.getElementById('birthDate').value || null,
-                deathDate: document.getElementById('deathDate').value || null,
+                birthdate: document.getElementById('birthDate').value || null,
+                deathdate: document.getElementById('deathDate').value || null,
                 photo: document.getElementById('photo').value || null,
                 bio: document.getElementById('bio').value || null
             };
             
-            // Add relations if editing an existing member
+            // Add relations if editing
             if (!isNewMember) {
                 const existingMember = allMembers.find(m => m.id === memberId);
                 if (existingMember) {
@@ -983,53 +1214,48 @@
                     member.spouses = existingMember.spouses || [];
                     member.children = existingMember.children || [];
                 }
+            } else {
+                member.parents = [];
+                member.spouses = [];
+                member.children = [];
             }
             
             showLoading();
             try {
-                // Simulate API call for now
-                // In production, use the commented fetch code below
-                /*
-                const url = `${API_URL}?operation=${isNewMember ? 'create' : 'update'}`;
-                const response = await fetch(url, {
+                // Gửi request lưu thành viên
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(member)
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error(`API error: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                if (data.status !== 'success') {
-                    throw new Error(data.message || 'Unknown error');
-                }
-                */
+                const responseData = await response.json();
                 
-                // Simulate API response
-                setTimeout(() => {
-                    if (isNewMember) {
-                        allMembers.push(member);
-                    } else {
-                        allMembers = allMembers.map(m => m.id === member.id ? member : m);
-                    }
-                    
-                    showSuccess(`Thành viên đã được ${isNewMember ? 'thêm' : 'cập nhật'} thành công`);
-                    resetForm();
-                    renderMembers();
-                    
-                    // Switch back to list tab
-                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
-                    document.getElementById('person-list').classList.add('active');
-                    
-                    hideLoading();
-                }, 1000);
+                if (isNewMember) {
+                    allMembers.push(member);
+                } else {
+                    allMembers = allMembers.map(m => m.id === member.id ? member : m);
+                }
+                
+                showSuccess(`Thành viên đã được ${isNewMember ? 'thêm' : 'cập nhật'} thành công`);
+                resetForm();
+                renderMembers();
+                
+                // Switch back to list tab
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
+                document.getElementById('person-list').classList.add('active');
+                
+                hideLoading();
             } catch (error) {
+                console.error('Error saving member:', error);
                 showError(`Không thể ${isNewMember ? 'thêm' : 'cập nhật'} thành viên: ` + error.message);
                 hideLoading();
             }
@@ -1039,71 +1265,77 @@
         async function deleteMember(id) {
             showLoading();
             try {
-                // Simulate API call for now
-                // In production, use the commented fetch code below
-                /*
-                const url = `${API_URL}?operation=delete&id=${id}`;
-                const response = await fetch(url);
+                // Gửi request xóa thành viên
+                const response = await fetch(API_URL, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id })
+                });
                 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error(`API error: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                if (data.status !== 'success') {
-                    throw new Error(data.message || 'Unknown error');
-                }
-                */
+                // Cập nhật mối quan hệ cho các thành viên có liên quan
+                updateRelatedMembers(id);
                 
-                // Simulate API response
-                setTimeout(() => {
-                    // Update relations for related members
-                    const memberToDelete = allMembers.find(m => m.id === id);
-                    if (memberToDelete) {
-                        // Remove this member from parents' children
-                        (memberToDelete.parents || []).forEach(parentId => {
-                            const parent = allMembers.find(m => m.id === parentId);
-                            if (parent && parent.children) {
-                                parent.children = parent.children.filter(childId => childId !== id);
-                            }
-                        });
-                        
-                        // Remove this member from spouses' spouses
-                        (memberToDelete.spouses || []).forEach(spouseId => {
-                            const spouse = allMembers.find(m => m.id === spouseId);
-                            if (spouse && spouse.spouses) {
-                                spouse.spouses = spouse.spouses.filter(sId => sId !== id);
-                            }
-                        });
-                        
-                        // Remove this member from children's parents
-                        (memberToDelete.children || []).forEach(childId => {
-                            const child = allMembers.find(m => m.id === childId);
-                            if (child && child.parents) {
-                                child.parents = child.parents.filter(parentId => parentId !== id);
-                            }
-                        });
-                    }
-                    
-                    // Remove the member
-                    allMembers = allMembers.filter(m => m.id !== id);
-                    
-                    showSuccess('Thành viên đã được xóa thành công');
-                    resetForm();
-                    renderMembers();
-                    
-                    // Switch back to list tab
-                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
-                    document.getElementById('person-list').classList.add('active');
-                    
-                    hideLoading();
-                }, 1000);
+                // Cập nhật danh sách
+                allMembers = allMembers.filter(m => m.id !== id);
+                
+                showSuccess('Thành viên đã được xóa thành công');
+                resetForm();
+                renderMembers();
+                
+                // Switch back to list tab
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
+                document.getElementById('person-list').classList.add('active');
+                
+                hideLoading();
             } catch (error) {
+                console.error('Error deleting member:', error);
                 showError('Không thể xóa thành viên: ' + error.message);
                 hideLoading();
             }
+        }
+        
+        // Cập nhật các thành viên liên quan khi xóa một thành viên
+        function updateRelatedMembers(deletedMemberId) {
+            const memberToDelete = allMembers.find(m => m.id === deletedMemberId);
+            if (!memberToDelete) return;
+            
+            // Xóa khỏi danh sách con của cha mẹ
+            (memberToDelete.parents || []).forEach(parentId => {
+                const parent = allMembers.find(m => m.id === parentId);
+                if (parent && parent.children) {
+                    parent.children = parent.children.filter(id => id !== deletedMemberId);
+                    // Cập nhật trong DB
+                    updateMemberInDatabase(parent).catch(err => console.error('Error updating parent:', err));
+                }
+            });
+            
+            // Xóa khỏi danh sách vợ/chồng
+            (memberToDelete.spouses || []).forEach(spouseId => {
+                const spouse = allMembers.find(m => m.id === spouseId);
+                if (spouse && spouse.spouses) {
+                    spouse.spouses = spouse.spouses.filter(id => id !== deletedMemberId);
+                    // Cập nhật trong DB
+                    updateMemberInDatabase(spouse).catch(err => console.error('Error updating spouse:', err));
+                }
+            });
+            
+            // Xóa khỏi danh sách cha mẹ của con cái
+            (memberToDelete.children || []).forEach(childId => {
+                const child = allMembers.find(m => m.id === childId);
+                if (child && child.parents) {
+                    child.parents = child.parents.filter(id => id !== deletedMemberId);
+                    // Cập nhật trong DB
+                    updateMemberInDatabase(child).catch(err => console.error('Error updating child:', err));
+                }
+            });
         }
         
         // Utility functions
