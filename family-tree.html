@@ -486,7 +486,7 @@
             }
         });
 
-        // Cách tiếp cận hoàn toàn mới để xử lý vợ chồng
+        // Cập nhật cấu hình createTreeStructure
         function createTreeStructure() {
             console.log("Đang tạo cấu trúc cây...");
             
@@ -509,10 +509,10 @@
                     rootOrientation: "NORTH", 
                     nodeAlign: "CENTER",
                     scrollbar: "native",
-                    padding: 80,
-                    siblingSeparation: 100,
-                    levelSeparation: 180,
-                    subtreeSeparation: 120,
+                    padding: 50,
+                    siblingSeparation: 80,
+                    levelSeparation: 150,
+                    subtreeSeparation: 80,
                     connectors: {
                         type: 'step',
                         style: {
@@ -662,54 +662,39 @@
             // Ngăn xử lý lặp vô hạn nếu có lỗi trong dữ liệu
             if (processedIds.has(person.id)) {
                 console.warn(`Phát hiện lặp lại ID: ${person.id}`);
-                return {
-                    innerHTML: `<div class="node-info"><p class="node-name">${person.name} (Đã xử lý)</p></div>`,
-                    HTMLclass: `${person.gender} processed-node`
-                };
+                return null;
             }
             processedIds.add(person.id);
             
             console.log(`Tạo cây con cho: ${person.name || 'Không rõ tên'} (ID: ${person.id})`);
             
             try {
-                // Trường hợp không có vợ/chồng - hiển thị đơn giản
+                // Trường hợp không có vợ/chồng - đơn giản chỉ tạo node cho người này và con cái
                 if (!person.spouses || person.spouses.length === 0) {
                     const personNode = createNodeFromPerson(person);
                     
                     // Lấy tất cả con của họ
                     const children = getChildrenOf(person.id);
                     if (children.length > 0) {
-                        // Tạo cây con cho từng đứa con, truyền lại tập hợp ID đã xử lý
                         personNode.children = children.map(child => createFamilySubtree(child, new Set(processedIds)));
                     }
                     
                     return personNode;
                 }
                 
-                // PHƯƠNG PHÁP MỚI NHẤT - GIỮ CON VÀ CẶP VỢ CHỒNG Ở CÙNG MỘT CẤP
-                // Tạo node mức độ 0 (level) dạng ẩn để chứa cặp vợ chồng và con cái
-                const familyNode = {
-                    innerHTML: "", // Node trống
-                    HTMLclass: "family-node", // Để áp dụng CSS ẩn
-                    connectors: {
-                        style: {
-                            'stroke': 'transparent' // Kết nối trong suốt để tạo cấu trúc nhưng không hiển thị
-                        }
-                    },
-                    children: []
-                };
-                
-                // Tạo node cặp vợ chồng (level 1) 
+                // Xử lý trường hợp có vợ/chồng - CÁCH ĐƠN GIẢN NHẤT, CHỈ 1 NODE GIẢ
+                // Tạo node giả duy nhất để chứa cặp vợ chồng
                 const coupleNode = {
-                    pseudo: true,
-                    HTMLclass: "couple-pseudo-node",
+                    pseudo: true, 
+                    childrenDropLevel: 0, // Quan trọng: giữ con cái ở cùng cấp với node giả
                     children: []
                 };
                 
-                // Thêm người chính vào node vợ chồng
-                coupleNode.children.push(createNodeFromPerson(person));
+                // Thêm người chính vào
+                const personNode = createNodeFromPerson(person);
+                coupleNode.children.push(personNode);
                 
-                // Thêm vợ/chồng vào node vợ chồng
+                // Thêm vợ/chồng vào cùng cấp
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
@@ -717,11 +702,7 @@
                     }
                 }
                 
-                // Thêm node vợ chồng vào cây gia đình
-                familyNode.children.push(coupleNode);
-                
-                // Xử lý con cái
-                // Thu thập tất cả con cái từ tất cả các vợ/chồng
+                // Thu thập tất cả con cái
                 let allChildren = [];
                 for (const spouseId of person.spouses) {
                     const commonChildren = getCommonChildren(person.id, spouseId);
@@ -733,30 +714,19 @@
                     self.findIndex(c => c.id === child.id) === index
                 );
                 
-                // Nếu có con cái, tạo node giả chứa tất cả con
+                // Thêm tất cả con cái vào node của người chính
                 if (uniqueChildren.length > 0) {
-                    // Tạo node con cái (level 1, ngang hàng với coupleNode)
-                    const childrenNode = {
-                        pseudo: true,
-                        HTMLclass: "children-pseudo-node",
-                        children: uniqueChildren.map(child => createFamilySubtree(child, new Set(processedIds)))
-                    };
-                    
-                    // Thêm node con cái vào cây gia đình
-                    familyNode.children.push(childrenNode);
+                    personNode.children = uniqueChildren.map(child => 
+                        createFamilySubtree(child, new Set(processedIds))
+                    );
                 }
                 
-                return familyNode;
+                return coupleNode;
                 
             } catch (error) {
                 console.error(`Lỗi khi tạo cây con cho ${person.name}:`, error);
                 return {
-                    innerHTML: `
-                        <div style="padding: 10px; text-align: center;">
-                            <p>${person.name || 'Không rõ tên'}</p>
-                            <p style="font-size: 11px; color: #e74c3c;">Lỗi: ${error.message}</p>
-                        </div>
-                    `,
+                    innerHTML: `<p>${person.name || 'Không rõ tên'}</p><p>Lỗi: ${error.message}</p>`,
                     HTMLclass: person.gender || "error-node"
                 };
             }
