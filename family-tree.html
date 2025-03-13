@@ -7,79 +7,74 @@
     <link rel="stylesheet" href="family-tree.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Loại bỏ OrgChart và thêm FamilyTreeJS -->
-    <script src="https://unpkg.com/familytree-js@1.0.1/dist/familytree.js"></script>
-    <link href="https://unpkg.com/familytree-js@1.0.1/dist/familytree.css" rel="stylesheet">
+    <!-- Thư viện Treant.js - một thư viện cây gia phả đơn giản hơn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.css" rel="stylesheet">
 
     <style>
         #family-tree-container {
-            height: 700px;
             width: 100%;
+            height: 700px;
+            overflow: auto;
+            position: relative;
             border-radius: 5px;
             background-color: #f8f9fa;
         }
         
-        /* CSS cho FamilyTree */
-        .ft-node {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        .node {
+            padding: 5px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            background-color: white;
+            width: 200px;
+            text-align: center;
         }
         
-        .ft-node.male {
+        .node.male {
             border-left: 5px solid #0066cc;
         }
         
-        .ft-node.female {
+        .node.female {
             border-left: 5px solid #e91e63;
         }
         
-        .ft-node .ft-image {
-            width: 100%;
-            height: 120px;
+        .node-image {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
             object-fit: cover;
+            margin: 0 auto 10px;
             display: block;
-            background-size: cover;
-            background-position: center;
+            border: 3px solid #f0f5ff;
         }
         
-        .ft-node .ft-title {
+        .node-info {
+            text-align: center;
+        }
+        
+        .node-name {
             font-weight: bold;
-            text-align: center;
-            padding: 5px;
-            background-color: #f8f8f8;
+            font-size: 14px;
+            margin-bottom: 5px;
         }
         
-        .ft-node .ft-subtitle {
-            text-align: center;
+        .node-dates {
             font-size: 12px;
             color: #666;
-            padding: 0 5px 5px;
-            background-color: #f8f8f8;
         }
         
-        .ft-toolbar {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 100;
-            background-color: rgba(255,255,255,0.8);
-            border-radius: 5px;
-            padding: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .ft-toolbar button {
-            margin: 0 2px;
-            padding: 5px 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 3px;
+        .view-details-link {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #007bff;
+            text-decoration: none;
             cursor: pointer;
         }
         
-        .ft-toolbar button:hover {
-            background-color: #f3f3f3;
+        .node p {
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -138,14 +133,12 @@
             </div>
 
             <div id="family-tree-container" class="family-tree-container" style="display: none">
-                <!-- Container cho FamilyTreeJS -->
-                <div id="family-tree"></div>
+                <div id="family-tree" class="chart"></div>
                 
-                <!-- Thanh công cụ zoom -->
-                <div class="ft-toolbar">
-                    <button id="ft-zoom-in" title="Phóng to"><i class="fas fa-plus"></i></button>
-                    <button id="ft-zoom-out" title="Thu nhỏ"><i class="fas fa-minus"></i></button>
-                    <button id="ft-zoom-reset" title="Khôi phục"><i class="fas fa-sync-alt"></i></button>
+                <div class="zoom-controls">
+                    <button id="zoom-in" class="zoom-btn" title="Phóng to"><i class="fas fa-plus"></i></button>
+                    <button id="zoom-out" class="zoom-btn" title="Thu nhỏ"><i class="fas fa-minus"></i></button>
+                    <button id="zoom-reset" class="zoom-btn" title="Khôi phục"><i class="fas fa-sync-alt"></i></button>
                 </div>
             </div>
 
@@ -156,12 +149,6 @@
             </div>
         </div>
     </section>
-
-    <div class="zoom-controls">
-        <button id="zoom-in" class="zoom-btn" title="Phóng to"><i class="fas fa-plus"></i></button>
-        <button id="zoom-out" class="zoom-btn" title="Thu nhỏ"><i class="fas fa-minus"></i></button>
-        <button id="zoom-reset" class="zoom-btn" title="Khôi phục"><i class="fas fa-sync-alt"></i></button>
-    </div>
 
     <div id="person-detail-modal" class="modal">
         <div class="modal-content">
@@ -183,7 +170,8 @@
     <script>
         // Thiết lập cấu trúc dữ liệu cho gia phả
         let familyData = [];
-        let familyTree = null;
+        let treeChart = null;
+        let currentScale = 1.0;
 
         // Lấy dữ liệu gia phả từ localStorage hoặc API
         async function getFamilyData() {
@@ -337,7 +325,7 @@
                     return;
                 }
 
-                // Render cây gia phả sử dụng FamilyTreeJS
+                // Render cây gia phả sử dụng Treant
                 renderFamilyTree();
 
                 // Thiết lập sự kiện cho modal
@@ -356,107 +344,208 @@
             }
         });
 
-        // Thay thế hàm renderFamilyTree() và setupOrgChartZoomControls()
+        // Hàm tạo cấu trúc cây từ dữ liệu phẳng
+        function createTreeStructure() {
+            console.log("Đang tạo cấu trúc cây...");
+            
+            // Tìm tổ tiên đầu tiên (thế hệ 1)
+            const rootPersons = familyData.filter(person => person.generation === 1 && person.gender === 'male');
+            
+            if (rootPersons.length === 0) {
+                console.error('Không tìm thấy người ở thế hệ 1 làm gốc');
+                return null;
+            }
+            
+            // Lấy tổ tiên đầu tiên làm gốc
+            const rootPerson = rootPersons[0];
+            
+            // Tạo node gốc
+            const rootNode = createNodeFromPerson(rootPerson);
+            
+            // Đệ quy thêm con
+            addChildrenNodes(rootNode, rootPerson);
+            
+            return {
+                chart: {
+                    container: "#family-tree",
+                    connectors: {
+                        type: 'step',
+                        style: {
+                            'stroke': '#bbb',
+                            'stroke-width': 2
+                        }
+                    },
+                    nodeAlign: "BOTTOM",
+                    scrollbar: "native",
+                    padding: 50
+                },
+                nodeStructure: rootNode
+            };
+        }
+
+        // Hàm tạo node từ thông tin người
+        function createNodeFromPerson(person) {
+            // Tính tuổi hoặc năm sống
+            let lifespan = '';
+            if (person.birthDate) {
+                const birthYear = new Date(person.birthDate).getFullYear();
+                if (person.deathDate) {
+                    const deathYear = new Date(person.deathDate).getFullYear();
+                    lifespan = `${birthYear} - ${deathYear}`;
+                } else {
+                    lifespan = `Sinh năm ${birthYear}`;
+                }
+            }
+            
+            // Ảnh đại diện theo giới tính
+            let photoUrl = person.photo;
+            if (!photoUrl) {
+                if (person.gender === 'male') {
+                    photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                } else {
+                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                }
+            }
+            
+            // Thêm thông tin chi vào tên nếu là nam
+            let displayName = person.name;
+            if (person.gender === 'male' && person.generation > 1) {
+                const branch = findPersonBranch(person);
+                if (branch > 0) {
+                    displayName = `Chi ${branch} - ${person.name}`;
+                }
+            }
+            
+            return {
+                innerHTML: `
+                    <div class="node ${person.gender}" data-id="${person.id}">
+                        <img src="${photoUrl}" alt="${person.name}" class="node-image">
+                        <p class="node-name">${displayName}</p>
+                        <p class="node-dates">${lifespan}</p>
+                        <a class="view-details-link" data-id="${person.id}">Xem chi tiết</a>
+                    </div>
+                `,
+                HTMLclass: person.gender,
+                data: { id: person.id }
+            };
+        }
+
+        // Hàm đệ quy thêm con vào node
+        function addChildrenNodes(parentNode, parentPerson) {
+            // Nếu người này có vợ/chồng, thêm vợ/chồng trước
+            if (parentPerson.spouses && parentPerson.spouses.length > 0) {
+                parentNode.children = [];
+                
+                // Thêm vợ/chồng
+                for (const spouseId of parentPerson.spouses) {
+                    const spouse = familyData.find(p => p.id === spouseId);
+                    if (spouse) {
+                        const spouseNode = createNodeFromPerson(spouse);
+                        
+                        // Nếu vợ/chồng này có con với người hiện tại
+                        const childrenWithSpouse = familyData.filter(p => 
+                            p.parents && 
+                            p.parents.includes(parentPerson.id) && 
+                            p.parents.includes(spouseId)
+                        );
+                        
+                        if (childrenWithSpouse.length > 0) {
+                            spouseNode.children = [];
+                            
+                            // Sắp xếp con theo thứ tự sinh
+                            childrenWithSpouse.sort((a, b) => {
+                                if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                                return 0;
+                            });
+                            
+                            // Thêm từng người con
+                            for (const child of childrenWithSpouse) {
+                                const childNode = createNodeFromPerson(child);
+                                addChildrenNodes(childNode, child);
+                                spouseNode.children.push(childNode);
+                            }
+                        }
+                        
+                        parentNode.children.push(spouseNode);
+                    }
+                }
+            } 
+            // Nếu không có vợ/chồng nhưng có con (hiếm gặp)
+            else if (parentPerson.children && parentPerson.children.length > 0) {
+                parentNode.children = [];
+                
+                // Lấy tất cả con của người này
+                const children = familyData.filter(p => 
+                    p.parents && p.parents.includes(parentPerson.id)
+                );
+                
+                // Sắp xếp con theo thứ tự sinh
+                children.sort((a, b) => {
+                    if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
+                    return 0;
+                });
+                
+                // Thêm từng người con
+                for (const child of children) {
+                    const childNode = createNodeFromPerson(child);
+                    addChildrenNodes(childNode, child);
+                    parentNode.children.push(childNode);
+                }
+            }
+        }
+
+        // Hàm render cây gia phả
         function renderFamilyTree() {
             console.log("Bắt đầu render cây gia phả");
             
-            // Kiểm tra xem FamilyTree có tồn tại không
-            if (typeof familyTree === 'undefined') {
-                console.error('FamilyTree không được định nghĩa. Vui lòng kiểm tra thư viện.');
+            // Kiểm tra xem Treant có tồn tại không
+            if (typeof Treant === 'undefined') {
+                console.error('Treant không được định nghĩa. Vui lòng kiểm tra thư viện.');
                 document.getElementById('loading-indicator').style.display = 'none';
                 
                 const errorMessage = document.createElement('p');
                 errorMessage.style.textAlign = 'center';
                 errorMessage.style.padding = '40px 0';
                 errorMessage.style.color = '#e74c3c';
-                errorMessage.textContent = 'Lỗi: Thư viện FamilyTreeJS không được tải. Vui lòng kiểm tra kết nối internet.';
+                errorMessage.textContent = 'Lỗi: Thư viện Treant không được tải. Vui lòng kiểm tra kết nối internet.';
                 document.getElementById('family-tree-container').appendChild(errorMessage);
                 document.getElementById('family-tree-container').style.display = 'block';
                 return;
             }
             
             try {
-                // Chuyển đổi dữ liệu
-                console.log("Đang chuyển đổi dữ liệu...");
-                const nodes = convertFamilyDataToFamilyTreeFormat();
-                console.log("Đã chuyển đổi dữ liệu thành công:", nodes);
-                
-                // Thêm timeout để ẩn loading nếu sự kiện ready không kích hoạt
+                // Thêm timeout để ẩn loading nếu rendering quá lâu
                 const loadingTimeout = setTimeout(function() {
                     console.log("Timeout - Ẩn loading indicator sau 5 giây");
                     document.getElementById('loading-indicator').style.display = 'none';
                     document.getElementById('family-tree-container').style.display = 'block';
                 }, 5000);
                 
-                // Tạo và cấu hình chart
-                console.log("Đang khởi tạo FamilyTree...");
-                familyTree = new familyTree.FamilyTree(document.getElementById('family-tree'), {
-                    data: {
-                        id: 'root',
-                        name: 'Nguyễn Bá',
-                        children: nodes
-                    },
-                    nodeBinding: {
-                        field_0: "name",
-                        field_1: "dates",
-                        img_0: "photo"
-                    },
-                    nodeInfo: {
-                        showOnClick: true,
-                        showOnHover: true
-                    },
-                    nodeMenu: {
-                        showOnClick: true,
-                        showOnHover: true
-                    },
-                    enableSearch: true,
-                    searchPlaceholder: "Tìm kiếm thành viên...",
-                    searchFields: ["name", "dates"],
-                    mouseScrool: familyTree.action.zoom,
-                    scaleInitial: 0.8,
-                    orientation: familyTree.orientation.top,
-                    levelSeparation: 120,
-                    siblingSeparation: 60,
-                    subtreeSeparation: 80,
-                    padding: 50,
-                    showXScroll: familyTree.scroll.visible,
-                    showYScroll: familyTree.scroll.visible,
-                    tags: {
-                        male: {
-                            template: "belinda"
-                        },
-                        female: {
-                            template: "diva"
-                        }
-                    }
-                });
+                // Tạo cấu trúc cây
+                console.log("Đang chuyển đổi dữ liệu...");
+                const treeConfig = createTreeStructure();
+                console.log("Đã chuyển đổi dữ liệu thành công");
                 
-                console.log("FamilyTree đã được khởi tạo");
+                if (!treeConfig) {
+                    throw new Error('Không thể tạo cấu trúc cây gia phả');
+                }
                 
-                // Xử lý sự kiện chi tiết
-                familyTree.on('click', function(sender, args) {
-                    showPersonDetail(args.node.id);
-                    return false;
-                });
+                // Tạo và hiển thị cây
+                console.log("Đang khởi tạo Treant...");
+                treeChart = new Treant(treeConfig);
                 
-                // Xử lý khi chart đã sẵn sàng
-                familyTree.on('ready', function() {
-                    console.log("FamilyTree đã sẵn sàng - Sự kiện ready đã kích hoạt");
-                    // Hủy timeout vì sự kiện ready đã kích hoạt
-                    clearTimeout(loadingTimeout);
-                    // Ẩn loading và hiển thị family tree
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    document.getElementById('family-tree-container').style.display = 'block';
-                });
+                console.log("Treant đã được khởi tạo");
                 
-                // Kích hoạt draw ngay lập tức
-                console.log("Kích hoạt vẽ FamilyTree");
-                familyTree.draw();
+                // Hiển thị cây gia phả
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('family-tree-container').style.display = 'block';
+                clearTimeout(loadingTimeout);
                 
-                // Thiết lật zoom controls
-                setupFamilyTreeZoomControls();
+                // Thiết lập zoom controls và sự kiện click
+                setupZoomControls();
+                setupTreeClickEvents();
             } catch (error) {
-                console.error('Lỗi khi khởi tạo FamilyTree:', error);
+                console.error('Lỗi khi khởi tạo cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
                 
                 const errorMessage = document.createElement('p');
@@ -469,122 +558,48 @@
             }
         }
 
-        // Cập nhật hàm setupFamilyTreeZoomControls()
-        function setupFamilyTreeZoomControls() {
-            if (!familyTree) return;
+        // Thiết lập sự kiện click trên cây
+        function setupTreeClickEvents() {
+            // Thêm sự kiện click cho các nút xem chi tiết
+            document.querySelectorAll('.view-details-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    const personId = this.getAttribute('data-id');
+                    showPersonDetail(personId);
+                });
+            });
+        }
+
+        // Thiết lập các nút zoom
+        function setupZoomControls() {
+            const container = document.getElementById('family-tree');
             
-            const zoomInBtn = document.getElementById('ft-zoom-in');
-            const zoomOutBtn = document.getElementById('ft-zoom-out');
-            const zoomResetBtn = document.getElementById('ft-zoom-reset');
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const zoomResetBtn = document.getElementById('zoom-reset');
             
             if (zoomInBtn) {
                 zoomInBtn.addEventListener('click', function() {
-                    familyTree.zoom(1.2, null, 'smooth');
+                    currentScale *= 1.2;
+                    container.style.transform = `scale(${currentScale})`;
+                    container.style.transformOrigin = 'top left';
                 });
             }
             
             if (zoomOutBtn) {
                 zoomOutBtn.addEventListener('click', function() {
-                    familyTree.zoom(0.8, null, 'smooth');
+                    currentScale *= 0.8;
+                    container.style.transform = `scale(${currentScale})`;
+                    container.style.transformOrigin = 'top left';
                 });
             }
             
             if (zoomResetBtn) {
                 zoomResetBtn.addEventListener('click', function() {
-                    familyTree.fit();
+                    currentScale = 1.0;
+                    container.style.transform = 'scale(1)';
+                    container.style.transformOrigin = 'top left';
                 });
             }
-        }
-
-        // Hàm chuyển đổi dữ liệu gia phả sang định dạng FamilyTree
-        function convertFamilyDataToFamilyTreeFormat() {
-            const nodes = [];
-            
-            // Chuyển đổi từng thành viên trong gia phả
-            familyData.forEach(person => {
-                // Tính toán thông tin tuổi/năm sống
-                let lifespan = '';
-                if (person.birthDate) {
-                    const birthYear = new Date(person.birthDate).getFullYear();
-                    if (person.deathDate) {
-                        const deathYear = new Date(person.deathDate).getFullYear();
-                        lifespan = `${birthYear} - ${deathYear}`;
-                    } else {
-                        lifespan = `Sinh năm ${birthYear}`;
-                    }
-                }
-                
-                // Ảnh đại diện theo giới tính
-                let photoUrl = person.photo;
-                if (!photoUrl) {
-                    if (person.gender === 'male') {
-                        photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
-                    } else {
-                        photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
-                    }
-                }
-                
-                // Thêm thông tin chi vào tên nếu là nam
-                let displayName = person.name;
-                if (person.gender === 'male' && person.generation > 1) {
-                    const branch = findPersonBranch(person);
-                    if (branch > 0) {
-                        displayName = `Chi ${branch} - ${person.name}`;
-                    }
-                }
-                
-                // Tạo node cho FamilyTree
-                const node = {
-                    id: person.id,
-                    name: displayName,
-                    dates: lifespan,
-                    photo: photoUrl,
-                    gender: person.gender,
-                    tags: [person.gender]
-                };
-                
-                // Thiết lập quan hệ với cha mẹ
-                if (person.parents && person.parents.length > 0) {
-                    // Ưu tiên cha nếu có cả cha và mẹ
-                    const father = familyData.find(p => p.gender === 'male' && person.parents.includes(p.id));
-                    if (father) {
-                        node.pid = father.id;
-                    } else {
-                        // Nếu không có cha, sử dụng mẹ
-                        node.pid = person.parents[0];
-                    }
-                }
-                
-                // Thiết lập quan hệ vợ/chồng
-                if (person.spouses && person.spouses.length > 0) {
-                    node.pids = [];
-                    person.spouses.forEach(spouseId => {
-                        node.pids.push(spouseId);
-                    });
-                }
-                
-                nodes.push(node);
-            });
-            
-            return nodes;
-        }
-
-        // Thêm hàm theo dõi pinch-to-zoom để cập nhật các kết nối
-        function setupZoomHandlers() {
-            // Không còn cần thiết khi sử dụng FamilyTree
-            console.log('setupZoomHandlers không còn cần thiết');
-        }
-
-        // Cập nhật hàm observeTreeContainer
-        function observeTreeContainer() {
-            // Không còn cần thiết khi sử dụng FamilyTree
-            console.log('observeTreeContainer không còn cần thiết');
-        }
-
-        // Cập nhật hàm setupFamilyConnections
-        function setupFamilyConnections() {
-            // Không còn cần thiết khi sử dụng FamilyTree
-            console.log('setupFamilyConnections không còn cần thiết');
         }
 
         // Hàm tìm chi của một người
