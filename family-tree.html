@@ -81,8 +81,13 @@
         .Treant .node,
         .Treant .pseudo {
             position: absolute;
-            width: 220px; /* Cố định chiều rộng node */
+            width: auto;
+            min-width: 200px;
+            max-width: 240px;
             text-align: center;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: white;
         }
         
         .Treant .node.male {
@@ -94,11 +99,11 @@
         }
         
         .Treant .pseudo {
-            width: 0px;
+            width: 0;
             height: 30px;
             border: none;
-            box-shadow: none;
             background-color: transparent;
+            box-shadow: none;
         }
         
         /* Tạo hiệu ứng "kết nối" giữa các cặp vợ chồng */
@@ -166,6 +171,16 @@
         
         .zoom-btn:hover {
             background-color: #f0f0f0;
+        }
+        
+        /* Đảm bảo hình ảnh không bị méo */
+        .node-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 8px;
+            border: 3px solid #f0f5ff;
         }
     </style>
 </head>
@@ -590,11 +605,11 @@
                     nodeAlign: "CENTER",
                     scrollbar: "native",
                     padding: 80,
-                    siblingSeparation: 100,
-                    levelSeparation: 200,
-                    subtreeSeparation: 150,
+                    siblingSeparation: 120,
+                    levelSeparation: 150,
+                    subtreeSeparation: 180,
                     connectors: {
-                        type: 'curved',
+                        type: 'step',
                         style: {
                             'stroke': '#888',
                             'stroke-width': 2
@@ -603,10 +618,6 @@
                     animateOnInit: false,
                     node: {
                         collapsable: false
-                    },
-                    animation: {
-                        nodeSpeed: 300,
-                        connectorsSpeed: 300,
                     }
                 },
                 nodeStructure: rootNode
@@ -650,9 +661,11 @@
                 innerHTML: `
                     <div class="node ${person.gender}" data-id="${person.id}">
                         <img src="${photoUrl}" alt="${person.name}" class="node-image">
-                        <p class="node-name">${displayName}</p>
-                        <p class="node-dates">${lifespan}</p>
-                        <a class="view-details-link" data-id="${person.id}">Xem chi tiết</a>
+                        <div class="node-info">
+                            <p class="node-name">${displayName}</p>
+                            <p class="node-dates">${lifespan}</p>
+                            <a class="view-details-link" data-id="${person.id}">Xem chi tiết</a>
+                        </div>
                     </div>
                 `,
                 HTMLclass: person.gender,
@@ -664,52 +677,71 @@
         function addChildrenNodes(parentNode, parentPerson) {
             console.log(`Đang thêm con cho ${parentPerson.name} (ID: ${parentPerson.id})`);
             
-            // Thiết lập để hiển thị con theo hàng ngang
+            // Đặt kiểu hiển thị con cho node cha
             parentNode.stackChildren = false;
             
-            // Xử lý các trường hợp khác nhau
+            // Trường hợp 1: Người có vợ/chồng
             if (parentPerson.spouses && parentPerson.spouses.length > 0) {
-                // Tạo một mảng để giữ các con
-                const childNodes = [];
+                // Tạo mảng để chứa vợ/chồng và con cái
+                let familyNodes = [];
                 
-                // Xử lý từng vợ/chồng
+                // Thêm từng vợ/chồng vào cây
                 for (const spouseId of parentPerson.spouses) {
                     const spouse = familyData.find(p => p.id === spouseId);
                     if (!spouse) continue;
                     
-                    console.log(`Tìm con chung giữa ${parentPerson.name} và ${spouse.name}`);
+                    console.log(`Đang thêm vợ/chồng ${spouse.name} cho ${parentPerson.name}`);
                     
-                    // Tìm con chung
-                    const commonChildren = familyData.filter(p => 
+                    // Tạo node cho vợ/chồng
+                    const spouseNode = createNodeFromPerson(spouse);
+                    spouseNode.stackChildren = false;
+                    
+                    // Thêm vợ/chồng vào cây gia đình
+                    familyNodes.push(spouseNode);
+                    
+                    // Tìm con chung giữa người hiện tại và vợ/chồng
+                    const childrenWithSpouse = familyData.filter(p => 
                         p.parents && 
                         p.parents.includes(parentPerson.id) && 
                         p.parents.includes(spouseId)
                     );
                     
-                    if (commonChildren.length > 0) {
-                        console.log(`Tìm thấy ${commonChildren.length} con chung`);
+                    if (childrenWithSpouse.length > 0) {
+                        console.log(`Tìm thấy ${childrenWithSpouse.length} con chung giữa ${parentPerson.name} và ${spouse.name}`);
+                        
+                        // Tạo node giả để chứa con
+                        const childrenContainer = {
+                            pseudo: true,
+                            stackChildren: false,
+                            children: []
+                        };
                         
                         // Sắp xếp con theo thứ tự sinh
-                        commonChildren.sort((a, b) => {
+                        childrenWithSpouse.sort((a, b) => {
                             if (a.birthDate && b.birthDate) return new Date(a.birthDate) - new Date(b.birthDate);
                             return 0;
                         });
                         
-                        // Thêm con vào danh sách
-                        for (const child of commonChildren) {
+                        // Thêm từng người con vào node giả
+                        for (const child of childrenWithSpouse) {
                             const childNode = createNodeFromPerson(child);
                             addChildrenNodes(childNode, child);
-                            childNodes.push(childNode);
+                            childrenContainer.children.push(childNode);
+                        }
+                        
+                        if (childrenContainer.children.length > 0) {
+                            // Gán node con cho node vợ/chồng
+                            spouseNode.children = [childrenContainer];
                         }
                     }
                 }
                 
-                // Nếu có con, thêm vào node cha mẹ
-                if (childNodes.length > 0) {
-                    parentNode.children = childNodes;
+                // Gán các node vợ/chồng cho node cha mẹ
+                if (familyNodes.length > 0) {
+                    parentNode.children = familyNodes;
                 }
-            } 
-            // Nếu không có vợ/chồng nhưng có con
+            }
+            // Trường hợp 2: Người không có vợ/chồng nhưng có con
             else if (parentPerson.children && parentPerson.children.length > 0) {
                 const childNodes = [];
                 
@@ -729,6 +761,7 @@
                 // Thêm con vào danh sách
                 for (const child of children) {
                     const childNode = createNodeFromPerson(child);
+                    childNode.stackChildren = false;
                     addChildrenNodes(childNode, child);
                     childNodes.push(childNode);
                 }
