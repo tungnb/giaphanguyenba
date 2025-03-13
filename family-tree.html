@@ -675,50 +675,51 @@
                     return personNode;
                 }
                 
-                // Xử lý trường hợp có vợ/chồng - Sửa lỗi hiển thị sai thế hệ
-                // Tạo 1 node giả duy nhất cho cặp vợ chồng và con cái của họ
-                const familyNode = {
+                // Xử lý trường hợp có vợ/chồng
+                // Tạo node giả đại diện cho cặp vợ chồng
+                const coupleNode = {
                     pseudo: true,
                     children: []
                 };
                 
-                // Thêm người hiện tại vào node giả
-                familyNode.children.push(personNode);
+                // Thêm người hiện tại và vợ/chồng vào node cặp đôi
+                coupleNode.children.push(personNode);
                 
-                // Thêm mỗi vợ/chồng vào node giả
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
                         const spouseNode = createNodeFromPerson(spouse);
-                        familyNode.children.push(spouseNode);
+                        coupleNode.children.push(spouseNode);
                     }
                 }
                 
-                // Thu thập tất cả con cái và thêm trực tiếp vào cây
+                // Thu thập tất cả con cái
                 let allChildren = [];
                 for (const spouseId of person.spouses) {
                     const commonChildren = getCommonChildren(person.id, spouseId);
                     allChildren = [...allChildren, ...commonChildren];
                 }
                 
-                // Thêm con cái trực tiếp vào node giả, không lồng thêm node giả nào khác
+                // Nếu có con cái, tạo một node cha cho tất cả con cái
                 if (allChildren.length > 0) {
                     // Loại bỏ trùng lặp (nếu có)
                     const uniqueChildren = allChildren.filter((child, index, self) => 
                         self.findIndex(c => c.id === child.id) === index
                     );
                     
-                    // Thêm từng con vào node giả của cặp vợ chồng
-                    for (const child of uniqueChildren) {
-                        const childNode = createFamilySubtree(child);
-                        if (childNode) {
-                            // Thêm con trực tiếp vào node giả của cặp vợ chồng
-                            familyNode.children.push(childNode);
-                        }
+                    // Tạo cây cho từng đứa con
+                    const childrenNodes = uniqueChildren.map(child => createFamilySubtree(child));
+                    
+                    // Chỉ giữ lại những node con hợp lệ
+                    const validChildrenNodes = childrenNodes.filter(node => node !== null);
+                    
+                    if (validChildrenNodes.length > 0) {
+                        // Thêm tất cả con trực tiếp vào node của cặp vợ chồng
+                        coupleNode.children = [...coupleNode.children, ...validChildrenNodes];
                     }
                 }
                 
-                return familyNode;
+                return coupleNode;
                 
             } catch (error) {
                 console.error(`Lỗi khi tạo cây con cho ${person.name}:`, error);
