@@ -260,6 +260,7 @@
         // Thiết lập cấu trúc dữ liệu cho gia phả
         let familyData = [];
         let familyChart = null;
+        let formattedChartData = null; // Biến toàn cục để lưu dữ liệu đã định dạng
 
         // Thêm polyfill cho phương thức addPartnerAndParentNodes nếu nó không tồn tại trong OrgChart
         if (OrgChart && !OrgChart.prototype.addPartnerAndParentNodes) {
@@ -582,6 +583,9 @@
 
         // Hàm khởi tạo OrgChart
         function initializeOrgChart(formattedData) {
+            // Lưu dữ liệu đã định dạng vào biến toàn cục để sử dụng sau này
+            formattedChartData = formattedData;
+
             // Tùy chỉnh template cho node đơn
             OrgChart.templates.single = Object.assign({}, OrgChart.templates.olivia);
             OrgChart.templates.single.size = [280, 120];
@@ -742,25 +746,37 @@
             // Xử lý sự kiện khi click vào node
             chart.on('click', function(sender, args) {
                 if (args.node) {
-                    // Log thông tin node để debug
+                    // Log đầy đủ thông tin node để debug
                     console.log("Node clicked:", args.node.id);
                     
-                    // Kiểm tra nếu là node vợ chồng
-                    let isCouple = false;
-                    if (args.node.tags) {
-                        isCouple = args.node.tags.includes('couple_male') || 
-                                  args.node.tags.includes('couple_female') ||
-                                  args.node.tags.indexOf('couple_male') !== -1 || 
-                                  args.node.tags.indexOf('couple_female') !== -1;
-                    }
-                    
-                    if (isCouple) {
-                        // Hiển thị thông tin của người nội tộc
-                        showPersonDetail(args.node.personId);
-                    } else {
-                        // Nếu là node đơn, sử dụng personId nếu có, không thì dùng id
-                        const personId = args.node.personId || args.node.id;
-                        showPersonDetail(personId);
+                    try {
+                        // Kiểm tra nếu là node vợ chồng dựa vào ID có chứa dấu "_"
+                        const isCouple = args.node.id.includes("_");
+                        
+                        if (isCouple) {
+                            // Truy cập trực tiếp vào dữ liệu gốc để tìm node
+                            const originalData = formattedChartData.nodes.find(n => n.id === args.node.id);
+                            
+                            if (originalData && originalData.personId) {
+                                console.log("Found personId in original data:", originalData.personId);
+                                showPersonDetail(originalData.personId);
+                            } else {
+                                // Phương pháp dự phòng: Sử dụng ID đầu tiên trong cặp
+                                const ids = args.node.id.split('_');
+                                if (ids.length === 2) {
+                                    const personId = ids[0];
+                                    console.log("Using first ID from couple:", personId);
+                                    showPersonDetail(personId);
+                                } else {
+                                    console.error("Không thể xác định personId cho node vợ chồng:", args.node.id);
+                                }
+                            }
+                        } else {
+                            // Nếu là node đơn, sử dụng id trực tiếp
+                            showPersonDetail(args.node.id);
+                        }
+                    } catch (error) {
+                        console.error("Error in click handler:", error);
                     }
                 }
                 return false; // Ngăn hành vi mặc định
