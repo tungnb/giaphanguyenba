@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Blog Cá Nhân</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .user-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .error-message {
+            background-color: #fde8e8;
+            color: #e53e3e;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e53e3e;
+        }
+        
+        .warning-message {
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d97706;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #666;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            color: #cbd5e0;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+        
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .pagination-button {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #0066cc;
+            padding: 8px 14px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .pagination-button:hover {
+            background-color: #e9ecef;
+        }
+        
+        .pagination-button.active {
+            background-color: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        
+        .pagination-button:disabled {
+            color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .pagination-info {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        /* Filter styles */
+        .filter-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+        
+        .filter-label {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div>
+                <h2>Quản lý bài viết</h2>
+                <p class="user-info">Xin chào, <span id="username-display">Admin</span>!</p>
+            </div>
+            <div class="btn-container">
+                <button id="new-post-btn" class="btn btn-new">Viết bài mới</button>
+                <button id="logout-btn" class="btn btn-logout">Đăng xuất</button>
+            </div>
+        </div>
+        
+        <div id="error-message" style="display: none;" class="error-message"></div>
+        <div id="warning-message" style="display: none;" class="warning-message"></div>
+        
+        <div class="filter-controls">
+            
+<select id="category-filter" class="filter-select">
+    <option value="">Tất cả danh mục</option>
+    <option value="life">Cuộc sống</option>
+    <option value="business">Kinh doanh</option>
+    <option value="tech">Công nghệ</option>
+</select>
+            
+            <select id="status-filter" class="filter-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="published">Đã xuất bản</option>
+                <option value="draft">Bản nháp</option>
+            </select>
+        </div>
+        
+        <div id="loading-indicator" style="text-align: center; padding: 20px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="animation: rotate 1s linear infinite;">
+                <style>
+                    @keyframes rotate {
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+                <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25"/>
+                <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" fill="#0066cc"/>
+            </svg>
+            <p style="margin-top: 10px;">Đang tải dữ liệu...</p>
+        </div>
+        
+        <table id="posts-table-container" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề</th>
+                    <th>Danh mục</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="posts-table">
+                <!-- Dữ liệu bài viết sẽ được thêm vào đây -->
+            </tbody>
+        </table>
+        
+        <div id="pagination-info" class="pagination-info"></div>
+        <div id="pagination" class="pagination"></div>
+        
+        <div id="empty-state" style="display: none;" class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3>Chưa có bài viết nào</h3>
+            <p>Hãy bắt đầu bằng cách tạo bài viết đầu tiên của bạn. Nhấp vào nút "Viết bài mới" ở trên.</p>
+        </div>
+    </div>
+
+    <script>
+        // Thiết lập phân trang
+        const ITEMS_PER_PAGE = 20;
+        let currentPage = 1;
+        let allPosts = [];
+        let filteredPosts = [];
+        
+        // Kiểm tra trạng thái đăng nhập
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                // Nếu chưa đăng nhập, chuyển hướng về trang login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Hiển thị tên người dùng
+            const username = localStorage.getItem('username') || 'Admin';
+            document.getElementById('username-display').textContent = username;
+            
+            // Tải danh sách bài viết
+            fetchPosts();
+            
+            // Xử lý nút đăng xuất
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('username');
+                window.location.href = 'login.html';
+            });
+            
+            // Xử lý nút tạo bài viết mới
+            document.getElementById('new-post-btn').addEventListener('click', function() {
+                window.location.href = 'editor.html';
+            });
+            
+            // Xử lý sự kiện thay đổi bộ lọc
+            document.getElementById('category-filter').addEventListener('change', applyFilters);
+            document.getElementById('status-filter').addEventListener('change', applyFilters);
+        });
+        
+        // Áp dụng các bộ lọc và hiển thị lại dữ liệu
+        function applyFilters() {
+            const categoryFilter = document.getElementById('category-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            // Lọc bài viết dựa trên bộ lọc
+            filteredPosts = allPosts.filter(post => {
+                // Lọc theo danh mục
+                if (categoryFilter && post.category !== categoryFilter) {
+                    return false;
+                }
+                
+                // Lọc theo trạng thái
+                if (statusFilter && post.status !== statusFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Đặt lại trang hiện tại về 1 sau khi lọc
+            currentPage = 1;
+            
+            // Hiển thị bài viết đã lọc
+            displayPosts(filteredPosts);
+        }
+        
+        // Lấy danh sách bài viết từ API
+        async function fetchPosts() {
+            try {
+                // Ẩn các thông báo
+                document.getElementById('error-message').style.display = 'none';
+                document.getElementById('warning-message').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'none';
+                
+                // Hiển thị chỉ báo đang tải
+                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('posts-table-container').style.display = 'none';
+                
+                // Lấy dữ liệu từ API
+                const response = await fetch('/api/posts');
+                
+                if (!response.ok) {
+                    let errorMessage = `Lỗi khi lấy dữ liệu: ${response.status}`;
+                    
+                    try {
+                        const errorData = await response.json();
+                        errorMessage += ` - ${errorData.error || 'Unknown error'}`;
+                    } catch (parseError) {
+                        // Không làm gì nếu không parse được lỗi
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                const posts = await response.json();
+                
+                // Sắp xếp bài viết theo ngày mới nhất
+                posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Lưu tất cả bài viết vào biến toàn cục
+                allPosts = posts;
+                filteredPosts = posts;
+                
+                // Hiển thị danh sách bài viết
+                displayPosts(posts);
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+                
+                // Fallback sử dụng localStorage nếu API bị lỗi
+                try {
+                    let posts = JSON.parse(localStorage.getItem('blog-posts') || '[]');
+                    
+                    // Sắp xếp theo ngày mới nhất
+                    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    // Lưu tất cả bài viết vào biến toàn cục
+                    allPosts = posts;
+                    filteredPosts = posts;
+                    
+                    displayPosts(posts);
+                    
+                    document.getElementById('warning-message').textContent = `Cảnh báo: Sử dụng dữ liệu cục bộ do lỗi API: ${error.message}`;
+                    document.getElementById('warning-message').style.display = 'block';
+                } catch (localError) {
+                    document.getElementById('error-message').textContent = `Lỗi: ${error.message}`;
+                    document.getElementById('error-message').style.display = 'block';
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    
+                    // Hiển thị empty state
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            }
+        }
+        
+        // Hiển thị danh sách bài viết
+        function displayPosts(posts) {
+            // Ẩn loading indicator
+            document.getElementById('loading-indicator').style.display = 'none';
+            
+            if (!posts || posts.length === 0) {
+                // Hiển thị empty state
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('posts-table-container').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('pagination-info').style.display = 'none';
+                return;
+            }
+            
+            // Tính toán phân trang
+            const totalPages = Math.ceil(posts.length / ITEMS_PER_PAGE);
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, posts.length);
+            const currentPosts = posts.slice(startIndex, endIndex);
+            
+            // Hiển thị thông tin phân trang
+            document.getElementById('pagination-info').textContent = 
+                `Hiển thị ${startIndex + 1}-${endIndex} của ${posts.length} bài viết`;
+            document.getElementById('pagination-info').style.display = 'block';
+            
+            // Tạo phân trang
+            createPagination(totalPages);
+            
+            // Hiển thị bảng bài viết
+            document.getElementById('posts-table-container').style.display = 'table';
+            const tableBody = document.getElementById('posts-table');
+            tableBody.innerHTML = '';
+            
+            currentPosts.forEach(post => {
+                const row = document.createElement('tr');
+                
+                // Rút gọn ID để dễ đọc
+                const shortId = post.id.length > 8 ? post.id.substring(0, 8) + '...' : post.id;
+                
+                // Lấy tên danh mục hiển thị
+                const categoryName = getCategoryName(post.category);
+                
+                row.innerHTML = `
+                    <td title="${post.id}">${shortId}</td>
+                    <td>${post.title}</td>
+                    <td>${categoryName}</td>
+                    <td>
+                        <span class="status-badge status-${post.status === 'published' ? 'published' : 'draft'}">
+                            ${post.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                        </span>
+                    </td>
+                    <td>${formatDate(post.date)}</td>
+                    <td>
+                        <a href="editor.html?id=${post.id}" class="action-btn">Sửa</a>
+                        <span class="action-btn delete-btn" data-id="${post.id}">Xóa</span>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Xử lý nút xóa
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-id');
+                    
+                    if (confirm('Bạn có chắc muốn xóa bài viết này?')) {
+                        deletePost(postId);
+                    }
+                });
+            });
+        }
+        
+        // Tạo phân trang
+        function createPagination(totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'flex';
+            
+            // Nút Previous
+            const prevButton = document.createElement('button');
+            prevButton.className = 'pagination-button';
+            prevButton.textContent = '←';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayPosts(filteredPosts);
+                }
+            });
+            paginationContainer.appendChild(prevButton);
+            
+            // Hiển thị các nút trang
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `pagination-button ${i === currentPage ? 'active' : ''}`;
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    displayPosts(filteredPosts);
+                });
+                paginationContainer.appendChild(pageButton);
+            }
+            
+            // Nút Next
+            const nextButton = document.createElement('button');
+            nextButton.className = 'pagination-button';
+            nextButton.textContent = '→';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayPosts(filteredPosts);
+                }
+            });
+            paginationContainer.appendChild(nextButton);
+        }
+        
+        // Xóa bài viết
+        async function deletePost(postId) {
+            try {
+                // Hiển thị loading indicator
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Xóa bài viết khỏi database thông qua API
+                try {
+                    const response = await fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Lỗi API: ${response.status}`);
+                    }
+                } catch (apiError) {
+                    console.error('API error:', apiError);
+                    // Không throw lỗi ở đây, để tiếp tục xóa từ localStorage
+                }
+                
+                // Luôn xóa từ localStorage, ngay cả khi API thất bại
+                let posts = JSON.parse(localStorage.getItem('blog-posts') || '[]');
+                posts = posts.filter(post => post.id !== postId);
+                localStorage.setItem('blog-posts', JSON.stringify(posts));
+                
+                // Ẩn loading indicator
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                // Cập nhật danh sách bài viết hiện tại
+                allPosts = allPosts.filter(post => post.id !== postId);
+                filteredPosts = filteredPosts.filter(post => post.id !== postId);
+                
+                alert('Bài viết đã được xóa thành công.');
+                
+                // Hiển thị lại danh sách bài viết
+                displayPosts(filteredPosts);
+                
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                // Hiển thị thông báo lỗi
+                document.getElementById('error-message').textContent = `Lỗi khi xóa bài viết: ${error.message}`;
+                document.getElementById('error-message').style.display = 'block';
+            }
+        }
+        
+        // Định dạng ngày tháng
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString; // Trả về nguyên gốc nếu không phải ngày hợp lệ
+                }
+                
+                return date.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                return dateString; // Trả về nguyên gốc nếu có lỗi
+            }
+        }
+        
+        // Lấy tên danh mục từ slug
+        function getCategoryName(categorySlug) {
+            const categories = {
+                'life': 'Cuộc sống',
+                'business': 'Kinh doanh',
+                'tech': 'Công nghệ'
+            };
+            
+            return categories[categorySlug] || 'Chưa phân loại';
+        }
+    </script>
+</body>
+</html>

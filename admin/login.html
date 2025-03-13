@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập Admin - Blog Cá Nhân</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .btn-login {
+            background-color: #0066cc;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-login:hover {
+            background-color: #0052a3;
+        }
+        
+        .btn-login:disabled {
+            background-color: #83b7e7;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="form-title">Đăng nhập Admin</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn-login" id="login-button">Đăng nhập</button>
+            <p id="error-message" class="error-message">Tên đăng nhập hoặc mật khẩu không đúng.</p>
+        </form>
+        <a href="../index.html" class="back-link">← Quay lại trang chủ</a>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginButton = document.getElementById('login-button');
+            const errorMessage = document.getElementById('error-message');
+            
+            try {
+                // Hiển thị trạng thái đang đăng nhập
+                loginButton.textContent = 'Đang đăng nhập...';
+                loginButton.disabled = true;
+                errorMessage.style.display = 'none';
+                
+                // Gọi API để xác thực
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Lưu thông tin đăng nhập
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', data.username);
+                    
+                    // Chuyển hướng đến trang dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Hiển thị lỗi
+                    errorMessage.textContent = data.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
+                    errorMessage.style.display = 'block';
+                    loginButton.textContent = 'Đăng nhập';
+                    loginButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Hiển thị lỗi
+                errorMessage.textContent = 'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại sau.';
+                errorMessage.style.display = 'block';
+                loginButton.textContent = 'Đăng nhập';
+                loginButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nguyễn Bá Tùng - Blog</title>
+    <title>Nguyễn Bá Tùng - Tất cả bài viết</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reset CSS */
@@ -39,7 +39,7 @@
         /* Header Styles */
         header {
             background-color: #fff;
-            padding: 30px 0 20px;
+            padding: 25px 0 20px; /* Giảm padding */
             text-align: center;
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
@@ -50,30 +50,30 @@
         }
         
         .blog-title {
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             color: #333;
         }
         
         .author-info {
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Giảm margin */
             display: flex;
-            flex-direction: row;
+            flex-direction: row; /* Đổi thành row để layout ngang */
             align-items: center;
             justify-content: center;
-            gap: 30px;
-            text-align: left;
+            gap: 25px; /* Khoảng cách giữa avatar và thông tin */
+            text-align: left; /* Căn trái cho thông tin */
         }
         
         .avatar-container {
-            width: 120px;
-            height: 120px;
-            min-width: 120px;
+            width: 100px;
+            height: 100px;
+            min-width: 100px; /* Đảm bảo avatar không bị co lại */
             border-radius: 50%;
             overflow: hidden;
-            border: 4px solid #f0f5ff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 3px solid #f0f5ff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         
         .author-text-content {
@@ -88,85 +88,37 @@
         }
         
         .author-name {
-            font-size: 1.6rem;
+            font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 5px;
             color: #333;
         }
         
         .author-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #666;
             margin-bottom: 10px;
             font-style: italic;
         }
         
-        .author-description {
-            font-size: 1rem;
-            color: #555;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            padding: 0;
-            display: none;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            opacity: 0;
-            max-height: 0;
-            text-align: left;
-            width: 100%;
-        }
-        
-        .author-description.active {
-            display: block;
-            opacity: 1;
-            max-height: 500px;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        
-        .about-me-btn {
-            display: inline-block;
-            padding: 6px 15px;
-            background-color: #f0f5ff;
-            color: #0066cc;
-            border: 1px solid #0066cc;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 5px;
-            align-self: flex-start;
-        }
-        
-        .about-me-btn:hover {
-            background-color: #0066cc;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .about-me-btn i {
-            margin-right: 5px;
-        }
-        
         .social-links {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            justify-content: flex-start; /* Căn trái thay vì căn giữa */
+            gap: 12px;
+            margin-top: 5px; /* Giảm margin */
         }
         
         .social-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background-color: #f0f5ff;
             color: #0066cc;
             transition: all 0.3s ease;
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
         
         .social-btn:hover {
@@ -216,39 +168,101 @@
             opacity: 1;
         }
         
+        .page-title {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .author-description {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding: 0;
+            display: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            opacity: 0;
+            max-height: 0;
+            text-align: left;
+            width: 100%;
+        }
+        
+        .author-description.active {
+            display: block;
+            opacity: 1;
+            max-height: 300px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .about-me-btn {
+            display: inline-block;
+            padding: 6px 15px;
+            background-color: #f0f5ff;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+            align-self: flex-start; /* Căn nút về bên trái */
+        }
+        
+        .about-me-btn:hover {
+            background-color: #0066cc;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .about-me-btn i {
+            margin-right: 5px;
+        }
+        
         /* Content Styles */
         .content {
             padding: 60px 0;
         }
         
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 40px;
-            color: #333;
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #0066cc;
         }
         
-        .posts-container {
-            margin-top: 60px;
+        .back-link i {
+            margin-right: 5px;
         }
         
-        .category-row {
-            margin-bottom: 60px;
+        .filter-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
-        .category-title {
-            font-size: 1.6rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #0066cc;
-            color: #333;
+        .filter-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
         }
         
         .post-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            margin-top: 30px;
         }
         
         .post-card {
@@ -376,93 +390,37 @@
             white-space: nowrap;
         }
         
-        .view-all {
-            display: block;
-            text-align: center;
-            margin-top: 50px;
-            margin-bottom: 20px;
-        }
-        
-        .view-all-btn {
-            display: inline-block;
-            padding: 10px 25px;
-            background-color: #0066cc;
-            color: white;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .view-all-btn:hover {
-            background-color: #0052a3;
-            text-decoration: none;
-        }
-        
-        /* About Section */
-        .about-section {
-            background-color: #fff;
-            padding: 60px 0;
-            margin-top: 60px;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.05);
-        }
-        
-        .about-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        
-        .about-description {
-            margin-bottom: 30px;
-            color: #555;
-            font-size: 1.1rem;
-        }
-        
-        /* Contact Section */
-        .contact-section {
-            padding: 60px 0;
-            background-color: #f0f5ff;
-            text-align: center;
-        }
-        
-        .contact-info {
+        /* Pagination */
+        .pagination {
             display: flex;
             justify-content: center;
-            gap: 40px;
-            margin-top: 30px;
+            margin-top: 50px;
+            gap: 5px;
         }
         
-        .contact-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .pagination-btn {
+            padding: 8px 14px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s ease;
         }
         
-        .contact-icon {
-            font-size: 2rem;
-            color: #0066cc;
-            margin-bottom: 15px;
+        .pagination-btn:hover {
+            background-color: #f0f0f0;
         }
         
-        /* Footer */
-        footer {
-            background-color: #333;
+        .pagination-btn.active {
+            background-color: #0066cc;
             color: #fff;
-            padding: 30px 0;
-            text-align: center;
+            border-color: #0066cc;
         }
         
-        .footer-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .copyright {
-            font-size: 0.9rem;
-            opacity: 0.8;
+        .pagination-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
         }
         
         /* Loading indicator */
@@ -487,33 +445,56 @@
             }
         }
         
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 40px 0;
+            color: #666;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .copyright {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         /* Responsive design */
+        @media (max-width: 992px) {
+            .post-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
         @media (max-width: 768px) {
             .post-grid {
                 grid-template-columns: 1fr;
             }
             
-            .contact-info {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .blog-title {
-                font-size: 2.2rem;
-            }
-            
-            .author-name {
-                font-size: 1.4rem;
-            }
-            
             .author-info {
-                flex-direction: column;
+                flex-direction: column; /* Đổi lại thành column trên mobile */
                 text-align: center;
                 gap: 15px;
             }
             
+            .social-links {
+                justify-content: center; /* Căn giữa trên mobile */
+            }
+            
             .about-me-btn {
-                align-self: center;
+                align-self: center; /* Căn nút vào giữa trên mobile */
             }
         }
         
@@ -543,15 +524,15 @@
                 
                 <div class="author-info">
                     <div class="avatar-container">
-                       <img src="profile2.jpg" alt="Avatar" class="avatar-img"> 
+                        <img src="profile2.jpg" alt="Avatar" class="avatar-img">
                     </div>
                     <div class="author-text-content">
                         <h2 class="author-name">Xin Chào, tôi là Nguyễn Bá Tùng</h2>
                         <p class="author-title">Bố của 3 đứa trẻ | Giám đốc nhà máy | Kẻ nghiện công nghệ</p>
-                        <p class="author-title">Make it basic and logical</p>
                         
                         <p id="author-description" class="author-description">
                             Thích công nghệ nhưng lại học NEU và làm công ty may. Sự phát triển như vũ bão của AI đã giúp tôi trở lại với đam mê đó. Đây là nhật ký lưu trữ, chia sẻ ba phần mà tôi quan tâm nhất: cuộc sống, kinh doanh và công nghệ. Tạo website này cũng như thả 1 giọt nước mưa xuống biển cả internet. Nếu bạn tình cờ thấy website này, hãy xem như đó là bí mật của 2 ta.
+                            <br> Make it basic and logical
                         </p>
                         
                         <div class="social-links">
@@ -567,39 +548,56 @@
                                 <i class="fas fa-phone"></i>
                                 <span class="tooltip-text">0983887485</span>
                             </a>
-                            <button id="about-me-btn" class="about-me-btn">
-                                <i class="fas fa-user"></i> Về tôi
-                            </button>
+
+                        <button id="about-me-btn" class="about-me-btn">
+                            <i class="fas fa-user"></i> Về tôi
+                        </button>
                         </div>
                         
-                       
                     </div>
                 </div>
                 
-                <!--<p id="author-description" class="author-description">
-                    Thích công nghệ nhưng lại học NEU và làm công ty may. Và AI đã giúp tôi trở lại với đam mê đó. Hãy coi như là nhật ký lưu trữ công khai. Tạo website này cũng như thả 1 giọt nước mưa xuống biển cả internet. Nếu bạn tình cờ thấy website này, hãy xem như đó là bí mật của 2 ta.
-                    
-                </p>-->
             </div>
         </div>
     </header>
 
     <section class="content">
         <div class="container">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
+            
+            <div class="filter-container">
+                <span class="filter-label">Lọc theo danh mục:</span>
+                <select id="category-filter" class="filter-select">
+                    <option value="">Tất cả danh mục</option>
+                    <option value="life">Cuộc sống</option>
+                    <option value="business">Kinh doanh</option>
+                    <option value="tech">Công nghệ</option>
+                </select>
+                
+                <div id="tag-filter-container" style="display: none;">
+                    <span class="filter-label">Tag đang lọc:</span>
+                    <span id="current-tag" class="post-tag" style="margin-right: 10px;"></span>
+                    <button id="clear-tag-filter" class="about-me-btn" style="padding: 3px 10px; margin: 0;">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            </div>
             
             <div id="loading-indicator" class="loading-indicator">
                 <div class="loading-spinner"></div>
                 <p>Đang tải bài viết...</p>
             </div>
             
-            <div id="posts-container" class="posts-container" style="display: none;">
-                <div class="post-grid" id="recent-posts">
-                    <!-- Bài viết mới nhất sẽ được thêm vào đây -->
-                </div>
+            <div id="posts-container" class="post-grid" style="display: none">
+                <!-- Bài viết sẽ được thêm vào đây -->
             </div>
             
-            <div class="view-all">
-                <a href="all-posts.html" class="view-all-btn">Xem Tất Cả Bài Viết</a>
+            <div id="no-results" class="no-results" style="display: none">
+                <p>Không có bài viết nào phù hợp với tiêu chí tìm kiếm.</p>
+            </div>
+            
+            <div id="pagination" class="pagination">
+                <!-- Nút phân trang sẽ được thêm vào đây -->
             </div>
         </div>
     </section>
@@ -613,6 +611,12 @@
     </footer>
 
     <script>
+        // Thiết lập phân trang
+        const POSTS_PER_PAGE = 12;
+        let currentPage = 1;
+        let allPosts = [];
+        let filteredPosts = [];
+        
         // Lấy danh sách bài viết từ API
         async function getPosts() {
             try {
@@ -635,8 +639,9 @@
             }
         }
         
-        // Xử lý nút About Me
+        // Hiển thị danh sách bài viết
         document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý nút About Me
             const aboutMeBtn = document.getElementById('about-me-btn');
             const authorDescription = document.getElementById('author-description');
             
@@ -651,97 +656,139 @@
                 });
             }
             
-            // Tiếp tục các hàm DOMContentLoaded hiện có
+            // Tiếp tục tải bài viết
             loadPosts();
         });
         
-        // Hàm tải bài viết đã di chuyển từ event listener
+        // Tải bài viết
         async function loadPosts() {
             try {
-                // Hiển thị chỉ báo đang tải
+                // Hiển thị loading indicator
                 document.getElementById('loading-indicator').style.display = 'block';
                 document.getElementById('posts-container').style.display = 'none';
+                document.getElementById('no-results').style.display = 'none';
                 
                 // Lấy danh sách bài viết
-                let posts = await getPosts();
+                allPosts = await getPosts();
                 
-                // Sắp xếp bài viết theo thời gian (mới nhất đầu tiên)
-                posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                // Sắp xếp theo thời gian (mới nhất đầu tiên)
+                allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
-                // Lấy 9 bài viết mới nhất
-                const recentPosts = posts.slice(0, 9);
+                // Khởi tạo filteredPosts
+                filteredPosts = [...allPosts];
                 
-                // Kiểm tra nếu không có bài viết nào
-                if (recentPosts.length === 0) {
-                    const noPostsMessage = document.createElement('p');
-                    noPostsMessage.style.textAlign = 'center';
-                    noPostsMessage.style.padding = '40px 0';
-                    noPostsMessage.style.color = '#666';
-                    noPostsMessage.textContent = 'Chưa có bài viết nào được đăng.';
-                    document.getElementById('posts-container').appendChild(noPostsMessage);
-                } else {
-                    // Hiển thị bài viết mới nhất
-                    renderPosts('recent-posts', recentPosts);
+                // Thiết lập bộ lọc danh mục
+                document.getElementById('category-filter').addEventListener('change', function() {
+                    const category = this.value;
+                    
+                    if (category) {
+                        filteredPosts = allPosts.filter(post => post.category === category);
+                    } else {
+                        filteredPosts = [...allPosts];
+                    }
+                    
+                    // Đặt lại trang hiện tại về 1 khi lọc
+                    currentPage = 1;
+                    
+                    // Hiển thị lại bài viết
+                    displayPosts();
+                });
+                
+                // Kiểm tra xem có tham số danh mục trong URL không
+                const urlParams = new URLSearchParams(window.location.search);
+                const categoryParam = urlParams.get('category');
+                const tagParam = urlParams.get('tag');
+                
+                if (tagParam) {
+                    // Lọc theo tag
+                    filteredPosts = allPosts.filter(post => {
+                        if (!post.tags) return false;
+                        
+                        // Kiểm tra nếu tags là mảng
+                        if (Array.isArray(post.tags)) {
+                            return post.tags.includes(tagParam);
+                        } 
+                        // Kiểm tra nếu tags là chuỗi
+                        else if (typeof post.tags === 'string') {
+                            const tagsArray = post.tags.split(',').map(tag => tag.trim());
+                            return tagsArray.includes(tagParam);
+                        }
+                        
+                        return false;
+                    });
+                    
+                    // Hiển thị bộ lọc tag
+                    document.getElementById('tag-filter-container').style.display = 'inline-flex';
+                    document.getElementById('current-tag').textContent = `#${tagParam}`;
+                    
+                    // Xử lý nút xóa bộ lọc tag
+                    document.getElementById('clear-tag-filter').addEventListener('click', function() {
+                        window.location.href = 'all-posts.html';
+                    });
+                } else if (categoryParam) {
+                    const categoryFilter = document.getElementById('category-filter');
+                    categoryFilter.value = categoryParam;
+                    
+                    // Kích hoạt sự kiện change
+                    categoryFilter.dispatchEvent(new Event('change'));
                 }
                 
-                // Ẩn loading và hiển thị nội dung
-                document.getElementById('loading-indicator').style.display = 'none';
-                document.getElementById('posts-container').style.display = 'block';
+                // Hiển thị bài viết
+                displayPosts();
                 
             } catch (error) {
                 console.error('Error loading posts:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('posts-container').style.display = 'none';
                 
                 const errorMessage = document.createElement('p');
                 errorMessage.style.textAlign = 'center';
                 errorMessage.style.padding = '40px 0';
                 errorMessage.style.color = '#e74c3c';
                 errorMessage.textContent = `Lỗi khi tải bài viết: ${error.message}`;
-                document.getElementById('posts-container').appendChild(errorMessage);
-                document.getElementById('posts-container').style.display = 'block';
+                document.getElementById('posts-container').parentNode.insertBefore(errorMessage, document.getElementById('posts-container').nextSibling);
             }
         }
         
-        // Hiển thị danh sách bài viết
-        function renderPosts(containerId, posts) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
+        // Hiển thị bài viết với phân trang
+        function displayPosts() {
+            // Ẩn loading indicator
+            document.getElementById('loading-indicator').style.display = 'none';
             
-            if (posts.length === 0) {
-                const emptyMessage = document.createElement('p');
-                emptyMessage.style.gridColumn = '1 / -1';
-                emptyMessage.style.textAlign = 'center';
-                emptyMessage.style.color = '#666';
-                emptyMessage.textContent = 'Chưa có bài viết nào.';
-                container.appendChild(emptyMessage);
+            // Kiểm tra nếu không có bài viết
+            if (filteredPosts.length === 0) {
+                document.getElementById('posts-container').style.display = 'none';
+                document.getElementById('no-results').style.display = 'block';
+                document.getElementById('pagination').style.display = 'none';
                 return;
             }
             
-            posts.forEach(post => {
+            // Tính toán phân trang
+            const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+            const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+            const endIndex = Math.min(startIndex + POSTS_PER_PAGE, filteredPosts.length);
+            const currentPosts = filteredPosts.slice(startIndex, endIndex);
+            
+            // Hiển thị bài viết
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            
+            currentPosts.forEach(post => {
                 // Tạo tóm tắt từ nội dung HTML
                 let excerpt = '';
                 if (post.content) {
-                    // Loại bỏ HTML tags để tạo excerpt
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = post.content;
                     excerpt = tempDiv.textContent || tempDiv.innerText || '';
-                    // Giới hạn đoạn trích đến 150 ký tự (khoảng 3 dòng)
+                    // Giới hạn đoạn trích đến 120 ký tự để đồng nhất với trang chủ 
                     excerpt = excerpt.substring(0, 120) + (excerpt.length > 120 ? '...' : '');
                 }
                 
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
                 
-                // HTML cho bài viết
-                let featuredImage = post.featuredImage ? 
-                    `<img src="${post.featuredImage}" alt="${post.title}" class="post-image" loading="lazy">` : 
-                    `<div class="post-image" style="background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
-                    </div>`;
-                
-                // Thêm badge hiển thị danh mục
+                // Lấy tên danh mục
                 const categoryName = getCategoryName(post.category);
-                const categoryBadge = `<a href="all-posts.html?category=${post.category}" class="post-category">${categoryName}</a>`;
                 
                 // Tạo HTML cho tags (nếu có)
                 let tagsHTML = '';
@@ -760,12 +807,19 @@
                         tagsHTML = '<div class="post-tags">';
                         tagsArray.forEach(tag => {
                             if (tag) { // Chỉ thêm tag nếu nó không rỗng
-                                tagsHTML += `<a href="all-posts.html?tag=${tag}" class="post-tag">#${tag}</a>`;
+                                tagsHTML += `<a href="?tag=${tag}" class="post-tag">#${tag}</a>`;
                             }
                         });
                         tagsHTML += '</div>';
                     }
                 }
+                
+                // HTML cho bài viết
+                let featuredImage = post.featuredImage ? 
+                    `<img src="${post.featuredImage}" alt="${post.title}" class="post-image" loading="lazy">` : 
+                    `<div class="post-image" style="background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
+                    </div>`;
                 
                 postCard.innerHTML = `
                     ${featuredImage}
@@ -774,7 +828,7 @@
                         <p class="post-excerpt">${excerpt}</p>
                         <div class="post-meta">
                             <div class="post-meta-left">
-                                ${categoryBadge}
+                                <a href="?category=${post.category}" class="post-category">${categoryName}</a>
                             </div>
                             <span class="post-date"><i class="far fa-calendar-alt"></i> ${formatDate(post.date)}</span>
                         </div>
@@ -787,27 +841,77 @@
                 
                 container.appendChild(postCard);
             });
+            
+            // Hiển thị phân trang
+            createPagination(totalPages);
+            
+            // Hiển thị container
+            document.getElementById('posts-container').style.display = 'grid';
+            document.getElementById('no-results').style.display = 'none';
         }
         
-        // Định dạng ngày tháng
-        function formatDate(dateString) {
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    return dateString; // Trả về nguyên gốc nếu không phải ngày hợp lệ
-                }
-                
-                return date.toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            } catch (error) {
-                return dateString; // Trả về nguyên gốc nếu có lỗi
+        // Tạo phân trang
+        function createPagination(totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
             }
+            
+            paginationContainer.style.display = 'flex';
+            
+            // Nút Previous
+            const prevButton = document.createElement('button');
+            prevButton.className = 'pagination-btn';
+            prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayPosts();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+            paginationContainer.appendChild(prevButton);
+            
+            // Hiển thị các nút trang
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    displayPosts();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                paginationContainer.appendChild(pageButton);
+            }
+            
+            // Nút Next
+            const nextButton = document.createElement('button');
+            nextButton.className = 'pagination-btn';
+            nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayPosts();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+            paginationContainer.appendChild(nextButton);
         }
         
-        // Lấy tên danh mục
+        // Lấy tên danh mục từ slug
         function getCategoryName(categorySlug) {
             const categories = {
                 'life': 'Cuộc sống',
@@ -816,6 +920,24 @@
             };
             
             return categories[categorySlug] || 'Chưa phân loại';
+        }
+        
+        // Định dạng ngày tháng
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString;
+                }
+                
+                return date.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                return dateString;
+            }
         }
     </script>
 </body>
