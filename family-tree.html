@@ -453,6 +453,9 @@
                     }
                 }
 
+                // Log để kiểm tra URL ảnh
+                console.log(`Người ${person.id} (${person.name}): photo = ${photoUrl}`);
+
                 // Xử lý chuỗi ngày
                 let lifespan = '';
                 if (person.birthDate) {
@@ -484,6 +487,9 @@
                             }
                         }
 
+                        // Log để kiểm tra URL ảnh của vợ/chồng
+                        console.log(`Vợ/chồng của ${person.name} (${spouse.name}): photo = ${spousePhotoUrl}`);
+
                         // Lifespan của vợ/chồng
                         let spouseLifespan = '';
                         if (spouse.birthDate) {
@@ -501,12 +507,12 @@
                             id: coupleId,
                             personId: person.id,
                             name: person.name, 
-                            img: photoUrl, // QUAN TRỌNG: đảm bảo đây là URL hợp lệ cho avatar người chính
+                            img: photoUrl, // QUAN TRỌNG: URL ảnh người chính
                             birth: lifespan,
                             personGender: person.gender,
                             spouseId: spouse.id,
                             spouseName: spouse.name,
-                            spouseImg: spousePhotoUrl,
+                            spouseImg: spousePhotoUrl, // URL ảnh người phối ngẫu
                             spouseBirth: spouseLifespan,
                             spouseGender: spouse.gender,
                             generation: person.generation,
@@ -515,8 +521,9 @@
                         };
 
                         // Debug để kiểm tra giá trị img
-                        console.log(`CoupleNode ${coupleId} - người chính:`, person.name, "img:", photoUrl);
-                        console.log(`CoupleNode ${coupleId} - người phối ngẫu:`, spouse.name, "img:", spousePhotoUrl);
+                        console.log(`CoupleNode ${coupleId}:`);
+                        console.log(`- Người chính: ${person.name}, img = ${photoUrl}`);
+                        console.log(`- Người phối ngẫu: ${spouse.name}, spouseImg = ${spousePhotoUrl}`);
                         
                         // Thêm node vợ chồng vào mảng
                         nodes.push(coupleNode);
@@ -542,6 +549,9 @@
                         personGender: person.gender
                     };
                     nodes.push(node);
+                    
+                    // Debug để kiểm tra giá trị img cho node đơn
+                    console.log(`SingleNode ${person.id} (${person.name}): img = ${photoUrl}`);
                 }
             });
 
@@ -619,7 +629,7 @@
             OrgChart.templates.single_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>';
 
-            // Tạo template tùy chỉnh cho node vợ chồng - với sự giám sát các phần tử gốc để debug
+            // Tạo template tùy chỉnh cho node vợ chồng
             OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
             OrgChart.templates.couple.size = [280, 120];
             OrgChart.templates.couple.node = 
@@ -633,9 +643,9 @@
                 '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
                 '</g>';
             
-            // Đặt text (tên) ở nửa trên của node - VỊ TRÍ TÊN
+            // Vị trí tên - đặt trên cùng
             OrgChart.templates.couple.field_0 = 
-                '<text id="name_{id}" style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
+                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_1 = 
                 '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_2 = 
@@ -643,18 +653,14 @@
             OrgChart.templates.couple.field_3 = 
                 '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
                 
-            // XÁC ĐỊNH RÕ vị trí và cách thức hiển thị avatar
+            // Vị trí avatar - đặt dưới tên (không thay đổi vị trí)
             OrgChart.templates.couple.img_0 = 
-                '<g id="img_0_{id}" class="person-img-group">' +
                 '<clipPath id="personClip_{id}"><circle cx="70" cy="75" r="25"></circle></clipPath>' +
-                '<image id="person_img_{id}" data-debug="primary person" preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="50" width="50" height="50"></image>' +
-                '</g>';
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="50" width="50" height="50"></image>';
             
             OrgChart.templates.couple.img_1 = 
-                '<g id="img_1_{id}" class="spouse-img-group">' +
                 '<clipPath id="spouseClip_{id}"><circle cx="210" cy="75" r="25"></circle></clipPath>' +
-                '<image id="spouse_img_{id}" data-debug="spouse" preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="50" width="50" height="50"></image>' +
-                '</g>';
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="50" width="50" height="50"></image>';
                 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
             OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
@@ -683,10 +689,7 @@
                     // Ràng buộc cho tất cả các node
                     field_0: "name",
                     field_1: "birth",
-                    img_0: function(sender, node) {
-                        console.log(`Binding img_0 cho node ${node.id}:`, node.img);
-                        return node.img || ''; // Đảm bảo trả về giá trị hợp lệ
-                    },
+                    img_0: "img",
                     
                     // Ràng buộc đặc biệt cho node vợ chồng
                     field_2: "spouseName",
@@ -696,7 +699,8 @@
                 nodeMenu: {
                     details: { text: "Chi tiết" }
                 },
-                nodes: formattedData.nodes,
+                // Quan trọng: Tạo một bản sao của dữ liệu để tránh tham chiếu
+                nodes: JSON.parse(JSON.stringify(formattedData.nodes)),
                 tags: {
                     male: {
                         template: "single_male",
@@ -729,106 +733,53 @@
                 subtreeSeparation: 80
             });
             
-            // Thêm sự kiện để debug sau khi biểu đồ được tải
+            // Thêm sự kiện để kiểm tra và ghi log dữ liệu
             chart.on('load', function() {
-                console.log("Chart loaded - chuẩn bị kiểm tra và sửa lỗi ảnh avatar");
+                console.log("Biểu đồ đã tải - kiểm tra dữ liệu và avatar");
                 
-                // Lấy tất cả nodes để kiểm tra
-                const coupleNodes = chart.config.nodes.filter(node => 
-                    node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))
-                );
-                
-                console.log(`Tìm thấy ${coupleNodes.length} couple nodes`);
+                // Kiểm tra tất cả node trong chart config
+                chart.config.nodes.forEach(node => {
+                    console.log("NODE:", node.id);
+                    if (node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))) {
+                        console.log("- Template:", node.tags[0]);
+                        console.log("- Người chính:", node.name);
+                        console.log("- Avatar người chính:", node.img);
+                        console.log("- Người phối ngẫu:", node.spouseName);
+                        console.log("- Avatar phối ngẫu:", node.spouseImg);
+                    } else {
+                        console.log("- Template: single");
+                        console.log("- Tên:", node.name);
+                        console.log("- Avatar:", node.img);
+                    }
+                });
                 
                 // Đợi DOM render hoàn tất
                 setTimeout(() => {
-                    // Lấy SVG container
+                    // Kiểm tra ảnh trong SVG
                     const svgContainer = document.querySelector('#family-tree > svg');
-                    if (!svgContainer) {
-                        console.error("Không tìm thấy SVG container");
-                        return;
+                    if (svgContainer) {
+                        const images = svgContainer.querySelectorAll('image');
+                        console.log(`Tìm thấy ${images.length} phần tử image trong SVG`);
+                        
+                        images.forEach((img, index) => {
+                            const href = img.getAttribute('xlink:href');
+                            console.log(`Image ${index}: ${href || 'không có'}`);
+                        });
                     }
-
-                    // Xử lý từng couple node
-                    coupleNodes.forEach(node => {
-                        console.log(`Kiểm tra node ${node.id}: ${node.name} + ${node.spouseName}`);
-                        
-                        // Tìm element node trong DOM
-                        const nodeElement = svgContainer.querySelector(`[data-id="${node.id}"]`);
-                        if (!nodeElement) {
-                            console.warn(`Không tìm thấy element cho node ${node.id}`);
-                            return;
-                        }
-                        
-                        // Tìm và kiểm tra phần tử image cho người chính
-                        const personImage = nodeElement.querySelector(`#person_img_${node.id}`);
-                        if (personImage) {
-                            const currentHref = personImage.getAttribute('xlink:href');
-                            console.log(`Ảnh người chính (${node.name}):`, currentHref);
-                            
-                            // Nếu href của ảnh không khớp với dữ liệu, cập nhật lại
-                            if (currentHref !== node.img) {
-                                console.log(`Sửa ảnh cho ${node.name} từ "${currentHref}" thành "${node.img}"`);
-                                personImage.setAttribute('xlink:href', node.img);
-                            }
-                        } else {
-                            console.warn(`Không tìm thấy ảnh cho người chính (${node.name})`);
-                        }
-                        
-                        // Tìm và kiểm tra phần tử image cho vợ/chồng
-                        const spouseImage = nodeElement.querySelector(`#spouse_img_${node.id}`);
-                        if (spouseImage) {
-                            const currentHref = spouseImage.getAttribute('xlink:href');
-                            console.log(`Ảnh vợ/chồng (${node.spouseName}):`, currentHref);
-                            
-                            // Nếu href của ảnh không khớp với dữ liệu, cập nhật lại
-                            if (currentHref !== node.spouseImg) {
-                                console.log(`Sửa ảnh cho ${node.spouseName} từ "${currentHref}" thành "${node.spouseImg}"`);
-                                spouseImage.setAttribute('xlink:href', node.spouseImg);
-                            }
-                        } else {
-                            console.warn(`Không tìm thấy ảnh cho vợ/chồng (${node.spouseName})`);
-                        }
-                    });
-                }, 500); // Đợi 500ms để đảm bảo DOM được render đầy đủ
-
-                // Thêm sự kiện redraw để đảm bảo ảnh vẫn hiển thị sau khi biểu đồ bị vẽ lại
-                chart.on('redraw', function() {
-                    console.log("Chart redrawn - cập nhật lại ảnh avatar");
-                    setTimeout(() => fixCoupleImages(chart), 500);
-                });
+                }, 500);
             });
-
-            // Hàm để sửa lỗi ảnh trong couple nodes
-            function fixCoupleImages(chart) {
-                // Lấy SVG container
-                const svgContainer = document.querySelector('#family-tree > svg');
-                if (!svgContainer) return;
-                
-                // Lấy tất cả nodes để kiểm tra
-                const coupleNodes = chart.config.nodes.filter(node => 
-                    node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))
-                );
-                
-                // Xử lý từng couple node
-                coupleNodes.forEach(node => {
-                    // Tìm element node trong DOM
-                    const nodeElement = svgContainer.querySelector(`[data-id="${node.id}"]`);
-                    if (!nodeElement) return;
-                    
-                    // Tìm và kiểm tra phần tử image cho người chính
-                    const personImage = nodeElement.querySelector('image[data-debug="primary person"]');
-                    if (personImage && personImage.getAttribute('xlink:href') !== node.img) {
-                        personImage.setAttribute('xlink:href', node.img);
+            
+            // Theo dõi khi chart được vẽ lại
+            chart.on('redraw', function() {
+                console.log("Biểu đồ được vẽ lại - kiểm tra lại dữ liệu");
+                setTimeout(() => {
+                    const svgContainer = document.querySelector('#family-tree > svg');
+                    if (svgContainer) {
+                        const images = svgContainer.querySelectorAll('image');
+                        console.log(`Sau khi vẽ lại: ${images.length} phần tử image`);
                     }
-                    
-                    // Tìm và kiểm tra phần tử image cho vợ/chồng
-                    const spouseImage = nodeElement.querySelector('image[data-debug="spouse"]');
-                    if (spouseImage && spouseImage.getAttribute('xlink:href') !== node.spouseImg) {
-                        spouseImage.setAttribute('xlink:href', node.spouseImg);
-                    }
-                });
-            }
+                }, 500);
+            });
 
             // Xử lý sự kiện khi click vào node
             chart.on('click', function(sender, args) {
