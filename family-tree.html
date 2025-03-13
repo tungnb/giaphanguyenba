@@ -432,18 +432,18 @@
             }
         }
 
-        // Chuyển đổi cấu trúc dữ liệu cho OrgChart.js
-        function convertToOrgChartFormat(familyDataArray) {
+        // Tạo danh sách node từ dữ liệu gia phả
+        function formatFamilyData(familyDataArray) {
             const nodes = [];
-            const processedIds = new Set(); // Theo dõi các ID đã xử lý
-            const coupleNodes = new Map(); // Lưu trữ các node vợ chồng để cập nhật thông tin
+            const coupleNodes = new Map();
+            const processedIds = new Set();
 
-            // Bước 1: Tạo node cho mỗi người (chưa có vợ/chồng)
+            // Bước 1: Tạo các node cho từng người
             familyDataArray.forEach(person => {
-                // Nếu đã xử lý ID này (đã thêm vào node khác), bỏ qua
+                // Kiểm tra nếu người này đã được xử lý trong một cặp vợ chồng
                 if (processedIds.has(person.id)) return;
 
-                // Ảnh đại diện theo giới tính
+                // Avatar mặc định nếu không có ảnh
                 let photoUrl = person.photo;
                 if (!photoUrl) {
                     if (person.gender === 'male') {
@@ -453,7 +453,7 @@
                     }
                 }
 
-                // Tạo chuỗi hiển thị ngày sinh, ngày mất
+                // Xử lý chuỗi ngày
                 let lifespan = '';
                 if (person.birthDate) {
                     const birthYear = new Date(person.birthDate).getFullYear();
@@ -465,12 +465,11 @@
                     }
                 }
 
-                // Kiểm tra xem người này có vợ/chồng không
+                // Nếu có vợ/chồng, tạo node vợ chồng
                 if (person.spouses && person.spouses.length > 0) {
-                    // Đối với mỗi vợ/chồng, tạo một node chung
                     person.spouses.forEach(spouseId => {
                         const spouse = familyDataArray.find(p => p.id === spouseId);
-                        if (!spouse) return;
+                        if (!spouse || processedIds.has(spouseId)) return;
 
                         // Tạo ID cho cặp vợ chồng
                         const coupleId = [person.id, spouse.id].sort().join('_');
@@ -501,8 +500,8 @@
                         const coupleNode = {
                             id: coupleId,
                             personId: person.id,
-                            name: person.name,
-                            img: photoUrl,
+                            name: person.name, 
+                            img: photoUrl, // QUAN TRỌNG: đảm bảo đây là URL hợp lệ cho avatar người chính
                             birth: lifespan,
                             personGender: person.gender,
                             spouseId: spouse.id,
@@ -516,8 +515,8 @@
                         };
 
                         // Debug để kiểm tra giá trị img
-                        console.log(`CoupleNode ${coupleId} - img (người chính):`, photoUrl);
-                        console.log(`CoupleNode ${coupleId} - spouseImg:`, spousePhotoUrl);
+                        console.log(`CoupleNode ${coupleId} - người chính:`, person.name, "img:", photoUrl);
+                        console.log(`CoupleNode ${coupleId} - người phối ngẫu:`, spouse.name, "img:", spousePhotoUrl);
                         
                         // Thêm node vợ chồng vào mảng
                         nodes.push(coupleNode);
@@ -546,6 +545,9 @@
                 }
             });
 
+            // Debug để kiểm tra tất cả node
+            console.log("Tất cả nodes:", nodes);
+            
             // Bước 2: Thiết lập quan hệ cha mẹ - con
             familyDataArray.forEach(person => {
                 if (!person.parents || person.parents.length === 0) return;
@@ -587,11 +589,11 @@
 
         // Hàm khởi tạo OrgChart
         function initializeOrgChart(formattedData) {
-            // Tạo template tùy chỉnh cho node single (người không có vợ/chồng)
+            // Tùy chỉnh template cho node đơn
             OrgChart.templates.single = Object.assign({}, OrgChart.templates.olivia);
             OrgChart.templates.single.size = [280, 120];
             OrgChart.templates.single.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="1" stroke="#E4E4E4"></rect>';
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>';
             OrgChart.templates.single.nodeMenuButton = 
                 '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
                 '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
@@ -617,7 +619,7 @@
             OrgChart.templates.single_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>';
 
-            // Tạo template tùy chỉnh cho node vợ chồng
+            // Tạo template tùy chỉnh cho node vợ chồng - với sự giám sát các phần tử gốc để debug
             OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
             OrgChart.templates.couple.size = [280, 120];
             OrgChart.templates.couple.node = 
@@ -630,22 +632,29 @@
                 '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
                 '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
                 '</g>';
+            
+            // Đặt text (tên) ở nửa trên của node - VỊ TRÍ TÊN
             OrgChart.templates.couple.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="90" text-anchor="middle">{val}</text>';
+                '<text id="name_{id}" style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="105" text-anchor="middle">{val}</text>';
+                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_2 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="90" text-anchor="middle">{val}</text>';
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_3 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="105" text-anchor="middle">{val}</text>';
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
                 
-            // Đây là phần chính để sửa lỗi - định nghĩa lại img_0 và img_1 với log cho debug
+            // XÁC ĐỊNH RÕ vị trí và cách thức hiển thị avatar
             OrgChart.templates.couple.img_0 = 
-                '<clipPath id="personClip_{id}"><circle cx="70" cy="55" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="30" width="50" height="50"></image>';
+                '<g id="img_0_{id}" class="person-img-group">' +
+                '<clipPath id="personClip_{id}"><circle cx="70" cy="75" r="25"></circle></clipPath>' +
+                '<image id="person_img_{id}" data-debug="primary person" preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="50" width="50" height="50"></image>' +
+                '</g>';
+            
             OrgChart.templates.couple.img_1 = 
-                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="55" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="30" width="50" height="50"></image>';
+                '<g id="img_1_{id}" class="spouse-img-group">' +
+                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="75" r="25"></circle></clipPath>' +
+                '<image id="spouse_img_{id}" data-debug="spouse" preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="50" width="50" height="50"></image>' +
+                '</g>';
                 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
             OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
@@ -671,10 +680,13 @@
                 enableDragDrop: false,
                 orientation: OrgChart.orientation.top,
                 nodeBinding: {
-                    // Ràng buộc chung cho tất cả các node
+                    // Ràng buộc cho tất cả các node
                     field_0: "name",
                     field_1: "birth",
-                    img_0: "img",
+                    img_0: function(sender, node) {
+                        console.log(`Binding img_0 cho node ${node.id}:`, node.img);
+                        return node.img || ''; // Đảm bảo trả về giá trị hợp lệ
+                    },
                     
                     // Ràng buộc đặc biệt cho node vợ chồng
                     field_2: "spouseName",
@@ -716,6 +728,107 @@
                 siblingSeparation: 50,
                 subtreeSeparation: 80
             });
+            
+            // Thêm sự kiện để debug sau khi biểu đồ được tải
+            chart.on('load', function() {
+                console.log("Chart loaded - chuẩn bị kiểm tra và sửa lỗi ảnh avatar");
+                
+                // Lấy tất cả nodes để kiểm tra
+                const coupleNodes = chart.config.nodes.filter(node => 
+                    node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))
+                );
+                
+                console.log(`Tìm thấy ${coupleNodes.length} couple nodes`);
+                
+                // Đợi DOM render hoàn tất
+                setTimeout(() => {
+                    // Lấy SVG container
+                    const svgContainer = document.querySelector('#family-tree > svg');
+                    if (!svgContainer) {
+                        console.error("Không tìm thấy SVG container");
+                        return;
+                    }
+
+                    // Xử lý từng couple node
+                    coupleNodes.forEach(node => {
+                        console.log(`Kiểm tra node ${node.id}: ${node.name} + ${node.spouseName}`);
+                        
+                        // Tìm element node trong DOM
+                        const nodeElement = svgContainer.querySelector(`[data-id="${node.id}"]`);
+                        if (!nodeElement) {
+                            console.warn(`Không tìm thấy element cho node ${node.id}`);
+                            return;
+                        }
+                        
+                        // Tìm và kiểm tra phần tử image cho người chính
+                        const personImage = nodeElement.querySelector(`#person_img_${node.id}`);
+                        if (personImage) {
+                            const currentHref = personImage.getAttribute('xlink:href');
+                            console.log(`Ảnh người chính (${node.name}):`, currentHref);
+                            
+                            // Nếu href của ảnh không khớp với dữ liệu, cập nhật lại
+                            if (currentHref !== node.img) {
+                                console.log(`Sửa ảnh cho ${node.name} từ "${currentHref}" thành "${node.img}"`);
+                                personImage.setAttribute('xlink:href', node.img);
+                            }
+                        } else {
+                            console.warn(`Không tìm thấy ảnh cho người chính (${node.name})`);
+                        }
+                        
+                        // Tìm và kiểm tra phần tử image cho vợ/chồng
+                        const spouseImage = nodeElement.querySelector(`#spouse_img_${node.id}`);
+                        if (spouseImage) {
+                            const currentHref = spouseImage.getAttribute('xlink:href');
+                            console.log(`Ảnh vợ/chồng (${node.spouseName}):`, currentHref);
+                            
+                            // Nếu href của ảnh không khớp với dữ liệu, cập nhật lại
+                            if (currentHref !== node.spouseImg) {
+                                console.log(`Sửa ảnh cho ${node.spouseName} từ "${currentHref}" thành "${node.spouseImg}"`);
+                                spouseImage.setAttribute('xlink:href', node.spouseImg);
+                            }
+                        } else {
+                            console.warn(`Không tìm thấy ảnh cho vợ/chồng (${node.spouseName})`);
+                        }
+                    });
+                }, 500); // Đợi 500ms để đảm bảo DOM được render đầy đủ
+
+                // Thêm sự kiện redraw để đảm bảo ảnh vẫn hiển thị sau khi biểu đồ bị vẽ lại
+                chart.on('redraw', function() {
+                    console.log("Chart redrawn - cập nhật lại ảnh avatar");
+                    setTimeout(() => fixCoupleImages(chart), 500);
+                });
+            });
+
+            // Hàm để sửa lỗi ảnh trong couple nodes
+            function fixCoupleImages(chart) {
+                // Lấy SVG container
+                const svgContainer = document.querySelector('#family-tree > svg');
+                if (!svgContainer) return;
+                
+                // Lấy tất cả nodes để kiểm tra
+                const coupleNodes = chart.config.nodes.filter(node => 
+                    node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))
+                );
+                
+                // Xử lý từng couple node
+                coupleNodes.forEach(node => {
+                    // Tìm element node trong DOM
+                    const nodeElement = svgContainer.querySelector(`[data-id="${node.id}"]`);
+                    if (!nodeElement) return;
+                    
+                    // Tìm và kiểm tra phần tử image cho người chính
+                    const personImage = nodeElement.querySelector('image[data-debug="primary person"]');
+                    if (personImage && personImage.getAttribute('xlink:href') !== node.img) {
+                        personImage.setAttribute('xlink:href', node.img);
+                    }
+                    
+                    // Tìm và kiểm tra phần tử image cho vợ/chồng
+                    const spouseImage = nodeElement.querySelector('image[data-debug="spouse"]');
+                    if (spouseImage && spouseImage.getAttribute('xlink:href') !== node.spouseImg) {
+                        spouseImage.setAttribute('xlink:href', node.spouseImg);
+                    }
+                });
+            }
 
             // Xử lý sự kiện khi click vào node
             chart.on('click', function(sender, args) {
@@ -750,23 +863,6 @@
                 const personId = args.node.personId || args.node.id;
                 showPersonDetail(personId);
                 return false;
-            });
-            
-            // Thêm sự kiện load để kiểm tra các node sau khi biểu đồ được vẽ
-            chart.on('load', function(sender) {
-                console.log("Biểu đồ đã được tải:", sender);
-                
-                // Kiểm tra các node couple
-                const coupleNodes = sender.nodes.filter(node => 
-                    node.tags && (node.tags.indexOf('couple_male') !== -1 || node.tags.indexOf('couple_female') !== -1)
-                );
-                
-                console.log("Các node couple:", coupleNodes);
-                
-                // Kiểm tra template của node
-                coupleNodes.forEach(node => {
-                    console.log(`Node ${node.id} sử dụng template:`, node.templateName);
-                });
             });
 
             return chart;
@@ -923,7 +1019,7 @@
                 }
 
                 // Chuyển đổi dữ liệu cho OrgChart.js
-                const formattedData = convertToOrgChartFormat(familyData);
+                const formattedData = formatFamilyData(familyData);
                 
                 // Khởi tạo OrgChart
                 document.getElementById('family-tree-container').style.display = 'block';
