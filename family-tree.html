@@ -587,13 +587,6 @@
             OrgChart.templates.single.size = [280, 120];
             OrgChart.templates.single.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>';
-            OrgChart.templates.single.nodeMenuButton = 
-                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
-                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
-                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
-                '</g>';
             OrgChart.templates.single.field_0 = 
                 '<text style="font-size:14px;" fill="#2D2D2D" x="140" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.single.field_1 = 
@@ -618,13 +611,6 @@
             OrgChart.templates.couple.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple.nodeMenuButton = 
-                '<g style="cursor:pointer;" transform="matrix(1,0,0,1,255,15)" control-node-menu-id="{id}">' +
-                '<rect x="-4" y="-4" fill="#000000" fill-opacity="0" width="30" height="30"></rect>' +
-                '<circle cx="0" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="10" cy="0" r="3" fill="#757575"></circle>' +
-                '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
-                '</g>';
             
             // Tên ở trên, avatar ở dưới - giống template single
             OrgChart.templates.couple.field_0 = 
@@ -670,34 +656,24 @@
                     field_3: "spouseBirth",
                     img_1: "spouseImg"
                 },
-                nodeMenu: {
-                    details: { text: "Chi tiết" }
-                },
+                nodeMenu: {},
                 nodes: formattedData.nodes,
                 tags: {
                     male: {
                         template: "single_male",
-                        nodeMenu: {
-                            details: { text: "Chi tiết" }
-                        }
+                        nodeMenu: {}
                     },
                     female: {
                         template: "single_female",
-                        nodeMenu: {
-                            details: { text: "Chi tiết" }
-                        }
+                        nodeMenu: {}
                     },
                     couple_male: {
                         template: "couple_male",
-                        nodeMenu: {
-                            details: { text: "Chi tiết" }
-                        }
+                        nodeMenu: {}
                     },
                     couple_female: {
                         template: "couple_female",
-                        nodeMenu: {
-                            details: { text: "Chi tiết" }
-                        }
+                        nodeMenu: {}
                     }
                 },
                 // Cấu hình hiển thị
@@ -716,21 +692,10 @@
             // Xử lý sự kiện khi click vào node
             chart.on('click', function(sender, args) {
                 if (args.node) {
-                    // Nếu là node vợ chồng, xác định vị trí click để quyết định hiển thị ai
+                    // Nếu là node vợ chồng, luôn hiển thị thông tin của người nội tộc
                     if (args.node.tags && (args.node.tags.indexOf('couple_male') != -1 || args.node.tags.indexOf('couple_female') != -1)) {
-                        const x = args.event.offsetX;
-                        const nodeX = args.node.x;
-                        
-                        // Tính vị trí tương đối trong node
-                        const relativeX = x - nodeX;
-                        
-                        if (relativeX < 140) {
-                            // Click vào bên trái (người chồng/vợ thứ nhất)
-                            showPersonDetail(args.node.personId);
-                        } else {
-                            // Click vào bên phải (người vợ/chồng)
-                            showPersonDetail(args.node.spouseId);
-                        }
+                        // Chỉ hiển thị thông tin của người nội tộc (personId)
+                        showPersonDetail(args.node.personId);
                     } else {
                         // Nếu là node đơn, sử dụng personId nếu có, không thì dùng id
                         const personId = args.node.personId || args.node.id;
@@ -738,14 +703,6 @@
                     }
                 }
                 return false; // Ngăn hành vi mặc định
-            });
-
-            // Xử lý sự kiện khi click vào menu chi tiết
-            chart.on('details', function(sender, args) {
-                // Luôn hiển thị chi tiết của người trong gia phả (personId)
-                const personId = args.node.personId || args.node.id;
-                showPersonDetail(personId);
-                return false;
             });
 
             return chart;
