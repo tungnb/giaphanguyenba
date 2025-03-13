@@ -831,9 +831,6 @@
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
                 
-                // Xóa bỏ tham chiếu đến danh mục
-                // const categoryName = getCategoryName(post.category);
-                
                 // Tạo HTML cho tags (nếu có)
                 let tagsHTML = '';
                 if (post.tags) {
@@ -872,8 +869,7 @@
                         <p class="post-excerpt">${excerpt}</p>
                         <div class="post-meta">
                             <div class="post-meta-left">
-                                <!-- Xóa bỏ hiển thị danh mục -->
-                                <!-- <a href="?category=${post.category}" class="post-category">${categoryName}</a> -->
+                                <!-- Đã loại bỏ hiển thị danh mục -->
                             </div>
                             <span class="post-date"><i class="far fa-calendar-alt"></i> ${formatDate(post.date)}</span>
                         </div>
