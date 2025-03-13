@@ -728,9 +728,6 @@
                     return;
                 }
                 
-                // Sắp xếp theo thế hệ
-                familyData.sort((a, b) => a.generation - b.generation);
-                
                 // Nhóm theo thế hệ
                 const generations = {};
                 familyData.forEach(person => {
@@ -739,6 +736,9 @@
                     }
                     generations[person.generation].push(person);
                 });
+                
+                // Tạo danh sách các cặp vợ chồng đã hiển thị để tránh lặp
+                const displayedCouples = new Set();
                 
                 // Tạo cây gia phả
                 const treeContainer = document.getElementById('tree');
