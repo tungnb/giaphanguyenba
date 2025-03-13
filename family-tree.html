@@ -626,25 +626,24 @@
                 '<circle cx="20" cy="0" r="3" fill="#757575"></circle>' +
                 '</g>';
             
-            // Avatar trước, tên sau - GIẢI PHÁP HOÀN TOÀN MỚI
-            // Tên được hiển thị ở vị trí bên dưới avatar
+            // Tên ở trên, avatar ở dưới - giống template single
             OrgChart.templates.couple.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="65" text-anchor="middle">{val}</text>';
+                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="80" text-anchor="middle">{val}</text>';
+                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_2 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="65" text-anchor="middle">{val}</text>';
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
             OrgChart.templates.couple.field_3 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="80" text-anchor="middle">{val}</text>';
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
                 
-            // Avatar - Không dùng clipPath, chỉ vẽ hình tròn và đặt ảnh lên trên
+            // Avatar - Không dùng clipPath, chỉ vẽ hình tròn và đặt ảnh ở dưới tên
             OrgChart.templates.couple.img_0 = 
-                '<circle cx="70" cy="30" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="50" y="10" width="40" height="40"></image>';
+                '<circle cx="70" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
+                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="50" y="60" width="40" height="40"></image>';
             
             OrgChart.templates.couple.img_1 = 
-                '<circle cx="210" cy="30" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="190" y="10" width="40" height="40"></image>';
+                '<circle cx="210" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
+                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="190" y="60" width="40" height="40"></image>';
                 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
             OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
