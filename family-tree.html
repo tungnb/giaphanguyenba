@@ -1015,6 +1015,38 @@
             // Hiển thị modal
             modal.style.display = 'block';
         }
+
+        // Thêm hàm renderFamilyTree
+        function renderFamilyTree() {
+            console.log("Bắt đầu render cây gia phả");
+            
+            // Hiện loading indicator
+            document.getElementById('loading-indicator').style.display = 'block';
+            
+            // Kiểm tra thư viện Treant
+            if (typeof Treant === 'undefined') {
+                console.error('Treant không được định nghĩa. Vui lòng kiểm tra thư viện.');
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                const errorMessage = document.createElement('p');
+                errorMessage.style.textAlign = 'center';
+                errorMessage.style.padding = '40px 0';
+                errorMessage.style.color = '#e74c3c';
+                errorMessage.textContent = 'Lỗi: Thư viện Treant không được tải. Vui lòng kiểm tra kết nối internet.';
+                document.getElementById('family-tree-container').appendChild(errorMessage);
+                document.getElementById('family-tree-container').style.display = 'block';
+                return;
+            }
+            
+            // Thiết lập timeout để hiển thị thông báo nếu loading quá lâu
+            const loadingTimeout = setTimeout(function() {
+                if (document.getElementById('loading-indicator').style.display !== 'none') {
+                    console.log("Quá trình tải mất nhiều thời gian. Hiển thị thông báo...");
+                    
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    const loadingText = loadingIndicator.querySelector('p');
+                    if (loadingText) {
+                        loadingText.innerHTML = 'Đang tải dữ liệu gia phả... <br><small>Có vẻ như quá trình này đang mất nhiều thời gian hơn dự kiến.</small>';
     </script>
 </body>
 </html>
