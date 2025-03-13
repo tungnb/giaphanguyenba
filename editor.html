@@ -1,0 +1,36 @@
+<form id="post-form">
+    <!-- ... existing code ... -->
+    
+    <!-- Xóa phần chọn danh mục -->
+    <!-- <div class="form-group">
+        <label for="category">Danh mục:</label>
+        <select id="category" name="category" required>
+            <option value="life">Cuộc sống</option>
+            <option value="business">Kinh doanh</option>
+            <option value="tech">Công nghệ</option>
+        </select>
+    </div> -->
+    
+    <!-- ... existing code ... -->
+</form>
+
+<script>
+    // ... existing code ...
+    
+    // Trong hàm lưu bài viết, xóa tham chiếu đến danh mục
+    function savePost() {
+        // ... existing code ...
+        
+        const postData = {
+            title: document.getElementById('title').value,
+            // Loại bỏ category
+            // category: document.getElementById('category').value,
+            content: editor.getHTML(), // hoặc bất kỳ phương thức nào lấy nội dung
+            // ... các trường khác
+        };
+        
+        // ... existing code ...
+    }
+    
+    // ... existing code ...
+</script> 

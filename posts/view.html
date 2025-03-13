@@ -140,7 +140,6 @@
                 <h1 id="post-title" class="post-title"></h1>
                 <div class="post-meta">
                     <span id="post-date"></span>
-                    <span id="post-category" class="post-category" style="display: none;"></span>
                 </div>
                 <div id="post-tags" class="post-tags" style="display: none;"></div>
             </header>
@@ -180,14 +179,6 @@
                 // Cập nhật nội dung bài viết
                 document.getElementById('post-title').textContent = post.title;
                 document.getElementById('post-date').textContent = formatDate(post.date);
-                
-                // Hiển thị danh mục nếu có
-                if (post.category) {
-                    const categoryDisplay = document.getElementById('post-category');
-                    const categoryName = getCategoryName(post.category);
-                    categoryDisplay.textContent = categoryName;
-                    categoryDisplay.style.display = 'inline-block';
-                }
                 
                 // Hiển thị tags nếu có
                 if (post.tags) {
@@ -249,20 +240,6 @@
             } catch (error) {
                 return dateString; // Trả về nguyên gốc nếu có lỗi
             }
-        }
-        
-        // Lấy tên danh mục từ slug
-        function getCategoryName(categorySlug) {
-            const categories = {
-                'technology': 'Công nghệ',
-                'lifestyle': 'Phong cách sống',
-                'travel': 'Du lịch',
-                'food': 'Ẩm thực',
-                'health': 'Sức khỏe',
-                'other': 'Khác'
-            };
-            
-            return categories[categorySlug] || categorySlug;
         }
     </script>
 </body>

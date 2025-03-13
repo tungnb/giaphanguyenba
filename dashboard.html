@@ -1,0 +1,121 @@
+<div class="filter-controls">
+    <!-- Xóa bỏ bộ lọc danh mục -->
+    <!-- <select id="category-filter" class="filter-select">
+        <option value="">Tất cả danh mục</option>
+        <option value="life">Cuộc sống</option>
+        <option value="business">Kinh doanh</option>
+        <option value="tech">Công nghệ</option>
+    </select> -->
+    
+    <select id="status-filter" class="filter-select">
+        <option value="">Tất cả trạng thái</option>
+        <option value="published">Đã xuất bản</option>
+        <option value="draft">Bản nháp</option>
+    </select>
+</div>
+
+<table id="posts-table-container" style="display: none;">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tiêu đề</th>
+            <!-- Xóa cột danh mục -->
+            <!-- <th>Danh mục</th> -->
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody id="posts-table">
+        <!-- Dữ liệu bài viết sẽ được thêm vào đây -->
+    </tbody>
+</table>
+
+<script>
+    // ... existing code ...
+    
+    // Xử lý sự kiện thay đổi bộ lọc
+    document.getElementById('status-filter').addEventListener('change', applyFilters);
+    // Loại bỏ sự kiện bộ lọc danh mục
+    // document.getElementById('category-filter').addEventListener('change', applyFilters);
+    
+    // Áp dụng các bộ lọc và hiển thị lại dữ liệu
+    function applyFilters() {
+        // Loại bỏ bộ lọc danh mục
+        // const categoryFilter = document.getElementById('category-filter').value;
+        const statusFilter = document.getElementById('status-filter').value;
+        
+        // Lọc bài viết dựa trên bộ lọc
+        filteredPosts = allPosts.filter(post => {
+            // Loại bỏ lọc theo danh mục
+            // // Lọc theo danh mục
+            // if (categoryFilter && post.category !== categoryFilter) {
+            //     return false;
+            // }
+            
+            // Lọc theo trạng thái
+            if (statusFilter && post.status !== statusFilter) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Đặt lại trang hiện tại về 1 sau khi lọc
+        currentPage = 1;
+        
+        // Hiển thị bài viết đã lọc
+        displayPosts(filteredPosts);
+    }
+    
+    // ... existing code ...
+    
+    // Hiển thị danh sách bài viết
+    function displayPosts(posts) {
+        // ... existing code ...
+        
+        currentPosts.forEach(post => {
+            const row = document.createElement('tr');
+            
+            // Rút gọn ID để dễ đọc
+            const shortId = post.id.length > 8 ? post.id.substring(0, 8) + '...' : post.id;
+            
+            // Loại bỏ tham chiếu đến danh mục
+            // const categoryName = getCategoryName(post.category);
+            
+            row.innerHTML = `
+                <td title="${post.id}">${shortId}</td>
+                <td>${post.title}</td>
+                <!-- Xóa bỏ cột danh mục -->
+                <!-- <td>${categoryName}</td> -->
+                <td>
+                    <span class="status-badge status-${post.status === 'published' ? 'published' : 'draft'}">
+                        ${post.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                    </span>
+                </td>
+                <td>${formatDate(post.date)}</td>
+                <td>
+                    <a href="editor.html?id=${post.id}" class="action-btn">Sửa</a>
+                    <span class="action-btn delete-btn" data-id="${post.id}">Xóa</span>
+                </td>
+            `;
+            
+            // ... existing code ...
+        });
+        
+        // ... existing code ...
+    }
+    
+    // ... existing code ...
+    
+    // Loại bỏ hàm lấy tên danh mục
+    // function getCategoryName(categorySlug) {
+    //     const categories = {
+    //         'life': 'Cuộc sống',
+    //         'business': 'Kinh doanh',
+    //         'tech': 'Công nghệ'
+    //     };
+    //     
+    //     return categories[categorySlug] || 'Chưa phân loại';
+    // }
+</script> 

@@ -566,13 +566,14 @@
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
             
             <div class="filter-container">
-                <span class="filter-label">Lọc theo danh mục:</span>
+                <!-- Xóa bỏ bộ lọc danh mục -->
+                <!-- <span class="filter-label">Lọc theo danh mục:</span>
                 <select id="category-filter" class="filter-select">
                     <option value="">Tất cả danh mục</option>
                     <option value="life">Cuộc sống</option>
                     <option value="business">Kinh doanh</option>
                     <option value="tech">Công nghệ</option>
-                </select>
+                </select> -->
                 
                 <div id="tag-filter-container" style="display: none;">
                     <span class="filter-label">Tag đang lọc:</span>
@@ -677,26 +678,27 @@
                 // Khởi tạo filteredPosts
                 filteredPosts = [...allPosts];
                 
-                // Thiết lập bộ lọc danh mục
-                document.getElementById('category-filter').addEventListener('change', function() {
-                    const category = this.value;
-                    
-                    if (category) {
-                        filteredPosts = allPosts.filter(post => post.category === category);
-                    } else {
-                        filteredPosts = [...allPosts];
-                    }
-                    
-                    // Đặt lại trang hiện tại về 1 khi lọc
-                    currentPage = 1;
-                    
-                    // Hiển thị lại bài viết
-                    displayPosts();
-                });
+                // Xóa bỏ bộ lọc danh mục
+                // document.getElementById('category-filter').addEventListener('change', function() {
+                //     const category = this.value;
+                //     
+                //     if (category) {
+                //         filteredPosts = allPosts.filter(post => post.category === category);
+                //     } else {
+                //         filteredPosts = [...allPosts];
+                //     }
+                //     
+                //     // Đặt lại trang hiện tại về 1 khi lọc
+                //     currentPage = 1;
+                //     
+                //     // Hiển thị lại bài viết
+                //     displayPosts();
+                // });
                 
-                // Kiểm tra xem có tham số danh mục trong URL không
+                // Kiểm tra xem có tham số tag trong URL không
                 const urlParams = new URLSearchParams(window.location.search);
-                const categoryParam = urlParams.get('category');
+                // Loại bỏ tham số danh mục
+                // const categoryParam = urlParams.get('category');
                 const tagParam = urlParams.get('tag');
                 
                 if (tagParam) {
@@ -725,13 +727,15 @@
                     document.getElementById('clear-tag-filter').addEventListener('click', function() {
                         window.location.href = 'all-posts.html';
                     });
-                } else if (categoryParam) {
-                    const categoryFilter = document.getElementById('category-filter');
-                    categoryFilter.value = categoryParam;
-                    
-                    // Kích hoạt sự kiện change
-                    categoryFilter.dispatchEvent(new Event('change'));
                 }
+                // Loại bỏ xử lý tham số danh mục
+                // else if (categoryParam) {
+                //     const categoryFilter = document.getElementById('category-filter');
+                //     categoryFilter.value = categoryParam;
+                //     
+                //     // Kích hoạt sự kiện change
+                //     categoryFilter.dispatchEvent(new Event('change'));
+                // }
                 
                 // Hiển thị bài viết
                 displayPosts();
@@ -787,8 +791,8 @@
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
                 
-                // Lấy tên danh mục
-                const categoryName = getCategoryName(post.category);
+                // Xóa bỏ tham chiếu đến danh mục
+                // const categoryName = getCategoryName(post.category);
                 
                 // Tạo HTML cho tags (nếu có)
                 let tagsHTML = '';
@@ -828,7 +832,8 @@
                         <p class="post-excerpt">${excerpt}</p>
                         <div class="post-meta">
                             <div class="post-meta-left">
-                                <a href="?category=${post.category}" class="post-category">${categoryName}</a>
+                                <!-- Xóa bỏ hiển thị danh mục -->
+                                <!-- <a href="?category=${post.category}" class="post-category">${categoryName}</a> -->
                             </div>
                             <span class="post-date"><i class="far fa-calendar-alt"></i> ${formatDate(post.date)}</span>
                         </div>
@@ -909,17 +914,6 @@
                 }
             });
             paginationContainer.appendChild(nextButton);
-        }
-        
-        // Lấy tên danh mục từ slug
-        function getCategoryName(categorySlug) {
-            const categories = {
-                'life': 'Cuộc sống',
-                'business': 'Kinh doanh',
-                'tech': 'Công nghệ'
-            };
-            
-            return categories[categorySlug] || 'Chưa phân loại';
         }
         
         // Định dạng ngày tháng

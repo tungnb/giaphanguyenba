@@ -739,10 +739,6 @@
                         <i class="fas fa-image" style="font-size: 3rem; color: #ddd;"></i>
                     </div>`;
                 
-                // Thêm badge hiển thị danh mục
-                const categoryName = getCategoryName(post.category);
-                const categoryBadge = `<a href="all-posts.html?category=${post.category}" class="post-category">${categoryName}</a>`;
-                
                 // Tạo HTML cho tags (nếu có)
                 let tagsHTML = '';
                 if (post.tags) {
@@ -774,7 +770,8 @@
                         <p class="post-excerpt">${excerpt}</p>
                         <div class="post-meta">
                             <div class="post-meta-left">
-                                ${categoryBadge}
+                                <!-- Loại bỏ hiển thị danh mục -->
+                                <!-- ${categoryBadge} -->
                             </div>
                             <span class="post-date"><i class="far fa-calendar-alt"></i> ${formatDate(post.date)}</span>
                         </div>
@@ -805,17 +802,6 @@
             } catch (error) {
                 return dateString; // Trả về nguyên gốc nếu có lỗi
             }
-        }
-        
-        // Lấy tên danh mục
-        function getCategoryName(categorySlug) {
-            const categories = {
-                'life': 'Cuộc sống',
-                'business': 'Kinh doanh',
-                'tech': 'Công nghệ'
-            };
-            
-            return categories[categorySlug] || 'Chưa phân loại';
         }
     </script>
 </body>
