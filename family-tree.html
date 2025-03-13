@@ -605,6 +605,38 @@
                 margin: 0 auto;
             }
         }
+        
+        /* Styles for parent-child connectors */
+        .parent-child-connector {
+            position: absolute;
+            z-index: 0;
+        }
+        
+        .v-connector {
+            position: absolute;
+            width: 2px;
+            background-color: #0066cc;
+            z-index: 0;
+        }
+        
+        .h-connector {
+            position: absolute;
+            height: 2px;
+            background-color: #0066cc;
+            z-index: 0;
+        }
+        
+        /* Sửa lại styles cho branch-title để không hiển thị trùng */
+        .branch-title {
+            width: 100%;
+            text-align: center;
+            color: #666;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #ccc;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -851,16 +883,24 @@
                         // Nếu có vợ/chồng thì hiển thị ngay bên cạnh và thêm đường kết nối
                         if (person.spouses && person.spouses.length > 0) {
                             person.spouses.forEach(spouseId => {
-                                const spouse = findPersonById(spouseId);
-                                if (spouse && spouse.generation == person.generation) {
-                                    // Thêm đường kết nối vợ chồng
-                                    const spouseConnector = document.createElement('div');
-                                    spouseConnector.className = 'spouse-connector';
-                                    branchContainer.appendChild(spouseConnector);
+                                // Tạo khóa duy nhất cho cặp vợ chồng (luôn sử dụng ID nhỏ hơn trước)
+                                const coupleKey = [person.id, spouseId].sort().join('-');
+                                
+                                // Kiểm tra xem cặp này đã hiển thị chưa
+                                if (!displayedCouples.has(coupleKey)) {
+                                    displayedCouples.add(coupleKey);
                                     
-                                    // Thêm thông tin vợ/chồng
-                                    const spouseElement = createPersonElement(spouse);
-                                    branchContainer.appendChild(spouseElement);
+                                    const spouse = findPersonById(spouseId);
+                                    if (spouse && spouse.generation == person.generation) {
+                                        // Thêm đường kết nối vợ chồng
+                                        const spouseConnector = document.createElement('div');
+                                        spouseConnector.className = 'spouse-connector';
+                                        branchContainer.appendChild(spouseConnector);
+                                        
+                                        // Thêm thông tin vợ/chồng
+                                        const spouseElement = createPersonElement(spouse);
+                                        branchContainer.appendChild(spouseElement);
+                                    }
                                 }
                             });
                         }
@@ -984,13 +1024,23 @@
                 if (person.gender === 'male') {
                     photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
                 } else {
-                    photoUrl = 'https://cdn.pixabay.com/photo/2014/04/02/14/10/female-306407_1280.png';
+                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png'; // Hình ảnh phù hợp hơn cho nữ
+                }
+            }
+            
+            // Thêm thông tin chi vào tên nếu là nam và có chi
+            let displayName = person.name;
+            if (person.gender === 'male' && person.generation > 1) {
+                const branch = findPersonBranch(person);
+                if (branch > 0) {
+                    // Chỉ hiển thị chi cho các con trai
+                    displayName = `Chi ${branch} - ${person.name}`;
                 }
             }
             
             personElement.innerHTML = `
                 <img src="${photoUrl}" alt="${person.name}" class="person-photo">
-                <div class="person-name">${person.name}</div>
+                <div class="person-name">${displayName}</div>
                 <div class="person-dates">${lifespan}</div>
                 <a href="#" class="view-details" data-id="${person.id}">Xem chi tiết</a>
             `;
@@ -1003,19 +1053,55 @@
             // Tạo các kết nối giữa cha mẹ và con cái
             familyData.forEach(person => {
                 if (person.parents && person.parents.length > 0) {
-                    // Tìm phần tử HTML của người con và cha mẹ
+                    // Tìm phần tử HTML của người con
                     const childElement = document.querySelector(`.person[data-id="${person.id}"]`);
+                    
+                    if (!childElement) return;
                     
                     person.parents.forEach(parentId => {
                         const parentElement = document.querySelector(`.person[data-id="${parentId}"]`);
                         
-                        if (childElement && parentElement) {
-                            // Tạo kết nối (code phức tạp hơn, bạn có thể thay bằng thư viện vẽ đồ thị)
-                            // Đây chỉ là ví dụ đơn giản
+                        if (parentElement) {
+                            // Tạo đường kết nối từ cha/mẹ đến con
+                            createParentChildConnector(parentElement, childElement);
                         }
                     });
                 }
             });
+        }
+        
+        // Hàm tạo đường kết nối từ cha mẹ đến con
+        function createParentChildConnector(parentElement, childElement) {
+            // Lấy vị trí của cha mẹ và con
+            const parentRect = parentElement.getBoundingClientRect();
+            const childRect = childElement.getBoundingClientRect();
+            
+            // Tạo container cho đường kết nối
+            const connector = document.createElement('div');
+            connector.className = 'parent-child-connector';
+            
+            // Tính toán vị trí và kích thước của đường kết nối
+            const startX = parentRect.left + parentRect.width / 2;
+            const startY = parentRect.bottom;
+            const endX = childRect.left + childRect.width / 2;
+            const endY = childRect.top;
+            
+            // Tạo đường kết nối dọc từ cha mẹ xuống
+            const verticalLine = document.createElement('div');
+            verticalLine.className = 'v-connector';
+            document.body.appendChild(verticalLine);
+            
+            // Tạo đường kết nối ngang nếu cần
+            if (startX !== endX) {
+                const horizontalLine = document.createElement('div');
+                horizontalLine.className = 'h-connector';
+                document.body.appendChild(horizontalLine);
+            }
+            
+            // Tạo đường kết nối dọc xuống đến con
+            const verticalLine2 = document.createElement('div');
+            verticalLine2.className = 'v-connector';
+            document.body.appendChild(verticalLine2);
         }
         
         // Thiết lập sự kiện cho modal xem chi tiết
