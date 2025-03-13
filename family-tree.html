@@ -1,4 +1,59 @@
+                    } else {
+                        photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                    }
+                }
+                
+                // Tạo node cho OrgChart
+                const node = {
+                    id: person.id,
+                    name: person.name,
+                    dates: lifespan,
+                    photo: photoUrl,
+                    gender: person.gender,
+                    tags: [person.gender],
+                    generation: person.generation
+                };
+                
+                // Thiết lập quan hệ với cha mẹ
+                if (person.parents && person.parents.length > 0) {
+                    // Ưu tiên cha nếu có cả cha và mẹ
+                    const father = familyData.find(p => p.gender === 'male' && person.parents.includes(p.id));
+                    if (father) {
+                        node.pid = father.id;
+                    } else {
+                        // Nếu không có cha, sử dụng mẹ
+                        node.pid = person.parents[0];
+                    }
+                }
+                
+                // Thiết lập quan hệ vợ/chồng
+                if (person.spouses && person.spouses.length > 0) {
+                    for (let i = 0; i < person.spouses.length; i++) {
+                        const spouseId = person.spouses[i];
+                        const spouse = familyData.find(p => p.id === spouseId);
+                        
+                        // Chỉ thiết lập quan hệ một lần để tránh lặp lại
+                        if (spouse && person.id < spouse.id) {
+                            if (!node.pids) node.pids = [];
+                            if (spouse.gender === 'female') {
+                                node.pids.push(spouseId);
+                            }
+                        }
 <!DOCTYPE html>
+                    }
+                }
+                
+                nodes.push(node);
+            });
+            
+            return nodes;
+        }
+
+        // Thiết lập điều khiển zoom cho OrgChart
+        function setupOrgChartZoomControls(chart) {
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const zoomResetBtn = document.getElementById('zoom-reset');
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +61,62 @@
     <title>Gia phả dòng họ Nguyễn Bá - xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa</title>
     <link rel="stylesheet" href="family-tree.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Thêm thư viện OrgChart.js -->
+    <script src="https://balkangraph.com/js/latest/OrgChart.js"></script>
+    <style>
+        #org-chart-container {
+            height: 800px;
+            width: 100%;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        
+        /* Style cho node trong orgchart */
+        .node-card {
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            background-color: white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .node-card.male {
+            border-left: 4px solid #0066cc;
+        }
+        
+        .node-card.female {
+            border-left: 4px solid #e91e63;
+        }
+        
+        .node-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f0f5ff;
+            margin-bottom: 5px;
+        }
+        
+        .node-name {
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 3px;
+        }
+        
+        .node-dates {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -99,6 +210,7 @@
     <script>
         // Thiết lập cấu trúc dữ liệu cho gia phả
         let familyData = [];
+        let chart; // Biến lưu trữ đối tượng OrgChart
 
         // Lấy dữ liệu gia phả từ localStorage hoặc API
         async function getFamilyData() {
@@ -236,7 +348,7 @@
             }
         }
 
-        // Hiển thị dữ liệu gia phả
+        // Cập nhật sự kiện DOMContentLoaded
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 // Hiển thị loading indicator
@@ -252,16 +364,15 @@
                     return;
                 }
 
-                // Render cây gia phả
+                // Render cây gia phả với OrgChart
                 await renderFamilyTree();
 
                 // Ẩn loading và hiển thị cây gia phả
                 document.getElementById('loading-indicator').style.display = 'none';
                 document.getElementById('family-tree-container').style.display = 'block';
 
-                // Thiết lập sự kiện cho modal và cập nhật kết nối khi cửa sổ thay đổi kích thước
+                // Thiết lập sự kiện cho modal
                 setupModalEvents();
-                observeTreeContainer();
             } catch (error) {
                 console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -275,338 +386,46 @@
             }
         });
 
-        // Hàm render cây gia phả
+        // Hàm render cây gia phả sử dụng OrgChart.js
+            
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', function() {
+                    chart.zoom(1.2, null, null, 'smooth');
+                });
         async function renderFamilyTree() {
-            // Nhóm theo thế hệ
-            const generations = {};
-            familyData.forEach(person => {
-                if (!generations[person.generation]) {
-                    generations[person.generation] = [];
-                }
-                generations[person.generation].push(person);
-            });
-
-            // Tạo cây gia phả
-            const treeContainer = document.getElementById('org-chart-container');
-            treeContainer.innerHTML = '';
-            
-            // Theo dõi các người đã hiển thị để tránh lặp
-            const displayedPersons = new Set();
-
-            // Hiển thị từng thế hệ
-            Object.keys(generations).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gen => {
-                // Sắp xếp thành viên trong thế hệ theo chi và theo thứ tự sinh
-                const genMembers = generations[gen];
-                genMembers.sort((a, b) => {
-                    // Sắp xếp theo chi trước
-                    const branchA = findPersonBranch(a);
-                    const branchB = findPersonBranch(b);
-                    
-                    if (branchA !== branchB) {
-                        return branchA - branchB;
-                    }
-                    
-                    // Trong cùng chi thì sắp xếp theo ngày sinh
-                    if (a.birthDate && b.birthDate) 
-                        return new Date(a.birthDate) - new Date(b.birthDate);
-                    return 0;
-                });
-
-                // Tạo container cho thế hệ
-                const genContainer = document.createElement('div');
-                genContainer.className = 'generation';
-                genContainer.dataset.generation = gen;
-
-                // Thêm tiêu đề thế hệ
-                const genTitle = document.createElement('h3');
-                genTitle.className = 'generation-title';
-                genTitle.textContent = `Thế hệ ${gen}`;
-                genContainer.appendChild(genTitle);
-
-                // Tạo container cho các thành viên trong thế hệ - hiển thị ngang một dòng
-                const membersContainer = document.createElement('div');
-                membersContainer.className = 'generation-members';
-                genContainer.appendChild(membersContainer);
-
-                // Tạo mảng các gia đình (người + vợ/chồng) để hiển thị theo nhóm
-                const families = [];
-                
-                genMembers.forEach(person => {
-                    // Nếu người này đã được hiển thị, bỏ qua
-                    if (displayedPersons.has(person.id)) return;
-                    
-                    // Tạo đơn vị gia đình
-                    const family = {
-                        main: person,
-                        spouses: []
-                    };
-                    
-                    // Thêm vợ/chồng vào gia đình nếu có
-                    if (person.spouses && person.spouses.length > 0) {
-                        person.spouses.forEach(spouseId => {
-                            const spouse = findPersonById(spouseId);
-                            if (spouse && spouse.generation === parseInt(gen) && !displayedPersons.has(spouseId)) {
-                                family.spouses.push(spouse);
-                                displayedPersons.add(spouseId);
-                            }
-                        });
-                    }
-                    
-                    families.push(family);
-                    displayedPersons.add(person.id);
-                });
-                
-                // Hiển thị từng gia đình
-                families.forEach(family => {
-                    // Hiển thị người chính
-                    const personElement = createPersonElement(family.main);
-                    personElement.id = `person-${family.main.id}`;
-                    membersContainer.appendChild(personElement);
-                    
-                    // Hiển thị vợ/chồng cùng với đường kết nối
-                    family.spouses.forEach(spouse => {
-                        // Tạo kết nối vợ chồng
-                        const spouseConnector = document.createElement('div');
-                        spouseConnector.className = 'spouse-connector';
-                        membersContainer.appendChild(spouseConnector);
-                        
-                        // Hiển thị vợ/chồng
-                        const spouseElement = createPersonElement(spouse);
-                        spouseElement.id = `person-${spouse.id}`;
-                        membersContainer.appendChild(spouseElement);
-                    });
-                });
-
-                treeContainer.appendChild(genContainer);
-            });
-
-            // Sau khi thêm tất cả thế hệ vào tree, đặt chiều rộng tối thiểu
-            const allGenerations = document.querySelectorAll('.generation-members');
-            let maxWidth = 0;
-            
-            allGenerations.forEach(gen => {
-                const width = gen.scrollWidth;
-                if (width > maxWidth) {
-                    maxWidth = width;
-                }
-            });
-            
-            // Đặt chiều rộng tối thiểu cho tree
-            if (maxWidth > 0) {
-                treeContainer.style.minWidth = (maxWidth + 80) + 'px'; // thêm padding
+            // Chuyển đổi dữ liệu gia phả sang định dạng phù hợp với OrgChart
             }
             
-            // Thiết lập các kết nối
-            setTimeout(setupFamilyConnections, 300);
-        }
-
-        // Thay thế hàm setupFamilyConnections để sử dụng SVG
-        function setupFamilyConnections() {
-            // Xóa tất cả đường kết nối hiện có
-            const treeContainer = document.getElementById('org-chart-container');
-            const existingConnectors = treeContainer.querySelectorAll('.connector-container, .connector-line, .mindmap-connector, .family-connector, .svg-container, .spouse-connector');
-            existingConnectors.forEach(conn => conn.remove());
-            
-            // Tạo container SVG cho các đường kết nối
-            const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svgContainer.setAttribute("class", "svg-container");
-            svgContainer.style.position = "absolute";
-            svgContainer.style.top = "0";
-            svgContainer.style.left = "0";
-            svgContainer.style.width = "100%";
-            svgContainer.style.height = "100%";
-            svgContainer.style.pointerEvents = "none";
-            svgContainer.style.zIndex = "2";
-            treeContainer.appendChild(svgContainer);
-            
-            // Cập nhật kích thước SVG để phù hợp với toàn bộ cây
-            svgContainer.setAttribute("width", treeContainer.scrollWidth);
-            svgContainer.setAttribute("height", treeContainer.scrollHeight);
-            
-            // Tạo kết nối từ cha mẹ đến con bằng SVG
-            familyData.forEach(person => {
-                if (person.children && person.children.length > 0) {
-                    const parentElement = document.getElementById(`person-${person.id}`);
-                    
-                    if (!parentElement) return;
-                    
-                    const childElements = person.children
-                        .map(childId => document.getElementById(`person-${childId}`))
-                        .filter(el => el);
-                    
-                    if (childElements.length > 0) {
-                        createSvgConnector(svgContainer, parentElement, childElements, treeContainer);
-                    }
-                }
-                
-                // Thêm xử lý kết nối vợ chồng
-                if (person.spouses && person.spouses.length > 0) {
-                    const personElement = document.getElementById(`person-${person.id}`);
-                    
-                    if (!personElement) return;
-                    
-                    person.spouses.forEach(spouseId => {
-                        const spouseElement = document.getElementById(`person-${spouseId}`);
-                        
-                        if (spouseElement) {
-                            // Để tránh vẽ 2 lần, chỉ vẽ kết nối khi personId < spouseId
-                            if (person.id < spouseId) {
-                                createSpouseConnector(svgContainer, personElement, spouseElement, treeContainer);
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        // Cải thiện hàm tạo kết nối cha mẹ-con để đảm bảo hiển thị tất cả
-        function createSvgConnector(svgContainer, parentElement, childElements, treeContainer) {
-            if (!parentElement || childElements.length === 0) return;
-
-            const treeRect = treeContainer.getBoundingClientRect();
-            const scrollTop = treeContainer.scrollTop;
-            const scrollLeft = treeContainer.scrollLeft;
-            
-            const parentRect = parentElement.getBoundingClientRect();
-            
-            // Lấy vị trí giữa đáy của thẻ cha mẹ
-            const parentX = parentRect.left + parentRect.width / 2 - treeRect.left + scrollLeft;
-            const parentY = parentRect.bottom - treeRect.top + scrollTop;
-            
-            // Tìm vị trí của tất cả con
-            let childPositions = [];
-            let minChildX = Infinity;
-            let maxChildX = -Infinity;
-            
-            childElements.forEach(childElement => {
-                const childRect = childElement.getBoundingClientRect();
-                const childX = childRect.left + childRect.width / 2 - treeRect.left + scrollLeft;
-                const childY = childRect.top - treeRect.top + scrollTop;
-                
-                childPositions.push({ x: childX, y: childY, element: childElement });
-                minChildX = Math.min(minChildX, childX);
-                maxChildX = Math.max(maxChildX, childX);
-            });
-            
-            // Sắp xếp lại các con theo thứ tự từ trái sang phải
-            childPositions.sort((a, b) => a.x - b.x);
-            
-            // Điểm trung tâm ngang giữa các con
-            const centerX = (minChildX + maxChildX) / 2;
-            
-            // Khoảng cách dọc cho đường kết nối
-            const verticalGap = 30;
-            
-            // Vẽ đường dọc từ cha mẹ xuống
-            const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            verticalLine.setAttribute("x1", parentX);
-            verticalLine.setAttribute("y1", parentY);
-            verticalLine.setAttribute("x2", parentX);
-            verticalLine.setAttribute("y2", parentY + verticalGap);
-            verticalLine.setAttribute("stroke", "#0066cc");
-            verticalLine.setAttribute("stroke-width", "2");
-            svgContainer.appendChild(verticalLine);
-            
-            // Vẽ đường ngang nối từ cha mẹ đến trung tâm các con (nếu cần)
-            if (Math.abs(parentX - centerX) > 2) {
-                const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                horizontalLine.setAttribute("x1", parentX);
-                horizontalLine.setAttribute("y1", parentY + verticalGap);
-                horizontalLine.setAttribute("x2", centerX);
-                horizontalLine.setAttribute("y2", parentY + verticalGap);
-                horizontalLine.setAttribute("stroke", "#0066cc");
-                horizontalLine.setAttribute("stroke-width", "2");
-                svgContainer.appendChild(horizontalLine);
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', function() {
+                    chart.zoom(0.8, null, null, 'smooth');
+                });
             }
             
-            // Đường dọc xuống từ trung tâm
-            const middleVerticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            middleVerticalLine.setAttribute("x1", centerX);
-            middleVerticalLine.setAttribute("y1", parentY + verticalGap);
-            middleVerticalLine.setAttribute("x2", centerX);
-            middleVerticalLine.setAttribute("y2", parentY + verticalGap * 2);
-            middleVerticalLine.setAttribute("stroke", "#0066cc");
-            middleVerticalLine.setAttribute("stroke-width", "2");
-            svgContainer.appendChild(middleVerticalLine);
+            if (zoomResetBtn) {
+            const nodes = convertFamilyDataToOrgChartFormat(familyData);
             
-            // Vẽ đường ngang từ trung tâm đến mỗi con
-            const childLineY = parentY + verticalGap * 2;
-            
-            // Vẽ đường ngang chính đi từ con trái cùng đến con phải cùng
-            if (childPositions.length > 1) {
-                const mainHorizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                mainHorizontalLine.setAttribute("x1", childPositions[0].x);
-                mainHorizontalLine.setAttribute("y1", childLineY);
-                mainHorizontalLine.setAttribute("x2", childPositions[childPositions.length - 1].x);
-                mainHorizontalLine.setAttribute("y2", childLineY);
-                mainHorizontalLine.setAttribute("stroke", "#0066cc");
-                mainHorizontalLine.setAttribute("stroke-width", "2");
-                svgContainer.appendChild(mainHorizontalLine);
+            // Tạo config cho OrgChart
+            chart = new OrgChart(document.getElementById('org-chart-container'), {
+                template: "olivia",
+                enableSearch: true,
+                searchFields: ["name", "id"],
+                searchDisplayField: "name",
+                searchPlaceholder: "Tìm kiếm thành viên...",
+                zoomResetBtn.addEventListener('click', function() {
+                    chart.fit();
+                });
             }
-            
-            // Vẽ đường dọc xuống từ đường ngang đến mỗi con
-            childPositions.forEach(childPos => {
-                const verticalToChild = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                verticalToChild.setAttribute("x1", childPos.x);
-                verticalToChild.setAttribute("y1", childLineY);
-                verticalToChild.setAttribute("x2", childPos.x);
-                verticalToChild.setAttribute("y2", childPos.y);
-                verticalToChild.setAttribute("stroke", "#0066cc");
-                verticalToChild.setAttribute("stroke-width", "2");
-                svgContainer.appendChild(verticalToChild);
-                
-                // Thêm điểm kết nối giữa đường dọc và con
-                const connectionPoint = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                connectionPoint.setAttribute("cx", childPos.x);
-                connectionPoint.setAttribute("cy", childPos.y);
-                connectionPoint.setAttribute("r", "3");
-                connectionPoint.setAttribute("fill", "#0066cc");
-                svgContainer.appendChild(connectionPoint);
-            });
-        }
-
-        // Thêm hàm mới để tạo kết nối vợ chồng
-        function createSpouseConnector(svgContainer, person1Element, person2Element, treeContainer) {
-            const treeRect = treeContainer.getBoundingClientRect();
-            const scrollTop = treeContainer.scrollTop;
-            const scrollLeft = treeContainer.scrollLeft;
-            
-            const person1Rect = person1Element.getBoundingClientRect();
-            const person2Rect = person2Element.getBoundingClientRect();
-            
-            // Tính toán vị trí kết nối (giữa hai người)
-            const person1RightX = person1Rect.right - treeRect.left + scrollLeft;
-            const person2LeftX = person2Rect.left - treeRect.left + scrollLeft;
-            const person1CenterY = person1Rect.top + person1Rect.height / 2 - treeRect.top + scrollTop;
-            const person2CenterY = person2Rect.top + person2Rect.height / 2 - treeRect.top + scrollTop;
-            
-            // Vẽ đường nối
-            const spouseLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            spouseLine.setAttribute("x1", person1RightX);
-            spouseLine.setAttribute("y1", person1CenterY);
-            spouseLine.setAttribute("x2", person2LeftX);
-            spouseLine.setAttribute("y2", person2CenterY);
-            spouseLine.setAttribute("stroke", "#ff9800");
-            spouseLine.setAttribute("stroke-width", "2");
-            svgContainer.appendChild(spouseLine);
-            
-            // Thêm hai điểm tròn ở hai đầu đường kẻ
-            const point1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            point1.setAttribute("cx", person1RightX);
-            point1.setAttribute("cy", person1CenterY);
-            point1.setAttribute("r", "4");
-            point1.setAttribute("fill", "#ff9800");
-            svgContainer.appendChild(point1);
-            
-            const point2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            point2.setAttribute("cx", person2LeftX);
-            point2.setAttribute("cy", person2CenterY);
-            point2.setAttribute("r", "4");
-            point2.setAttribute("fill", "#ff9800");
-            svgContainer.appendChild(point2);
         }
 
         // Thêm hàm theo dõi pinch-to-zoom để cập nhật các kết nối
+                nodeBinding: {
+                    field_0: "name",
+                    field_1: "dates",
+                    img_0: "photo"
+                },
+                nodeMenu: {
+                    details: { text: "Xem chi tiết" }
         function setupZoomHandlers() {
             let lastTouchDistance = 0;
             let isZooming = false;
@@ -875,6 +694,19 @@
                         parentsHTML += `
                             <div class="relation-item">
                                 ${parentData.name} (${parentData.gender === 'male' ? 'Cha' : 'Mẹ'})
+                },
+                menu: {
+                    pdf: { text: "Xuất PDF" },
+                    png: { text: "Xuất PNG" },
+                    svg: { text: "Xuất SVG" },
+                    csv: { text: "Xuất CSV" }
+                },
+                nodes: nodes,
+                mouseScrool: OrgChart.action.zoom,
+                orientation: OrgChart.orientation.top,
+                collapse: {
+                    level: 3,
+                    allChildren: false
                             </div>
                         `;
                     }
@@ -889,11 +721,17 @@
                 person.spouses.forEach(spouseId => {
                     const spouseData = familyData.find(p => p.id === spouseId);
                     if (spouseData) {
-                        let marriageInfo = '';
                         spousesHTML += `
                             <div class="relation-item">
-                                ${spouseData.name} ${marriageInfo ? `(${marriageInfo})` : ''}
+                                ${spouseData.name}
                             </div>
+                },
+                levelSeparation: 100,
+                siblingSeparation: 50,
+                subtreeSeparation: 80,
+                nodeMouseClick: OrgChart.action.details,
+                showXScroll: OrgChart.scroll.visible,
+                showYScroll: OrgChart.scroll.visible,
                         `;
                     }
                 });
@@ -901,20 +739,101 @@
             }
 
             contentContainer.innerHTML = `
-                <div class="person-detail">
-                    <img src="${photoUrl}" alt="${person.name}" class="person-photo">
-                    <div class="person-info">
-                        <h2>${person.name}</h2>
-                        <div class="person-dates">${lifespan}</div>
-                        <div class="relation-list">
-                            ${parentsHTML}
-                        </div>
-                        <div class="relation-list">
-                            ${spousesHTML}
-                        </div>
+                <div class="person-detail-header">
+                tags: {
+                    male: {
+                        template: "olivia"
+                    },
+                    female: {
+                        template: "isla"
+                    }
+                    <img src="${photoUrl}" alt="${person.name}" class="person-detail-photo">
+                    <div class="person-detail-info">
+                        <h2 class="person-detail-name">${person.name}</h2>
+                }
+            });
+            
+            // Override template mặc định để hiển thị nội dung tùy chỉnh
+            chart.editUI.on('field', function(sender, args){
+                if (args.name == 'photo') {
+                        <p class="person-detail-dates">${lifespan}</p>
+                        <p>Thế hệ: ${person.generation}</p>
+                        <p>Giới tính: ${person.gender === 'male' ? 'Nam' : 'Nữ'}</p>
+                    var img = document.createElement('img');
+                    img.src = args.value;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
                     </div>
                 </div>
+                
+                <div class="person-detail-section">
+                    <h3>Cha mẹ</h3>
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '50%';
+                    
+                    args.value = img;
+                }
+            });
+            
+            // Sự kiện khi nhấp vào node
+                    ${parentsHTML}
+                </div>
+                
+                <div class="person-detail-section">
+                    <h3>Vợ/Chồng</h3>
+                    ${spousesHTML}
+                </div>
+                
+                <div class="person-detail-section">
+                    <h3>Con cái</h3>
+                    ${person.children ? `
+            chart.on('click', function(sender, args){
+                return false; // Ngăn hành động mặc định
+            });
+            
+            // Sự kiện khi xem chi tiết
+            chart.on('details', function(sender, args){
+                    <div class="relation-list">
+                        ${person.children.map(childId => {
+                            const childData = familyData.find(p => p.id === childId);
+                            return `
+                const personId = args.node.id;
+                showPersonDetail(personId);
+                return false;
+            });
+            
+            // Kết nối các nút zoom với chart
+            setupOrgChartZoomControls(chart);
+                                <div class="relation-item">
+                                    ${childData.name} (${childData.gender === 'male' ? 'Con trai' : 'Con gái'})
+                                </div>
+                            `;
+                        }).join('')}
+            
+            // Ẩn loading và hiển thị container
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('family-tree-container').style.display = 'block';
+        }
+
+        // Hàm chuyển đổi dữ liệu gia phả sang định dạng OrgChart
+                    </div>
+                    ` : 'Không có thông tin con cái'}
+                </div>
+                
+                ${person.bio ? `
+                <div class="person-detail-section">
+                    <h3>Tiểu sử</h3>
+                    <p>${person.bio}</p>
+        function convertFamilyDataToOrgChartFormat(familyData) {
+            const nodes = [];
+            
+            // Chuyển đổi từng thành viên trong gia phả
+            familyData.forEach(person => {
+                </div>
+                ` : ''}
             `;
+            
+            modal.style.display = 'block';
         }
     </script>
 </body>
