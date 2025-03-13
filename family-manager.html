@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý gia phả - Dòng họ Nguyễn Bá</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #fff;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Navigation */
+        .navigation-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .nav-item {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #555;
+            text-decoration: none;
+        }
+        
+        .nav-item:hover {
+            background-color: #f0f5ff;
+            color: #0066cc;
+        }
+        
+        .nav-item.active {
+            background-color: #0066cc;
+            color: white;
+        }
+        
+        /* Main content */
+        .main-content {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .left-panel {
+            flex: 2;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .right-panel {
+            flex: 3;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        /* Search box */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .search-btn {
+            padding: 10px 15px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-btn:hover {
+            background-color: #0052a3;
+        }
+        
+        /* Members list */
+        .members-list {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .member-item:hover {
+            background-color: #f5f9ff;
+        }
+        
+        .member-item.active {
+            background-color: #e6f0ff;
+            border-left: 3px solid #0066cc;
+        }
+        
+        .member-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+            border: 1px solid #ddd;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .member-meta {
+            display: flex;
+            font-size: 0.8rem;
+            color: #666;
+            gap: 10px;
+        }
+        
+        .gender-male {
+            color: #0066cc;
+        }
+        
+        .gender-female {
+            color: #e91e63;
+        }
+        
+        .generation-badge {
+            background-color: #f0f5ff;
+            color: #0066cc;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        
+        /* Add button */
+        .add-member-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        
+        .add-member-btn:hover {
+            background-color: #0052a3;
+        }
+        
+        /* Member form */
+        .form-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #0066cc;
+            outline: none;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        /* Relation section */
+        .relation-section {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .relation-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .relation-container {
+            margin-bottom: 20px;
+        }
+        
+        .relation-label {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .relation-list {
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .relation-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .relation-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .relation-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .relation-type {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: #666;
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .relation-actions {
+            margin-left: 10px;
+        }
+        
+        .relation-delete-btn {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .relation-delete-btn:hover {
+            background-color: #fff0f0;
+        }
+        
+        .add-relation-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #f0f9ff;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .add-relation-btn:hover {
+            background-color: #e6f7ff;
+        }
+        
+        /* Form actions */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .save-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .save-btn:hover {
+            background-color: #0052a3;
+        }
+        
+        .cancel-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .delete-btn {
+            padding: 12px;
+            background-color: #fff0f0;
+            color: #ff4d4f;
+            border: 1px solid #ff4d4f;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background-color: #ff4d4f;
+            color: white;
+        }
+        
+        /* Relation modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #f0fff4;
+            color: #2e7d32;
+            border: 1px solid #2e7d32;
+        }
+        
+        .alert-error {
+            background-color: #fff0f0;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Quản lý gia phả dòng họ Nguyễn Bá</h1>
+            <p class="subtitle">Xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa</p>
+            
+            <div class="navigation-menu">
+                <a href="index.html" class="nav-item">Trang chủ</a>
+                <a href="family-tree.html" class="nav-item">Gia phả</a>
+                <a href="all-posts.html" class="nav-item">Tất cả bài viết</a>
+                <a href="family-manager.html" class="nav-item active">Quản lý gia phả</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="alert-success" class="alert alert-success"></div>
+        <div id="alert-error" class="alert alert-error"></div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="search-input" placeholder="Tìm kiếm thành viên...">
+                    <button class="search-btn" id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                
+                <div class="members-list" id="members-list">
+                    <!-- Danh sách thành viên sẽ được thêm vào đây -->
+                    <div class="member-item">
+                        <img src="https://via.placeholder.com/40" alt="Avatar" class="member-photo">
+                        <div class="member-info">
+                            <div class="member-name">Nguyễn Bá A</div>
+                            <div class="member-meta">
+                                <span class="gender-male"><i class="fas fa-male"></i> Nam</span>
+                                <span class="generation-badge">Thế hệ 1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="add-member-btn" class="add-member-btn">
+                    <i class="fas fa-plus"></i> Thêm thành viên mới
+                </button>
+            </div>
+            
+            <div class="right-panel">
+                <h2 class="form-title" id="form-title">Thêm thành viên mới</h2>
+                
+                <form id="member-form">
+                    <input type="hidden" id="member-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Họ và tên</label>
+                            <input type="text" id="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gender">Giới tính</label>
+                            <select id="gender" class="form-control">
+                                <option value="male">Nam</option>
+                                <option value="female">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="generation">Thế hệ</label>
+                            <input type="number" id="generation" class="form-control" min="1" value="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="birth-date">Ngày sinh</label>
+                            <input type="date" id="birth-date" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="death-date">Ngày mất (nếu có)</label>
+                            <input type="date" id="death-date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="photo">Ảnh đại diện (URL)</label>
+                        <input type="url" id="photo" class="form-control" placeholder="https://example.com/photo.jpg">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bio">Tiểu sử</label>
+                        <textarea id="bio" class="form-control"></textarea>
+                    </div>
+                    
+                    <div class="relation-section">
+                        <h3 class="relation-title">Quan hệ gia đình</h3>
+                        
+                        <div class="relation-container">
+                            <div class="relation-label">Cha mẹ</div>
+                            <div id="parents-list" class="relation-list">
+                                <!-- Danh sách cha mẹ sẽ được thêm vào đây -->
+                            </div>
+                            <button type="button" id="add-parent-btn" class="add-relation-btn">
+                                <i class="fas fa-plus"></i> Thêm cha/mẹ
+                            </button>
+                        </div>
+                        
+                        <div class="relation-container">
+                            <div class="relation-label">Vợ/Chồng</div>
+                            <div id="spouses-list" class="relation-list">
+                                <!-- Danh sách vợ/chồng sẽ được thêm vào đây -->
+                            </div>
+                            <button type="button" id="add-spouse-btn" class="add-relation-btn">
+                                <i class="fas fa-plus"></i> Thêm vợ/chồng
+                            </button>
+                        </div>
+                        
+                        <div class="relation-container">
+                            <div class="relation-label">Con cái</div>
+                            <div id="children-list" class="relation-list">
+                                <!-- Danh sách con cái sẽ được thêm vào đây -->
+                            </div>
+                            <button type="button" id="add-child-btn" class="add-relation-btn">
+                                <i class="fas fa-plus"></i> Thêm con
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="cancel-btn" class="cancel-btn">Hủy</button>
+                        <button type="submit" id="save-btn" class="save-btn">Lưu thông tin</button>
+                        <button type="button" id="delete-btn" class="delete-btn" style="display: none;">Xóa thành viên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal thêm quan hệ -->
+    <div id="relation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Thêm quan hệ</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="relation-person">Chọn thành viên</label>
+                    <select id="relation-person" class="form-control">
+                        <!-- Danh sách thành viên sẽ được thêm vào đây -->
+                    </select>
+                </div>
+                
+                <div class="form-group" id="relation-type-container">
+                    <label for="relation-type">Loại quan hệ</label>
+                    <select id="relation-type" class="form-control">
+                        <option value="father">Cha</option>
+                        <option value="mother">Mẹ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="marriage-date-container" style="display: none;">
+                    <label for="marriage-date">Ngày cưới</label>
+                    <input type="date" id="marriage-date" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" id="modal-cancel">Hủy</button>
+                <button type="button" class="save-btn" id="modal-save">Lưu</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Cấu hình API - thay URL này bằng URL Google Apps Script bạn đã triển khai
+        const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        
+        // Biến lưu trữ dữ liệu
+        let allMembers = [];
+        let currentMemberId = null;
+        let relationModalType = null;
+        
+        // Khởi tạo trang
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tải danh sách thành viên
+            loadMembers();
+            
+            // Xử lý form
+            document.getElementById('member-form').addEventListener('submit', handleFormSubmit);
+            
+            // Xử lý nút thêm thành viên mới
+            document.getElementById('add-member-btn').addEventListener('click', resetForm);
+            
+            // Xử lý nút hủy
+            document.getElementById('cancel-btn').addEventListener('click', resetForm);
+            
+            // Xử lý nút xóa
+            document.getElementById('delete-btn').addEventListener('click', handleDeleteMember);
+            
+            // Xử lý tìm kiếm
+            document.getElementById('search-btn').addEventListener('click', handleSearch);
+            document.getElementById('search-input').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+            
+            // Xử lý thêm quan hệ
+            document.getElementById('add-parent-btn').addEventListener('click', () => openRelationModal('parent'));
+            document.getElementById('add-spouse-btn').addEventListener('click', () => openRelationModal('spouse'));
+            document.getElementById('add-child-btn').addEventListener('click', () => openRelationModal('child'));
+            
+            // Xử lý modal
+            document.getElementById('modal-close').addEventListener('click', closeRelationModal);
+            document.getElementById('modal-cancel').addEventListener('click', closeRelationModal);
+            document.getElementById('modal-save').addEventListener('click', saveRelation);
+        });
+        
+        // Tải danh sách thành viên
+        async function loadMembers() {
+            try {
+                showLoading();
+                
+                // Gọi API để lấy danh sách thành viên
+                const response = await fetch(`${API_URL}?operation=read`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    allMembers = data.data || [];
+                    renderMembersList(allMembers);
+                } else {
+                    showError('Không thể tải danh sách thành viên: ' + (data.message || 'Lỗi không xác định'));
+                }
+            } catch (error) {
+                console.error('Error loading members:', error);
+                showError('Lỗi khi tải danh sách thành viên: ' + error.message);
+                
+                // Dữ liệu mẫu cho trường hợp không kết nối được API
+                allMembers = getSampleData();
+                renderMembersList(allMembers);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Hiển thị danh sách thành viên
+        function renderMembersList(members) {
+            const listContainer = document.getElementById('members-list');
+            listContainer.innerHTML = '';
+            
+            if (members.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Chưa có thành viên nào</p>';
+                return;
+            }
+            
+            members.forEach(member => {
+                const item = document.createElement('div');
+                item.className = 'member-item';
+                item.dataset.id = member.ID;
+                
+                // Xác định ảnh đại diện
+                const photoUrl = member.Photo || (member.Gender === 'male' ? 
+                    'https://via.placeholder.com/40?text=Nam' : 
+                    'https://via.placeholder.com/40?text=Nữ');
+                
+                item.innerHTML = `
+                    <img src="${photoUrl}" alt="${member.Name}" class="member-photo">
+                    <div class="member-info">
+                        <div class="member-name">${member.Name}</div>
+                        <div class="member-meta">
+                            <span class="gender-${member.Gender}">
+                                <i class="fas fa-${member.Gender === 'male' ? 'male' : 'female'}"></i> 
+                                ${member.Gender === 'male' ? 'Nam' : 'Nữ'}
+                            </span>
+                            <span class="generation-badge">Thế hệ ${member.Generation}</span>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    // Đánh dấu thành viên được chọn
+                    document.querySelectorAll('.member-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // Hiển thị thông tin thành viên
+                    editMember(member.ID);
+                });
+                
+                listContainer.appendChild(item);
+            });
+        }
+        
+        // Xử lý tìm kiếm
+        function handleSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                renderMembersList(allMembers);
+                return;
+            }
+            
+            const filteredMembers = allMembers.filter(member => 
+                member.Name.toLowerCase().includes(searchTerm) ||
+                (member.Bio && member.Bio.toLowerCase().includes(searchTerm))
+            );
+            
+            renderMembersList(filteredMembers);
+        }
+        
+        // Mở form chỉnh sửa thành viên
+        function editMember(memberId) {
+            const member = allMembers.find(m => m.ID === memberId);
+            
+            if (!member) {
+                showError('Không tìm thấy thông tin thành viên');
+                return;
+            }
+            
+            currentMemberId = memberId;
+            
+            // Cập nhật tiêu đề form
+            document.getElementById('form-title').textContent = 'Chỉnh sửa thành viên';
+            
+            // Điền thông tin vào form
+            document.getElementById('member-id').value = member.ID;
+            document.getElementById('name').value = member.Name || '';
+            document.getElementById('gender').value = member.Gender || 'male';
+            document.getElementById('generation').value = member.Generation || 1;
+            document.getElementById('birth-date').value = formatDateForInput(member.BirthDate);
+            document.getElementById('death-date').value = formatDateForInput(member.DeathDate);
+            document.getElementById('photo').value = member.Photo || '';
+            document.getElementById('bio').value = member.Bio || '';
+            
+            // Hiển thị thông tin thành viên
+            document.getElementById('form-title').textContent = 'Chỉnh sửa thành viên';
+        }
+        
+        // Xử lý tìm kiếm
+        function handleSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                renderMembersList(allMembers);
+                return;
+            }
+            
+            const filteredMembers = allMembers.filter(member => 
+                member.Name.toLowerCase().includes(searchTerm) ||
+                (member.Bio && member.Bio.toLowerCase().includes(searchTerm))
+            );
+            
+            renderMembersList(filteredMembers);
+        }
+        
+        // Xử lý thêm quan hệ
+        function openRelationModal(type) {
+            relationModalType = type;
+            document.getElementById('relation-type-container').style.display = 'none';
+            document.getElementById('marriage-date-container').style.display = 'none';
+            
+            if (type === 'parent') {
+                document.getElementById('relation-type-container').style.display = 'block';
+            } else if (type === 'spouse') {
+                document.getElementById('relation-type-container').style.display = 'block';
+                document.getElementById('marriage-date-container').style.display = 'block';
+            }
+            
+            // Load danh sách thành viên
+            loadMembers();
+        }
+        
+        // Xử lý lưu quan hệ
+        function saveRelation() {
+            const relationType = document.getElementById('relation-type').value;
+            const relationPersonId = document.getElementById('relation-person').value;
+            const marriageDate = document.getElementById('marriage-date').value;
+            
+            const relation = {
+                type: relationType,
+                personId: relationPersonId,
+                marriageDate: marriageDate
+            };
+            
+            // Gọi API để lưu quan hệ
+            fetch(`${API_URL}?operation=create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    operation: 'create',
+                    relation: relation
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showSuccess('Quan hệ đã được thêm thành công');
+                    closeRelationModal();
+                } else {
+                    showError('Lỗi khi thêm quan hệ: ' + (data.message || 'Lỗi không xác định'));
+                }
+            })
+            .catch(error => {
+                console.error('Error saving relation:', error);
+                showError('Lỗi khi thêm quan hệ: ' + error.message);
+            });
+        }
+        
+        // Xử lý đóng modal
+        function closeRelationModal() {
+            document.getElementById('relation-modal').style.display = 'none';
+        }
+        
+        // Xử lý xóa thành viên
+        function handleDeleteMember() {
+            const memberId = document.querySelector('.member-item.active').dataset.id;
+            
+            if (confirm('Bạn có chắc chắn muốn xóa thành viên này không?')) {
+                fetch(`${API_URL}?operation=delete&id=${memberId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showSuccess('Thành viên đã được xóa thành công');
+                        loadMembers();
+                    } else {
+                        showError('Lỗi khi xóa thành viên: ' + (data.message || 'Lỗi không xác định'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting member:', error);
+                    showError('Lỗi khi xóa thành viên: ' + error.message);
+                });
+            }
+        }
+        
+        // Xử lý xử lý form
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const memberId = form.querySelector('#member-id').value;
+            const name = form.querySelector('#name').value;
+            const gender = form.querySelector('#gender').value;
+            const generation = form.querySelector('#generation').value;
+            const birthDate = form.querySelector('#birth-date').value;
+            const deathDate = form.querySelector('#death-date').value;
+            const photo = form.querySelector('#photo').value;
+            const bio = form.querySelector('#bio').value;
+            
+            const member = {
+                ID: memberId,
+                Name: name,
+                Gender: gender,
+                Generation: generation,
+                BirthDate: birthDate,
+                DeathDate: deathDate,
+                Photo: photo,
+                Bio: bio
+            };
+            
+            fetch(`${API_URL}?operation=update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    operation: 'update',
+                    member: member
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showSuccess('Thành viên đã được cập nhật thành công');
+                    loadMembers();
+                } else {
+                    showError('Lỗi khi cập nhật thành viên: ' + (data.message || 'Lỗi không xác định'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating member:', error);
+                showError('Lỗi khi cập nhật thành viên: ' + error.message);
+            });
+        }
+        
+        // Xử lý reset form
+        function resetForm() {
+            document.getElementById('member-form').reset();
+            document.getElementById('form-title').textContent = 'Thêm thành viên mới';
+            document.getElementById('member-id').value = '';
+            document.querySelector('.member-item.active').classList.remove('active');
+            document.getElementById('relation-modal').style.display = 'none';
+        }
+        
+        // Xử lý hiển thị thông báo
+        function showSuccess(message) {
+            const alertSuccess = document.getElementById('alert-success');
+            alertSuccess.textContent = message;
+            alertSuccess.className = 'alert alert-success';
+            setTimeout(() => {
+                alertSuccess.className = 'alert';
+                alertSuccess.textContent = '';
+            }, 3000);
+        }
+        
+        function showError(message) {
+            const alertError = document.getElementById('alert-error');
+            alertError.textContent = message;
+            alertError.className = 'alert alert-error';
+            setTimeout(() => {
+                alertError.className = 'alert';
+                alertError.textContent = '';
+            }, 3000);
+        }
+        
+        function showLoading() {
+            // Implementation of showLoading function
+        }
+        
+        function hideLoading() {
+            // Implementation of hideLoading function
+        }
+        
+        function getSampleData() {
+            // Implementation of getSampleData function
+            return [];
+        }
+        
+        function formatDateForInput(date) {
+            // Implementation of formatDateForInput function
+            return date;
+        }
+    </script>
+</body>
+</html> 

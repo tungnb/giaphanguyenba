@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý gia phả - Blog Cá Nhân</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .family-tree-container {
             margin-top: 20px;
@@ -266,6 +267,137 @@
             color: #ccc;
             margin-bottom: 20px;
         }
+        
+        /* Thêm style để hiển thị loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Style cho modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        /* Style cho phần hiển thị thành viên */
+        .member-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        .member-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .member-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .member-meta {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .member-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit {
+            background-color: #e6f7ff;
+            color: #0066cc;
+        }
+        
+        .btn-delete {
+            background-color: #fff1f0;
+            color: #ff4d4f;
+        }
+        
+        .btn-action:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -295,9 +427,753 @@
                 <select id="generation-filter" class="filter-select">
                     <option value="">Tất cả thế hệ</option>
                     <option value="1">Thế hệ 1</option>
+                    <option value="2">Thế hệ 2</option>
+                    <option value="3">Thế hệ 3</option>
+                    <option value="4">Thế hệ 4</option>
+                    <option value="5">Thế hệ 5</option>
                 </select>
+                <input type="text" id="search-member" placeholder="Tìm kiếm thành viên..." class="filter-select" style="flex: 1;">
+            </div>
+            
+            <div id="members-container">
+                <!-- Danh sách thành viên sẽ được tạo động bằng JavaScript -->
+            </div>
+        </div>
+        
+        <div id="add-edit-person" class="tab-content">
+            <form id="member-form">
+                <input type="hidden" id="member-id">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Họ và tên</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">Giới tính</label>
+                        <select id="gender" class="form-control">
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="generation">Thế hệ</label>
+                        <input type="number" id="generation" class="form-control" min="1" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birthDate">Ngày sinh</label>
+                        <input type="date" id="birthDate" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deathDate">Ngày mất (nếu có)</label>
+                        <input type="date" id="deathDate" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="photo">Ảnh đại diện (URL)</label>
+                    <input type="url" id="photo" class="form-control" placeholder="https://example.com/avatar.jpg">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">Tiểu sử</label>
+                    <textarea id="bio" class="form-control" rows="5"></textarea>
+                </div>
+                
+                <div class="relation-container">
+                    <label>Cha mẹ</label>
+                    <div id="parents-container">
+                        <!-- Chọn cha mẹ -->
+                    </div>
+                    <button type="button" id="add-parent" class="btn-add-relation">Thêm cha/mẹ</button>
+                </div>
+                
+                <div class="relation-container">
+                    <label>Vợ/Chồng</label>
+                    <div id="spouses-container">
+                        <!-- Chọn vợ/chồng -->
+                    </div>
+                    <button type="button" id="add-spouse" class="btn-add-relation">Thêm vợ/chồng</button>
+                </div>
+                
+                <div class="relation-container">
+                    <label>Con cái</label>
+                    <div id="children-container">
+                        <!-- Chọn con -->
+                    </div>
+                    <button type="button" id="add-child" class="btn-add-relation">Thêm con</button>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px; text-align: center;">
+                    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+                    <button type="button" id="cancel-edit" class="btn">Hủy</button>
+                    <button type="button" id="delete-member" class="btn btn-delete" style="display: none;">Xóa thành viên</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Relation Modal -->
+    <div id="relation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="relation-modal-title">Thêm quan hệ</h3>
+            <div class="form-group">
+                <label for="relation-member">Chọn thành viên</label>
+                <select id="relation-member" class="form-control">
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="button" id="add-relation-btn" class="btn btn-primary">Thêm</button>
+                <button type="button" class="btn" onclick="closeRelationModal()">Hủy</button>
             </div>
         </div>
     </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <script>
+        // Google Sheets API URL (thay thế bằng URL thực của bạn sau khi triển khai)
+        const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+        
+        // Global variables
+        let allMembers = [];
+        let currentMemberId = null;
+        let currentRelationType = null;
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab navigation
+            const tabItems = document.querySelectorAll('.tab-item');
+            tabItems.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and content
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to current tab and content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // New person button
+            document.getElementById('new-person-btn').addEventListener('click', function() {
+                resetForm();
+                // Switch to add/edit tab
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab-item[data-tab="add-edit-person"]').classList.add('active');
+                document.getElementById('add-edit-person').classList.add('active');
+            });
+            
+            // Form submission
+            document.getElementById('member-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveMember();
+            });
+            
+            // Cancel edit button
+            document.getElementById('cancel-edit').addEventListener('click', function() {
+                // Switch back to list tab
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
+                document.getElementById('person-list').classList.add('active');
+            });
+            
+            // Delete member button
+            document.getElementById('delete-member').addEventListener('click', function() {
+                if (confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
+                    deleteMember(currentMemberId);
+                }
+            });
+            
+            // Generation filter
+            document.getElementById('generation-filter').addEventListener('change', function() {
+                filterMembers();
+            });
+            
+            // Search input
+            document.getElementById('search-member').addEventListener('input', function() {
+                filterMembers();
+            });
+            
+            // Relation buttons
+            document.getElementById('add-parent').addEventListener('click', function() {
+                openRelationModal('parent');
+            });
+            
+            document.getElementById('add-spouse').addEventListener('click', function() {
+                openRelationModal('spouse');
+            });
+            
+            document.getElementById('add-child').addEventListener('click', function() {
+                openRelationModal('child');
+            });
+            
+            // Close modal on X click
+            document.querySelector('.close').addEventListener('click', function() {
+                closeRelationModal();
+            });
+            
+            // Add relation button in modal
+            document.getElementById('add-relation-btn').addEventListener('click', function() {
+                addRelation();
+            });
+            
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    // Clear session/local storage and redirect to login
+                    localStorage.removeItem('user');
+                    window.location.href = '../index.html';
+                }
+            });
+            
+            // Initial load of members
+            loadMembers();
+        });
+        
+        // Load members from Google Sheets
+        async function loadMembers() {
+            showLoading();
+            try {
+                // Simulate API call for now
+                // In production, use the commented fetch code below
+                /*
+                const response = await fetch(`${API_URL}?operation=read`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    allMembers = data.data;
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                */
+                
+                // Simulate API response with sample data
+                setTimeout(() => {
+                    allMembers = getSampleMembers();
+                    renderMembers();
+                    hideLoading();
+                }, 1000);
+            } catch (error) {
+                showError('Không thể tải dữ liệu thành viên: ' + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Render members list
+        function renderMembers() {
+            const container = document.getElementById('members-container');
+            container.innerHTML = '';
+            
+            // Apply filters
+            const filteredMembers = filterMembers(true);
+            
+            if (filteredMembers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 20px;">Không tìm thấy thành viên nào.</p>';
+                return;
+            }
+            
+            filteredMembers.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                
+                const genderIcon = member.gender === 'male' ? 'male' : 'female';
+                const genderText = member.gender === 'male' ? 'Nam' : 'Nữ';
+                const photoUrl = member.photo || `https://via.placeholder.com/80/cccccc/ffffff?text=${member.name.charAt(0)}`;
+                
+                card.innerHTML = `
+                    <img src="${photoUrl}" alt="${member.name}" class="member-photo">
+                    <div class="member-info">
+                        <div class="member-name">${member.name}</div>
+                        <div class="member-meta">
+                            <i class="fas fa-${genderIcon}"></i> ${genderText} | 
+                            Thế hệ: ${member.generation} | 
+                            ${member.birthDate ? 'Sinh: ' + formatDate(member.birthDate) : ''}
+                            ${member.deathDate ? ' | Mất: ' + formatDate(member.deathDate) : ''}
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn-action btn-edit" data-id="${member.id}">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                            <button class="btn-action btn-delete" data-id="${member.id}">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+                
+                // Add event listeners
+                card.querySelector('.btn-edit').addEventListener('click', function() {
+                    editMember(this.getAttribute('data-id'));
+                });
+                
+                card.querySelector('.btn-delete').addEventListener('click', function() {
+                    if (confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
+                        deleteMember(this.getAttribute('data-id'));
+                    }
+                });
+            });
+        }
+        
+        // Filter members
+        function filterMembers(returnFiltered = false) {
+            const generationFilter = document.getElementById('generation-filter').value;
+            const searchTerm = document.getElementById('search-member').value.toLowerCase();
+            
+            const filtered = allMembers.filter(member => {
+                const matchesGeneration = !generationFilter || member.generation.toString() === generationFilter;
+                const matchesSearch = !searchTerm || 
+                    member.name.toLowerCase().includes(searchTerm) || 
+                    (member.bio && member.bio.toLowerCase().includes(searchTerm));
+                
+                return matchesGeneration && matchesSearch;
+            });
+            
+            if (returnFiltered) {
+                return filtered;
+            } else {
+                renderMembers();
+            }
+        }
+        
+        // Edit member
+        function editMember(id) {
+            const member = allMembers.find(m => m.id === id);
+            if (!member) {
+                showError('Không tìm thấy thành viên');
+                return;
+            }
+            
+            currentMemberId = id;
+            
+            // Fill the form
+            document.getElementById('member-id').value = member.id;
+            document.getElementById('name').value = member.name;
+            document.getElementById('gender').value = member.gender;
+            document.getElementById('generation').value = member.generation;
+            document.getElementById('birthDate').value = member.birthDate || '';
+            document.getElementById('deathDate').value = member.deathDate || '';
+            document.getElementById('photo').value = member.photo || '';
+            document.getElementById('bio').value = member.bio || '';
+            
+            // Show the delete button
+            document.getElementById('delete-member').style.display = 'inline-block';
+            
+            // Populate relations
+            populateRelations('parents', member.parents || []);
+            populateRelations('spouses', member.spouses || []);
+            populateRelations('children', member.children || []);
+            
+            // Switch to edit tab
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector('.tab-item[data-tab="add-edit-person"]').classList.add('active');
+            document.getElementById('add-edit-person').classList.add('active');
+        }
+        
+        // Populate relations list
+        function populateRelations(type, relationIds) {
+            const container = document.getElementById(`${type}-container`);
+            container.innerHTML = '';
+            
+            if (relationIds.length === 0) {
+                container.innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
+                return;
+            }
+            
+            relationIds.forEach(id => {
+                const relatedMember = allMembers.find(m => m.id === id);
+                if (!relatedMember) return;
+                
+                const relationItem = document.createElement('div');
+                relationItem.className = 'relation-row';
+                relationItem.innerHTML = `
+                    <span>${relatedMember.name}</span>
+                    <button type="button" class="btn-remove-relation" data-id="${id}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                container.appendChild(relationItem);
+                
+                // Event listener for remove button
+                relationItem.querySelector('.btn-remove-relation').addEventListener('click', function() {
+                    removeRelation(type, this.getAttribute('data-id'));
+                });
+            });
+        }
+        
+        // Remove relation
+        function removeRelation(type, relationId) {
+            const member = allMembers.find(m => m.id === currentMemberId);
+            if (!member) return;
+            
+            // Remove the relation
+            member[type] = (member[type] || []).filter(id => id !== relationId);
+            
+            // Update the UI
+            populateRelations(type, member[type]);
+            
+            // Update the allMembers array
+            allMembers = allMembers.map(m => m.id === member.id ? member : m);
+        }
+        
+        // Open relation modal
+        function openRelationModal(type) {
+            currentRelationType = type;
+            
+            // Set modal title
+            let title = 'Thêm ';
+            if (type === 'parent') title += 'cha/mẹ';
+            else if (type === 'spouse') title += 'vợ/chồng';
+            else if (type === 'child') title += 'con';
+            
+            document.getElementById('relation-modal-title').textContent = title;
+            
+            // Populate available members
+            const select = document.getElementById('relation-member');
+            select.innerHTML = '<option value="">-- Chọn thành viên --</option>';
+            
+            const currentMember = allMembers.find(m => m.id === currentMemberId);
+            let filteredMembers = allMembers.filter(m => m.id !== currentMemberId);
+            
+            // Additional filtering based on relation type
+            if (type === 'parent') {
+                // Parents should be from previous generation
+                filteredMembers = filteredMembers.filter(m => 
+                    m.generation < currentMember.generation &&
+                    !(currentMember.parents || []).includes(m.id)
+                );
+            } else if (type === 'child') {
+                // Children should be from next generation
+                filteredMembers = filteredMembers.filter(m => 
+                    m.generation > currentMember.generation &&
+                    !(currentMember.children || []).includes(m.id)
+                );
+            } else if (type === 'spouse') {
+                // Spouses should be from same generation
+                filteredMembers = filteredMembers.filter(m => 
+                    m.generation === currentMember.generation &&
+                    !(currentMember.spouses || []).includes(m.id)
+                );
+            }
+            
+            filteredMembers.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = member.name;
+                select.appendChild(option);
+            });
+            
+            // Show the modal
+            document.getElementById('relation-modal').style.display = 'block';
+        }
+        
+        // Close relation modal
+        function closeRelationModal() {
+            document.getElementById('relation-modal').style.display = 'none';
+        }
+        
+        // Add relation
+        function addRelation() {
+            const memberId = document.getElementById('relation-member').value;
+            if (!memberId) {
+                alert('Vui lòng chọn một thành viên');
+                return;
+            }
+            
+            const currentMember = allMembers.find(m => m.id === currentMemberId);
+            const relatedMember = allMembers.find(m => m.id === memberId);
+            
+            if (!currentMember || !relatedMember) {
+                closeRelationModal();
+                return;
+            }
+            
+            // Add relation to current member
+            if (currentRelationType === 'parent') {
+                currentMember.parents = [...(currentMember.parents || []), memberId];
+                // Also add current member as child of the parent
+                relatedMember.children = [...(relatedMember.children || []), currentMemberId];
+            } else if (currentRelationType === 'spouse') {
+                currentMember.spouses = [...(currentMember.spouses || []), memberId];
+                // Also add current member as spouse of the spouse
+                relatedMember.spouses = [...(relatedMember.spouses || []), currentMemberId];
+            } else if (currentRelationType === 'child') {
+                currentMember.children = [...(currentMember.children || []), memberId];
+                // Also add current member as parent of the child
+                relatedMember.parents = [...(relatedMember.parents || []), currentMemberId];
+            }
+            
+            // Update the allMembers array
+            allMembers = allMembers.map(m => {
+                if (m.id === currentMember.id) return currentMember;
+                if (m.id === relatedMember.id) return relatedMember;
+                return m;
+            });
+            
+            // Update the UI
+            populateRelations(currentRelationType + 's', currentMember[currentRelationType + 's'] || []);
+            
+            // Close the modal
+            closeRelationModal();
+        }
+        
+        // Reset form
+        function resetForm() {
+            document.getElementById('member-form').reset();
+            document.getElementById('member-id').value = '';
+            document.getElementById('delete-member').style.display = 'none';
+            currentMemberId = null;
+            
+            // Reset relations
+            document.getElementById('parents-container').innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
+            document.getElementById('spouses-container').innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
+            document.getElementById('children-container').innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
+        }
+        
+        // Save member
+        async function saveMember() {
+            const memberId = document.getElementById('member-id').value;
+            const isNewMember = !memberId;
+            
+            // Validate form
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                alert('Vui lòng nhập tên thành viên');
+                return;
+            }
+            
+            // Gather form data
+            const member = {
+                id: memberId || generateId(),
+                name: name,
+                gender: document.getElementById('gender').value,
+                generation: parseInt(document.getElementById('generation').value),
+                birthDate: document.getElementById('birthDate').value || null,
+                deathDate: document.getElementById('deathDate').value || null,
+                photo: document.getElementById('photo').value || null,
+                bio: document.getElementById('bio').value || null
+            };
+            
+            // Add relations if editing an existing member
+            if (!isNewMember) {
+                const existingMember = allMembers.find(m => m.id === memberId);
+                if (existingMember) {
+                    member.parents = existingMember.parents || [];
+                    member.spouses = existingMember.spouses || [];
+                    member.children = existingMember.children || [];
+                }
+            }
+            
+            showLoading();
+            try {
+                // Simulate API call for now
+                // In production, use the commented fetch code below
+                /*
+                const url = `${API_URL}?operation=${isNewMember ? 'create' : 'update'}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(member)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                */
+                
+                // Simulate API response
+                setTimeout(() => {
+                    if (isNewMember) {
+                        allMembers.push(member);
+                    } else {
+                        allMembers = allMembers.map(m => m.id === member.id ? member : m);
+                    }
+                    
+                    showSuccess(`Thành viên đã được ${isNewMember ? 'thêm' : 'cập nhật'} thành công`);
+                    resetForm();
+                    renderMembers();
+                    
+                    // Switch back to list tab
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
+                    document.getElementById('person-list').classList.add('active');
+                    
+                    hideLoading();
+                }, 1000);
+            } catch (error) {
+                showError(`Không thể ${isNewMember ? 'thêm' : 'cập nhật'} thành viên: ` + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Delete member
+        async function deleteMember(id) {
+            showLoading();
+            try {
+                // Simulate API call for now
+                // In production, use the commented fetch code below
+                /*
+                const url = `${API_URL}?operation=delete&id=${id}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                */
+                
+                // Simulate API response
+                setTimeout(() => {
+                    // Update relations for related members
+                    const memberToDelete = allMembers.find(m => m.id === id);
+                    if (memberToDelete) {
+                        // Remove this member from parents' children
+                        (memberToDelete.parents || []).forEach(parentId => {
+                            const parent = allMembers.find(m => m.id === parentId);
+                            if (parent && parent.children) {
+                                parent.children = parent.children.filter(childId => childId !== id);
+                            }
+                        });
+                        
+                        // Remove this member from spouses' spouses
+                        (memberToDelete.spouses || []).forEach(spouseId => {
+                            const spouse = allMembers.find(m => m.id === spouseId);
+                            if (spouse && spouse.spouses) {
+                                spouse.spouses = spouse.spouses.filter(sId => sId !== id);
+                            }
+                        });
+                        
+                        // Remove this member from children's parents
+                        (memberToDelete.children || []).forEach(childId => {
+                            const child = allMembers.find(m => m.id === childId);
+                            if (child && child.parents) {
+                                child.parents = child.parents.filter(parentId => parentId !== id);
+                            }
+                        });
+                    }
+                    
+                    // Remove the member
+                    allMembers = allMembers.filter(m => m.id !== id);
+                    
+                    showSuccess('Thành viên đã được xóa thành công');
+                    resetForm();
+                    renderMembers();
+                    
+                    // Switch back to list tab
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.querySelector('.tab-item[data-tab="person-list"]').classList.add('active');
+                    document.getElementById('person-list').classList.add('active');
+                    
+                    hideLoading();
+                }, 1000);
+            } catch (error) {
+                showError('Không thể xóa thành viên: ' + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const successElement = document.getElementById('success-message');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            
+            setTimeout(() => {
+                successElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+        
+        // Sample data for testing
+        function getSampleMembers() {
+            return [
+                {
+                    id: 'person1',
+                    name: 'Nguyễn Bá Minh',
+                    gender: 'male',
+                    generation: 1,
+                    birthDate: '1920-01-15',
+                    deathDate: '1995-08-22',
+                    photo: 'https://randomuser.me/api/portraits/men/32.jpg',
+                    bio: 'Người sáng lập dòng họ Nguyễn Bá tại xã Hoàng Sơn',
+                    parents: [],
+                    spouses: ['person2'],
+                    children: ['person3', 'person4']
+                },
+                {
+                    id: 'person2',
+                    name: 'Lê Thị Hồng',
+                    gender: 'female',
+                    generation: 1,
+                    birthDate: '1925-05-20',
+                    deathDate: '1998-11-10',
+                    photo: 'https://randomuser.me/api/portraits/women/32.jpg',
+                    bio: 'Vợ của Nguyễn Bá Minh, người có công xây dựng gia đình',
+                    parents: [],
+                }
+            ];
+        }
+    </script>
 </body>
 </html> 
