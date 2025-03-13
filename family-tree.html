@@ -651,7 +651,7 @@
             return familyTree;
         }
 
-        // Tạo cây con cho một người
+        // Sửa hàm createFamilySubtree để hiển thị đúng thế hệ
         function createFamilySubtree(person) {
             if (!person) {
                 console.error("createFamilySubtree được gọi với person là null hoặc undefined");
@@ -675,42 +675,44 @@
                     return personNode;
                 }
                 
-                // Xử lý trường hợp có vợ/chồng - PHƯƠNG PHÁP CẢI TIẾN
-                // Không tạo node giả lồng nhau nữa, chỉ dùng 1 node giả duy nhất
+                // Xử lý trường hợp có vợ/chồng - Sửa lỗi hiển thị sai thế hệ
+                // Tạo 1 node giả duy nhất cho cặp vợ chồng và con cái của họ
                 const familyNode = {
                     pseudo: true,
-                    children: [] 
+                    children: []
                 };
                 
-                // Thêm người hiện tại và vợ/chồng cùng cấp
+                // Thêm người hiện tại vào node giả
                 familyNode.children.push(personNode);
                 
-                // Thêm mỗi vợ/chồng
-                let allChildren = [];
+                // Thêm mỗi vợ/chồng vào node giả
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
                         const spouseNode = createNodeFromPerson(spouse);
                         familyNode.children.push(spouseNode);
-                        
-                        // Thu thập con chung
-                        const commonChildren = getCommonChildren(person.id, spouseId);
-                        allChildren = [...allChildren, ...commonChildren];
                     }
                 }
                 
-                // Thêm tất cả con cái vào cùng một cấp
+                // Thu thập tất cả con cái và thêm trực tiếp vào cây
+                let allChildren = [];
+                for (const spouseId of person.spouses) {
+                    const commonChildren = getCommonChildren(person.id, spouseId);
+                    allChildren = [...allChildren, ...commonChildren];
+                }
+                
+                // Thêm con cái trực tiếp vào node giả, không lồng thêm node giả nào khác
                 if (allChildren.length > 0) {
                     // Loại bỏ trùng lặp (nếu có)
                     const uniqueChildren = allChildren.filter((child, index, self) => 
                         self.findIndex(c => c.id === child.id) === index
                     );
                     
-                    // Tạo node con cho mỗi đứa con và thêm trực tiếp vào familyNode
+                    // Thêm từng con vào node giả của cặp vợ chồng
                     for (const child of uniqueChildren) {
                         const childNode = createFamilySubtree(child);
                         if (childNode) {
-                            // Thêm trực tiếp vào node con
+                            // Thêm con trực tiếp vào node giả của cặp vợ chồng
                             familyNode.children.push(childNode);
                         }
                     }
