@@ -247,11 +247,7 @@
             <div id="family-tree-container" class="family-tree-container" style="display: none">
                 <div id="family-tree" class="chart"></div>
                 
-                <div class="zoom-controls">
-                    <button id="zoom-in" class="zoom-btn" title="Phóng to"><i class="fas fa-plus"></i></button>
-                    <button id="zoom-out" class="zoom-btn" title="Thu nhỏ"><i class="fas fa-minus"></i></button>
-                    <button id="zoom-reset" class="zoom-btn" title="Khôi phục"><i class="fas fa-sync-alt"></i></button>
-                </div>
+               
             </div>
 
             <div id="empty-state" class="empty-state" style="display: none">
@@ -503,10 +499,10 @@
                     rootOrientation: "NORTH", 
                     nodeAlign: "CENTER",
                     scrollbar: "native",
-                    padding: 50,
-                    siblingSeparation: 80,
-                    levelSeparation: 150,
-                    subtreeSeparation: 100,
+                    padding: 80,
+                    siblingSeparation: 100,
+                    levelSeparation: 180,
+                    subtreeSeparation: 120,
                     connectors: {
                         type: 'step',
                         style: {
@@ -646,7 +642,7 @@
             return familyTree;
         }
 
-        // Sửa hàm createFamilySubtree để hiển thị đúng thế hệ
+        // Sửa lại hàm createFamilySubtree để hiển thị cặp vợ chồng đúng thế hệ
         function createFamilySubtree(person) {
             if (!person) {
                 console.error("createFamilySubtree được gọi với person là null hoặc undefined");
@@ -670,22 +666,15 @@
                     return personNode;
                 }
                 
-                // Xử lý trường hợp có vợ/chồng - CẢI TIẾN TỪ ĐÂY
-                // Tạo node giả cho cặp vợ chồng
-                const coupleNode = {
-                    pseudo: true,
-                    children: []
-                };
+                // Xử lý trường hợp có vợ/chồng - CÁCH MỚI KHẮC PHỤC LỖI
+                // Tạo node cho người hiện tại
+                const spouses = [];
                 
-                // Thêm người hiện tại vào node vợ chồng
-                coupleNode.children.push(personNode);
-                
-                // Thêm vợ/chồng vào node vợ chồng 
+                // Thu thập thông tin vợ/chồng
                 for (const spouseId of person.spouses) {
                     const spouse = findPersonById(spouseId);
                     if (spouse) {
-                        const spouseNode = createNodeFromPerson(spouse);
-                        coupleNode.children.push(spouseNode);
+                        spouses.push(createNodeFromPerson(spouse));
                     }
                 }
                 
@@ -696,18 +685,41 @@
                     allChildren = [...allChildren, ...commonChildren];
                 }
                 
-                // Nếu có con cái, thêm vào personNode thay vì coupleNode
-                if (allChildren.length > 0) {
-                    // Loại bỏ trùng lặp (nếu có)
-                    const uniqueChildren = allChildren.filter((child, index, self) => 
-                        self.findIndex(c => c.id === child.id) === index
-                    );
-                    
-                    // Tạo cây cho từng đứa con và thêm vào personNode
-                    personNode.children = uniqueChildren.map(child => createFamilySubtree(child));
+                // Loại bỏ trùng lặp nếu có
+                const uniqueChildren = allChildren.filter((child, index, self) => 
+                    self.findIndex(c => c.id === child.id) === index
+                );
+                
+                // Tạo cây cho từng đứa con
+                const childrenNodes = uniqueChildren.map(child => createFamilySubtree(child));
+                
+                // CẢI TIẾN: Đưa con cái vào đúng thế hệ nhưng vẫn giữ vợ chồng ngang hàng
+                if (spouses.length > 0) {
+                    // Trường hợp có vợ/chồng và có con
+                    if (childrenNodes.length > 0) {
+                        // Tiếp tục sử dụng node giả cho cặp vợ chồng
+                        const coupleNode = {
+                            pseudo: true,
+                            children: [personNode, ...spouses]
+                        };
+                        
+                        // Thêm con vào personNode (không phải coupleNode)
+                        personNode.children = childrenNodes;
+                        
+                        return coupleNode;
+                    } 
+                    // Trường hợp có vợ/chồng nhưng không có con
+                    else {
+                        const coupleNode = {
+                            pseudo: true,
+                            children: [personNode, ...spouses]
+                        };
+                        return coupleNode;
+                    }
                 }
                 
-                return coupleNode;
+                // Nếu không có vợ/chồng, chỉ trả về personNode
+                return personNode;
                 
             } catch (error) {
                 console.error(`Lỗi khi tạo cây con cho ${person.name}:`, error);
