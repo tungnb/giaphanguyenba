@@ -99,6 +99,7 @@
     <script>
         // Thiết lập cấu trúc dữ liệu cho gia phả
         let familyData = [];
+        let orgChart = null;
 
         // Lấy dữ liệu gia phả từ localStorage hoặc API
         async function getFamilyData() {
@@ -252,8 +253,8 @@
                     return;
                 }
 
-                // Render cây gia phả sử dụng OrgChart.js
-                await renderFamilyTree();
+                // Render cây gia phả sử dụng OrgChart
+                renderFamilyTree();
 
                 // Thiết lập sự kiện cho modal
                 setupModalEvents();
@@ -271,90 +272,68 @@
         });
 
         // Hàm render cây gia phả sử dụng OrgChart.js
-        async function renderFamilyTree() {
-            // Chuyển đổi dữ liệu gia phả sang định dạng phù hợp với OrgChart
-            const nodes = convertFamilyDataToOrgChartFormat(familyData);
+        function renderFamilyTree() {
+            // Chuyển đổi dữ liệu
+            const nodes = convertFamilyDataToOrgChartFormat();
             
-            // Tạo config cho OrgChart
-            const chart = new OrgChart(document.getElementById('org-chart-container'), {
-                template: "olivia",
-                enableSearch: true,
-                searchFields: ["name", "id"],
-                searchDisplayField: "name",
-                searchPlaceholder: "Tìm kiếm thành viên...",
+            // Tạo và cấu hình chart
+            orgChart = new OrgChart(document.getElementById('org-chart-container'), {
+                template: "familyTemplate",
                 nodeBinding: {
                     field_0: "name",
                     field_1: "dates",
                     img_0: "photo"
                 },
-                nodeMenu: {
-                    details: { text: "Xem chi tiết" }
-                },
+                nodes: nodes,
                 menu: {
                     pdf: { text: "Xuất PDF" },
                     png: { text: "Xuất PNG" },
-                    svg: { text: "Xuất SVG" },
-                    csv: { text: "Xuất CSV" }
+                    svg: { text: "Xuất SVG" }
                 },
-                nodes: nodes,
+                nodeMenu: {
+                    details: { text: "Xem chi tiết" }
+                },
+                enableSearch: true,
+                searchPlaceholder: "Tìm kiếm thành viên...",
+                searchFields: ["name", "dates"],
                 mouseScrool: OrgChart.action.zoom,
+                scaleInitial: 0.6,
                 orientation: OrgChart.orientation.top,
-                collapse: {
-                    level: 3,
-                    allChildren: false
-                },
-                levelSeparation: 100,
-                siblingSeparation: 50,
+                levelSeparation: 120,
+                siblingSeparation: 60,
                 subtreeSeparation: 80,
-                nodeMouseClick: OrgChart.action.details,
+                padding: 50,
                 showXScroll: OrgChart.scroll.visible,
                 showYScroll: OrgChart.scroll.visible,
                 tags: {
                     male: {
-                        template: "olivia"
+                        template: "male"
                     },
                     female: {
-                        template: "isla"
+                        template: "female"
                     }
                 }
             });
             
-            // Override template mặc định để hiển thị nội dung tùy chỉnh
-            chart.editUI.on('field', function(sender, args){
-                if (args.name == 'photo') {
-                    var img = document.createElement('img');
-                    img.src = args.value;
-                    img.style.width = '100px';
-                    img.style.height = '100px';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '50%';
-                    
-                    args.value = img;
-                }
-            });
-            
-            // Sự kiện khi nhấp vào node
-            chart.on('click', function(sender, args){
-                return false; // Ngăn hành động mặc định
-            });
-            
-            // Sự kiện khi xem chi tiết
-            chart.on('details', function(sender, args){
-                const personId = args.node.id;
-                showPersonDetail(personId);
+            // Xử lý sự kiện chi tiết
+            orgChart.on('details', function(sender, args) {
+                showPersonDetail(args.node.id);
                 return false;
             });
             
-            // Kết nối các nút zoom với chart
-            setupOrgChartZoomControls(chart);
+            // Xử lý khi chart đã sẵn sàng
+            orgChart.on('ready', function() {
+                // Ẩn loading và hiển thị family tree
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('family-tree-container').style.display = 'block';
+            });
             
-            // Ẩn loading và hiển thị container
-            document.getElementById('loading-indicator').style.display = 'none';
-            document.getElementById('family-tree-container').style.display = 'block';
+            // Thiết lập zoom controls
+            setupOrgChartZoomControls();
         }
 
         // Hàm chuyển đổi dữ liệu gia phả sang định dạng OrgChart
-        function convertFamilyDataToOrgChartFormat(familyData) {
+        function convertFamilyDataToOrgChartFormat() {
             const nodes = [];
             
             // Chuyển đổi từng thành viên trong gia phả
@@ -427,26 +406,26 @@
         }
 
         // Thiết lập điều khiển zoom cho OrgChart
-        function setupOrgChartZoomControls(chart) {
+        function setupOrgChartZoomControls() {
             const zoomInBtn = document.getElementById('zoom-in');
             const zoomOutBtn = document.getElementById('zoom-out');
             const zoomResetBtn = document.getElementById('zoom-reset');
             
             if (zoomInBtn) {
                 zoomInBtn.addEventListener('click', function() {
-                    chart.zoom(1.2, null, null, 'smooth');
+                    orgChart.zoom(1.2, null, 'smooth');
                 });
             }
             
             if (zoomOutBtn) {
                 zoomOutBtn.addEventListener('click', function() {
-                    chart.zoom(0.8, null, null, 'smooth');
+                    orgChart.zoom(0.8, null, 'smooth');
                 });
             }
             
             if (zoomResetBtn) {
                 zoomResetBtn.addEventListener('click', function() {
-                    chart.fit();
+                    orgChart.fit();
                 });
             }
         }
