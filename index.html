@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nguyễn Bá Tùng - Blog</title>
+    <title>Gia phả dòng họ Nguyễn Bá - xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reset CSS */
@@ -534,24 +534,63 @@
             transform: translateY(-2px);
             text-decoration: none;
         }
+        
+        /* Navigation menu styles */
+        .navigation-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .nav-item {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #555;
+        }
+        
+        .nav-item:hover {
+            background-color: #f0f5ff;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        
+        .nav-item.active {
+            background-color: #0066cc;
+            color: white;
+        }
+        
+        /* Responsive styles for navigation */
+        @media (max-width: 768px) {
+            .navigation-menu {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
             <div class="header-content">
+                <!-- Thêm menu điều hướng -->
+                <div class="navigation-menu">
+                    <a href="index.html" class="nav-item active">Trang chủ</a>
+                    <a href="family-tree.html" class="nav-item">Gia phả</a>
+                    <a href="all-posts.html" class="nav-item">Tất cả bài viết</a>
+                </div>
                 
                 <div class="author-info">
                     <div class="avatar-container">
                        <img src="profile2.jpg" alt="Avatar" class="avatar-img"> 
                     </div>
                     <div class="author-text-content">
-                        <h2 class="author-name">Xin Chào, tôi là Nguyễn Bá Tùng</h2>
-                        <p class="author-title">Bố của 3 đứa trẻ | Giám đốc nhà máy | Kẻ nghiện công nghệ</p>
-                        <p class="author-title">Make it basic and logical</p>
+                        <h2 class="author-name">Xin Chào/h2>
+                        <p class="author-title"></p>
                         
                         <p id="author-description" class="author-description">
-                            Thích công nghệ nhưng lại học NEU và làm công ty may. Sự phát triển như vũ bão của AI đã giúp tôi trở lại với đam mê đó. Đây là nhật ký lưu trữ, chia sẻ ba phần mà tôi quan tâm nhất: cuộc sống, kinh doanh và công nghệ. Tạo website này cũng như thả 1 giọt nước mưa xuống biển cả internet. Nếu bạn tình cờ thấy website này, hãy xem như đó là bí mật của 2 ta.
                         </p>
                         
                         <div class="social-links">
