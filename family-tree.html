@@ -165,6 +165,18 @@
             stroke: #e91e63 !important;
             stroke-width: 3px !important;
         }
+
+        /* Thêm style cho avatar người chính trong couple nodes */
+        .couple-person-avatar {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            z-index: 100;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -744,8 +756,11 @@
             chart.on('load', function(sender) {
                 console.log("Biểu đồ đã được tải:", sender);
                 
-                // Chờ một chút để đảm bảo DOM đã được vẽ
-                setTimeout(() => {
+                // Hàm thêm hoặc cập nhật avatar
+                function addOrUpdateAvatars() {
+                    // Xóa tất cả avatar hiện có để tránh trùng lặp
+                    document.querySelectorAll('.couple-person-avatar').forEach(el => el.remove());
+                    
                     // Tìm tất cả các node couple (có chứa dấu "_" trong ID)
                     const coupleElements = document.querySelectorAll('[data-id]');
                     
@@ -758,55 +773,58 @@
                             const node = sender.nodes.find(n => n.id === nodeId);
                             
                             if (node && node.data) {
-                                console.log(`Xử lý node ${nodeId}, img:`, node.data.img);
+                                console.log(`Thêm avatar HTML cho node ${nodeId}, img:`, node.data.img);
                                 
-                                // Kiểm tra nếu chưa có avatar của người chính
-                                const existingImage = element.querySelector(`[clip-path="url(#personClip_${nodeId})"]`);
+                                // Lấy vị trí của node
+                                const rect = element.getBoundingClientRect();
+                                const svgRect = document.querySelector('#family-tree svg').getBoundingClientRect();
                                 
-                                if (!existingImage) {
-                                    console.log(`Node ${nodeId} không có avatar người chính, đang thêm...`);
-                                    
-                                    // Tìm phần tử chứa node để thêm hình ảnh vào
-                                    const nodeContentElement = element.querySelector('g.node');
-                                    
-                                    if (nodeContentElement) {
-                                        // Tạo clipPath trước
-                                        const clipPathId = `personClip_${nodeId}`;
-                                        let clipPathExists = document.getElementById(clipPathId);
-                                        
-                                        if (!clipPathExists) {
-                                            const clipPathElement = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-                                            clipPathElement.setAttribute("id", clipPathId);
-                                            
-                                            const circleElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                                            circleElement.setAttribute("cx", "70");
-                                            circleElement.setAttribute("cy", "80");
-                                            circleElement.setAttribute("r", "25");
-                                            
-                                            clipPathElement.appendChild(circleElement);
-                                            nodeContentElement.appendChild(clipPathElement);
-                                            
-                                            // Tạo thẻ image
-                                            const imageElement = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                                            imageElement.setAttribute("clip-path", `url(#${clipPathId})`);
-                                            imageElement.setAttribute("preserveAspectRatio", "xMidYMid slice");
-                                            imageElement.setAttribute("x", "45");
-                                            imageElement.setAttribute("y", "55");
-                                            imageElement.setAttribute("width", "50");
-                                            imageElement.setAttribute("height", "50");
-                                            imageElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", node.data.img || '');
-                                            
-                                            // Thêm image vào node
-                                            nodeContentElement.appendChild(imageElement);
-                                            
-                                            console.log(`Đã thêm avatar cho node ${nodeId}`);
-                                        }
-                                    }
+                                // Tạo thẻ img
+                                const img = document.createElement('img');
+                                img.className = 'couple-person-avatar';
+                                img.src = node.data.img || '';
+                                img.alt = node.data.name || 'Avatar';
+                                img.setAttribute('data-node-id', nodeId);
+                                
+                                // Tính toán vị trí chính xác dựa trên vị trí node
+                                const svgElement = document.querySelector('#family-tree svg');
+                                // Lấy ma trận biến đổi hiện tại của SVG (để xử lý zoom và pan)
+                                const transform = svgElement.querySelector('g').getAttribute('transform');
+                                const transformMatch = transform ? transform.match(/matrix\((.*?)\)/) : null;
+                                
+                                // Tính toán vị trí dựa trên ma trận biến đổi nếu có
+                                let x, y;
+                                if (transformMatch && transformMatch[1]) {
+                                    const matrix = transformMatch[1].split(',').map(Number);
+                                    // Áp dụng ma trận biến đổi để tính toán vị trí chính xác
+                                    x = node.x * matrix[0] + node.y * matrix[2] + matrix[4] + 45;
+                                    y = node.x * matrix[1] + node.y * matrix[3] + matrix[5] + 55;
+                                } else {
+                                    // Fallback nếu không có ma trận biến đổi
+                                    x = rect.left - svgRect.left + 45;
+                                    y = rect.top - svgRect.top + 55;
                                 }
+                                
+                                img.style.left = x + 'px';
+                                img.style.top = y + 'px';
+                                
+                                // Thêm ảnh vào chart container
+                                document.getElementById('family-tree').appendChild(img);
+                                
+                                console.log(`Đã thêm avatar HTML cho node ${nodeId} tại vị trí (${x}, ${y})`);
                             }
                         }
                     });
-                }, 500);
+                }
+                
+                // Thêm avatar sau khi chart đã được vẽ
+                setTimeout(addOrUpdateAvatars, 1000);
+                
+                // Cập nhật vị trí avatar khi chart thay đổi (zoom, pan, resize)
+                chart.on('redraw', addOrUpdateAvatars);
+                
+                // Cập nhật vị trí khi cửa sổ thay đổi kích thước
+                window.addEventListener('resize', addOrUpdateAvatars);
             });
 
             return chart;
