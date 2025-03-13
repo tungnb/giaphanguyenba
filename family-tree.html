@@ -137,6 +137,23 @@
             text-decoration: none;
             cursor: pointer;
         }
+        
+        /* Tùy chỉnh đường kết nối vợ chồng */
+        [data-boc-layout-path-line-marriage] {
+            stroke: #FF9999;
+            stroke-width: 2px;
+            stroke-dasharray: 4;
+        }
+        
+        /* Ẩn node kết nối giữa vợ chồng */
+        [data-boc-tags~=partner-connection] {
+            opacity: 0;
+        }
+        
+        /* Tăng khoảng cách giữa vợ chồng */
+        .partner-node {
+            margin: 0 15px;
+        }
     </style>
 </head>
 <body>
@@ -468,6 +485,7 @@
                 template: "olivia",
                 enableSearch: false,
                 enableDragDrop: false,
+                orientation: OrgChart.orientation.top,
                 nodeBinding: {
                     field_0: "name",
                     field_1: "birth",
@@ -489,16 +507,32 @@
                         nodeMenu: {
                             details: { text: "Chi tiết" }
                         }
+                    },
+                    partner: {
+                        template: "olivia"
                     }
+                },
+                // Cấu hình hiển thị vợ chồng ngang hàng
+                levelSeparation: 100,
+                siblingSeparation: 50,
+                subtreeSeparation: 80,
+                partnerChildrenSplitSeparation: 20,
+                partnerNodeSeparation: 30,
+                // Cấu hình hiển thị mối quan hệ vợ chồng
+                marriage: {
+                    template: 'wedding', // Template cho đường kết nối vợ chồng
+                    calloutTooltip: 'Vợ/Chồng'
                 }
             });
 
-            // Thêm các mối quan hệ vợ chồng
+            // Thêm các mối quan hệ vợ chồng với cấu hình ngang hàng
             formattedData.relationships.forEach(relation => {
-                chart.addPartnerNode({
+                // Tạo mối quan hệ vợ chồng với type: partner để hiển thị ngang hàng
+                chart.addPartnerAndParentNodes({
                     id: relation.partnerId1 + "_" + relation.partnerId2,
                     partnerId: relation.partnerId1,
-                    partnerParentId: relation.partnerId2
+                    partnerParentId: relation.partnerId2,
+                    templateName: "partner"
                 });
             });
 
