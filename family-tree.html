@@ -653,6 +653,8 @@
 
         // Tạo cây con cho một người và gia đình của họ
         function createFamilySubtree(person) {
+            if (!person) {
+                console.error("createFamilySubtree được gọi với person là null hoặc undefined");
             console.log(`Tạo cây con cho: ${person.name}`);
             
             // Tạo node cho người này
