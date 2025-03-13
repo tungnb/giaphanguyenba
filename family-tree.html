@@ -634,26 +634,12 @@
             OrgChart.templates.couple_male.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            // Sao chép tất cả các trường và ảnh từ template couple
-            OrgChart.templates.couple_male.field_0 = OrgChart.templates.couple.field_0;
-            OrgChart.templates.couple_male.field_1 = OrgChart.templates.couple.field_1;
-            OrgChart.templates.couple_male.field_2 = OrgChart.templates.couple.field_2;
-            OrgChart.templates.couple_male.field_3 = OrgChart.templates.couple.field_3;
-            OrgChart.templates.couple_male.img_0 = OrgChart.templates.couple.img_0;
-            OrgChart.templates.couple_male.img_1 = OrgChart.templates.couple.img_1;
 
             // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
             OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
             OrgChart.templates.couple_female.node = 
                 '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
                 '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            // Sao chép tất cả các trường và ảnh từ template couple
-            OrgChart.templates.couple_female.field_0 = OrgChart.templates.couple.field_0;
-            OrgChart.templates.couple_female.field_1 = OrgChart.templates.couple.field_1;
-            OrgChart.templates.couple_female.field_2 = OrgChart.templates.couple.field_2;
-            OrgChart.templates.couple_female.field_3 = OrgChart.templates.couple.field_3;
-            OrgChart.templates.couple_female.img_0 = OrgChart.templates.couple.img_0;
-            OrgChart.templates.couple_female.img_1 = OrgChart.templates.couple.img_1;
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
