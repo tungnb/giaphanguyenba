@@ -261,6 +261,7 @@
 
         .person {
             width: 180px;
+            min-width: 180px;
             background-color: #fff;
             border-radius: 10px;
             overflow: hidden;
@@ -268,7 +269,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
             position: relative;
-            z-index: 2;
+            z-index: 3;
             padding: 15px;
         }
 
@@ -559,7 +560,7 @@
         .family-connector {
             position: absolute;
             background-color: #0066cc;
-            z-index: 1;
+            z-index: 2;
         }
 
         /* Bỏ responsive để hiển thị luôn ngang */
@@ -584,6 +585,41 @@
             .navigation-menu {
                 flex-wrap: wrap;
                 gap: 10px;
+            }
+
+            .person {
+                width: 180px;
+                min-width: 180px;
+                font-size: 0.9rem;
+            }
+            
+            .generation-members {
+                padding-bottom: 40px;
+            }
+            
+            .family-tree-container {
+                overflow-x: scroll;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tree {
+                min-width: fit-content;
+            }
+        }
+
+        /* Thêm style mới để chỉ dẫn người dùng cuộn ngang */
+        .scroll-indicator {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                display: block;
             }
         }
     </style>
@@ -954,9 +990,9 @@
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             
-            // Vị trí của cha mẹ
+            // Vị trí của cha mẹ - Điều chỉnh để đường kẻ bắt đầu từ chính giữa dưới cùng của thẻ
             const parentX = parentRect.left + parentRect.width / 2 + scrollLeft - containerRect.left;
-            const parentY = parentRect.bottom + scrollTop - containerRect.top;
+            const parentY = parentRect.bottom + scrollTop - containerRect.top - 5; // -5px để đường kẻ đúng vị trí
             
             // Tạo container cho các kết nối
             const connectorContainer = document.createElement('div');
@@ -1022,7 +1058,7 @@
                 horizontalToChild.style.height = '2px';
                 connectorContainer.appendChild(horizontalToChild);
                 
-                // Đường dọc xuống đến con
+                // Đường dọc xuống đến con - Điều chỉnh để kết nối chính xác với phần trên của thẻ con
                 const verticalToChild = document.createElement('div');
                 verticalToChild.className = 'family-connector';
                 verticalToChild.style.left = `${childX}px`;
