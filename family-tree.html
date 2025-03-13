@@ -722,17 +722,15 @@
                 return false;
             });
 
-            // Chỉnh sửa template cho node dựa trên dữ liệu
-            chart.on('redraw', function(sender) {
-                sender.nodes.forEach(node => {
-                    if (node.tags && node.tags.indexOf('couple') != -1) {
-                        if (node.data.personGender === 'male') {
-                            node.templateName = 'couple_male';
-                        } else if (node.data.personGender === 'female') {
-                            node.templateName = 'couple_female';
-                        }
+            // Loại bỏ sự kiện redraw và thêm cách xử lý khác
+            formattedData.nodes.forEach(node => {
+                if (node.tags && node.tags.includes('couple')) {
+                    if (node.personGender === 'male') {
+                        node.templateName = 'couple_male';
+                    } else if (node.personGender === 'female') {
+                        node.templateName = 'couple_female';
                     }
-                });
+                }
             });
 
             return chart;
