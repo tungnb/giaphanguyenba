@@ -1184,10 +1184,28 @@
                 );
             } else if (type === 'child') {
                 // Con cái nên thuộc thế hệ sau
-                filteredMembers = filteredMembers.filter(m => 
-                    parseInt(m.generation) > parseInt(currentMember.generation) &&
-                    !(currentMember.children || []).includes(m.id)
-                );
+                filteredMembers = filteredMembers.filter(m => {
+                    // Lọc theo thế hệ và không phải là con đã có
+                    const generationCheck = parseInt(m.generation) > parseInt(currentMember.generation);
+                    const notAlreadyChild = !(currentMember.children || []).includes(m.id);
+                    
+                    // Kiểm tra nếu thành viên là nam, chỉ hiển thị những người chưa có bố
+                    let noFatherCheck = true;
+                    if (currentMember.gender === 'male') {
+                        // Kiểm tra xem người này đã có bố chưa
+                        if (m.parents && m.parents.length > 0) {
+                            // Tìm xem trong parents có người nào là nam không
+                            const hasFather = m.parents.some(parentId => {
+                                const parent = allMembers.find(member => member.id === parentId);
+                                return parent && parent.gender === 'male';
+                            });
+                            // Nếu đã có bố thì không hiển thị trong danh sách
+                            noFatherCheck = !hasFather;
+                        }
+                    }
+                    
+                    return generationCheck && notAlreadyChild && noFatherCheck;
+                });
             } else if (type === 'spouse') {
                 // Vợ/chồng nên cùng thế hệ
                 filteredMembers = filteredMembers.filter(m => 
