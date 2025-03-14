@@ -996,111 +996,111 @@
             OrgChart.templates.single_female.nodeMenuButton = 
                 '<g style="display:none"></g>';
 
-            // Tạo template tùy chỉnh cho node vợ chồng - ĐƠN GIẢN HÓA TOÀN BỘ
-            OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
-            
-            // Custom template cho trường hợp có nhiều vợ/chồng
-            OrgChart.templates.couple.size = [280, 180]; // Tăng chiều cao để chứa nhiều vợ/chồng
-            OrgChart.templates.couple.node = 
-                '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple.nodeMenuButton = 
-                '<g style="display:none"></g>';
-            
-            // Tên và thông tin người chính
-            OrgChart.templates.couple.field_0 = 
+            // Tạo các template mới cho couple với số lượng vợ/chồng khác nhau
+            // TEMPLATE CHO CẶP VỢ CHỒNG CÓ 1 SPOUSE
+            OrgChart.templates.couple_one_spouse = Object.assign({}, OrgChart.templates.olivia);
+            OrgChart.templates.couple_one_spouse.size = [280, 120];
+            OrgChart.templates.couple_one_spouse.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+            OrgChart.templates.couple_one_spouse.nodeMenuButton = '<g style="display:none"></g>';
+
+            // Phần bên trái - người chính
+            OrgChart.templates.couple_one_spouse.field_0 = 
                 '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple.field_1 = 
+            OrgChart.templates.couple_one_spouse.field_1 = 
                 '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
-            
-            // Avatar người chính
-            OrgChart.templates.couple.img_0 = 
-                '<circle cx="70" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="50" y="60" width="40" height="40"></image>';
-            
-            // Tạo một function để hiển thị tất cả vợ/chồng
-            OrgChart.templates.couple.spousesString = function(data) {
-                if (!data.spouses || !data.spouses.length) {
-                    // Nếu không có thông tin spouses, sử dụng thông tin vợ/chồng đầu tiên
-                    return `
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">${data.spouseName || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">${data.spouseBirth || ""}</text>
-                        <circle cx="210" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${data.spouseImg || ""}" x="190" y="60" width="40" height="40"></image>
-                    `;
-                }
-                
-                let result = '';
-                const spouses = data.spouses;
-                
-                // Nếu chỉ có 1 vợ/chồng, hiển thị giống như trước
-                if (spouses.length === 1) {
-                    result = `
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">${spouses[0].name || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">${spouses[0].birth || ""}</text>
-                        <circle cx="210" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${spouses[0].img || ""}" x="190" y="60" width="40" height="40"></image>
-                    `;
-                } 
-                // Nếu có 2 vợ/chồng, hiển thị 2 người ở bên phải
-                else if (spouses.length === 2) {
-                    result = `
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">${spouses[0].name || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">${spouses[0].birth || ""}</text>
-                        <circle cx="210" cy="65" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${spouses[0].img || ""}" x="190" y="45" width="40" height="40"></image>
-                        
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="110" text-anchor="middle">${spouses[1].name || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="125" text-anchor="middle">${spouses[1].birth || ""}</text>
-                        <circle cx="210" cy="145" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${spouses[1].img || ""}" x="190" y="125" width="40" height="40"></image>
-                        
-                        <line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>
-                    `;
-                }
-                // Nếu có nhiều hơn 2 vợ/chồng, chỉ hiển thị 2 người đầu tiên và thông báo còn bao nhiêu người nữa
-                else {
-                    result = `
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">${spouses[0].name || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">${spouses[0].birth || ""}</text>
-                        <circle cx="210" cy="65" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${spouses[0].img || ""}" x="190" y="45" width="40" height="40"></image>
-                        
-                        <text style="font-size:14px;" fill="#2D2D2D" x="210" y="110" text-anchor="middle">${spouses[1].name || ""}</text>
-                        <text style="font-size:12px;" fill="#5B5B5B" x="210" y="125" text-anchor="middle">${spouses[1].birth || ""}</text>
-                        <circle cx="210" cy="145" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>
-                        <image preserveAspectRatio="xMidYMid slice" xlink:href="${spouses[1].img || ""}" x="190" y="125" width="40" height="40"></image>
-                        
-                        <line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>
-                        <text style="font-size:12px;" fill="#888" x="210" y="165" text-anchor="middle">+ ${spouses.length - 2} người khác</text>
-                    `;
-                }
-                
-                return result;
-            };
-            
-            // Áp dụng function hiển thị tất cả vợ/chồng
-            OrgChart.templates.couple.html = 
-                '<foreignObject x="0" y="0" width="280" height="180">' +
-                    '<xhtml:div style="width:280px; height:180px;" id="htmlContent_{id}">' +
-                    '</xhtml:div>' +
-                '</foreignObject>';
-            
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
-            OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
-            OrgChart.templates.couple_male.node = 
+            OrgChart.templates.couple_one_spouse.img_0 = 
+                '<clipPath id="personClip_{id}"><circle cx="70" cy="75" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="50" width="50" height="50"></image>';
+
+            // Phần bên phải - vợ/chồng 1
+            OrgChart.templates.couple_one_spouse.field_2 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_one_spouse.field_3 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_one_spouse.img_1 = 
+                '<clipPath id="spouseClip_{id}"><circle cx="210" cy="75" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouseClip_{id})" xlink:href="{val}" x="185" y="50" width="50" height="50"></image>';
+
+            // TEMPLATE CHO CẶP VỢ CHỒNG CÓ 2 SPOUSE
+            OrgChart.templates.couple_two_spouses = Object.assign({}, OrgChart.templates.olivia);
+            OrgChart.templates.couple_two_spouses.size = [280, 180];
+            OrgChart.templates.couple_two_spouses.node = 
+                '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>' +
+                '<line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>';
+            OrgChart.templates.couple_two_spouses.nodeMenuButton = '<g style="display:none"></g>';
+
+            // Phần bên trái - người chính
+            OrgChart.templates.couple_two_spouses.field_0 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.field_1 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.img_0 = 
+                '<clipPath id="personClip_{id}"><circle cx="70" cy="90" r="25"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="45" y="65" width="50" height="50"></image>';
+
+            // Phần bên phải trên - vợ/chồng 1
+            OrgChart.templates.couple_two_spouses.field_2 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.field_3 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.img_1 = 
+                '<clipPath id="spouse1Clip_{id}"><circle cx="210" cy="60" r="20"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouse1Clip_{id})" xlink:href="{val}" x="190" y="40" width="40" height="40"></image>';
+
+            // Phần bên phải dưới - vợ/chồng 2
+            OrgChart.templates.couple_two_spouses.field_4 = 
+                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="120" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.field_5 = 
+                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="135" text-anchor="middle">{val}</text>';
+            OrgChart.templates.couple_two_spouses.img_2 = 
+                '<clipPath id="spouse2Clip_{id}"><circle cx="210" cy="150" r="20"></circle></clipPath>' +
+                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#spouse2Clip_{id})" xlink:href="{val}" x="190" y="130" width="40" height="40"></image>';
+
+            // TEMPLATE CHO CẶP VỢ CHỒNG CÓ NHIỀU HƠN 2 SPOUSE
+            OrgChart.templates.couple_many_spouses = Object.assign({}, OrgChart.templates.couple_two_spouses);
+            OrgChart.templates.couple_many_spouses.field_6 = 
+                '<text style="font-size:12px;" fill="#888" x="210" y="170" text-anchor="middle">+ {val} người khác</text>';
+
+            // Tạo các biến thể nam/nữ của các template couple
+            // Cho template one_spouse
+            OrgChart.templates.couple_male_one_spouse = Object.assign({}, OrgChart.templates.couple_one_spouse);
+            OrgChart.templates.couple_male_one_spouse.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            OrgChart.templates.couple_female_one_spouse = Object.assign({}, OrgChart.templates.couple_one_spouse);
+            OrgChart.templates.couple_female_one_spouse.node = 
+                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            // Cho template two_spouses
+            OrgChart.templates.couple_male_two_spouses = Object.assign({}, OrgChart.templates.couple_two_spouses);
+            OrgChart.templates.couple_male_two_spouses.node = 
                 '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_male.nodeMenuButton = 
-                '<g style="display:none"></g>';
-            
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
-            OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
-            OrgChart.templates.couple_female.node = 
+                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>' +
+                '<line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            OrgChart.templates.couple_female_two_spouses = Object.assign({}, OrgChart.templates.couple_two_spouses);
+            OrgChart.templates.couple_female_two_spouses.node = 
                 '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_female.nodeMenuButton = 
-                '<g style="display:none"></g>';
+                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>' +
+                '<line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            // Cho template many_spouses
+            OrgChart.templates.couple_male_many_spouses = Object.assign({}, OrgChart.templates.couple_many_spouses);
+            OrgChart.templates.couple_male_many_spouses.node = 
+                '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>' +
+                '<line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>';
+
+            OrgChart.templates.couple_female_many_spouses = Object.assign({}, OrgChart.templates.couple_many_spouses);
+            OrgChart.templates.couple_female_many_spouses.node = 
+                '<rect x="0" y="0" width="280" height="180" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
+                '<line x1="140" y1="0" x2="140" y2="180" stroke="#E4E4E4" stroke-width="1"></line>' +
+                '<line x1="140" y1="90" x2="280" y2="90" stroke="#E4E4E4" stroke-width="1"></line>';
 
             // Cập nhật kích thước min cho các template
             OrgChart.templates.single.min = {
@@ -1108,13 +1108,28 @@
                 h: 120
             };
             
-            OrgChart.templates.couple.min = {
+            OrgChart.templates.couple_one_spouse.min = {
                 w: 280, 
+                h: 120
+            };
+            
+            OrgChart.templates.couple_two_spouses.min = {
+                w: 280,
                 h: 180
             };
             
-            OrgChart.templates.couple_male.min = OrgChart.templates.couple.min;
-            OrgChart.templates.couple_female.min = OrgChart.templates.couple.min;
+            OrgChart.templates.couple_many_spouses.min = {
+                w: 280,
+                h: 180
+            };
+
+            // Sao chép kích thước min cho tất cả các template variant
+            OrgChart.templates.couple_male_one_spouse.min = OrgChart.templates.couple_one_spouse.min;
+            OrgChart.templates.couple_female_one_spouse.min = OrgChart.templates.couple_one_spouse.min;
+            OrgChart.templates.couple_male_two_spouses.min = OrgChart.templates.couple_two_spouses.min;
+            OrgChart.templates.couple_female_two_spouses.min = OrgChart.templates.couple_two_spouses.min;
+            OrgChart.templates.couple_male_many_spouses.min = OrgChart.templates.couple_many_spouses.min;
+            OrgChart.templates.couple_female_many_spouses.min = OrgChart.templates.couple_many_spouses.min;
 
             // Tùy chỉnh template cho nút mở rộng/thu gọn
             OrgChart.templates.single.plus = 
@@ -1191,48 +1206,34 @@
                 nodes: formattedData.nodes,
                 tags: {
                     male: {
-                        template: "single_male",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
+                        template: "single_male"
                     },
                     female: {
-                        template: "single_female",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
+                        template: "single_female"
                     },
                     couple_male: {
-                        template: "couple_male",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
+                        template: "couple_male_one_spouse" // Template mặc định, sẽ được thay đổi dựa trên số lượng vợ/chồng
                     },
                     couple_female: {
-                        template: "couple_female",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
+                        template: "couple_female_one_spouse" // Template mặc định, sẽ được thay đổi dựa trên số lượng vợ/chồng
+                    },
+                    couple_male_one_spouse: {
+                        template: "couple_male_one_spouse"
+                    },
+                    couple_female_one_spouse: {
+                        template: "couple_female_one_spouse"
+                    },
+                    couple_male_two_spouses: {
+                        template: "couple_male_two_spouses"
+                    },
+                    couple_female_two_spouses: {
+                        template: "couple_female_two_spouses"
+                    },
+                    couple_male_many_spouses: {
+                        template: "couple_male_many_spouses"
+                    },
+                    couple_female_many_spouses: {
+                        template: "couple_female_many_spouses"
                     }
                 },
                 // Cấu hình hiển thị
