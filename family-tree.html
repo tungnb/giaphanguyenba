@@ -1283,27 +1283,31 @@
             chart.on('expcollclick', function(sender, collapse, id, ids) {
                 console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
                 
+                // Cho phép OrgChart xử lý việc mở rộng/thu gọn như bình thường trước
+                const result = true;
+                
+                // Nếu đang mở rộng (không phải thu gọn), thêm hành động bổ sung sau khi mở rộng
                 if (!collapse) {
-                    // Khi mở rộng, chỉ hiển thị con trực tiếp (không mở rộng tất cả con cháu)
-                    const expandPromise = sender.expand(id);
-                    
-                    expandPromise.then(() => {
-                        const node = sender.getNode(id);
+                    // Sử dụng setTimeout để đảm bảo hành động này xảy ra sau khi OrgChart đã mở rộng node
+                    setTimeout(function() {
+                        // Lấy thông tin node hiện tại sau khi đã mở rộng
+                        const node = chart.getNode(id);
                         if (node && node.childrenIds && node.childrenIds.length > 0) {
-                            // Thu gọn tất cả các nút con để không hiển thị con cháu
+                            // Thu gọn tất cả các nút con (nếu chúng có con cháu)
                             node.childrenIds.forEach(childId => {
-                                const childNode = sender.getNode(childId);
+                                const childNode = chart.getNode(childId);
                                 if (childNode && childNode.childrenIds && childNode.childrenIds.length > 0) {
-                                    sender.collapse(childId, true);
+                                    chart.collapse(childId, true);
                                 }
                             });
+                            
+                            // Cập nhật lại biểu đồ sau khi thu gọn
+                            chart.draw();
                         }
-                    });
-                    
-                    return false; // Không để OrgChart tự xử lý mở rộng
+                    }, 100); // Đợi 100ms để đảm bảo OrgChart đã mở rộng xong
                 }
                 
-                return true; // Cho phép OrgChart xử lý thu gọn bình thường
+                return result;
             });
 
             // Xử lý sự kiện khi click vào node
