@@ -1141,46 +1141,7 @@
             OrgChart.templates.couple_male_many_spouses.min = OrgChart.templates.couple_many_spouses.min;
             OrgChart.templates.couple_female_many_spouses.min = OrgChart.templates.couple_many_spouses.min;
 
-            // Tùy chỉnh template cho nút mở rộng/thu gọn
-            OrgChart.templates.single.plus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
-            OrgChart.templates.single.minus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
-
-            // Sao chép cấu hình nút mở rộng/thu gọn cho tất cả các template khác
-            OrgChart.templates.single_male.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.single_male.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.single_male.min = OrgChart.templates.single.min;
-            
-            OrgChart.templates.single_female.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.single_female.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.single_female.min = OrgChart.templates.single.min;
-            
-            // Tạo template riêng cho couple để đặt nút ở góc dưới bên trái của phần vợ/chồng
-            OrgChart.templates.couple.plus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
-            OrgChart.templates.couple.minus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
-            
-            OrgChart.templates.couple_male.plus = OrgChart.templates.couple.plus;
-            OrgChart.templates.couple_male.minus = OrgChart.templates.couple.minus;
-            
-            OrgChart.templates.couple_female.plus = OrgChart.templates.couple.plus;
-            OrgChart.templates.couple_female.minus = OrgChart.templates.couple.minus;
-
-            // Tùy chỉnh template cho nút mở rộng/thu gọn
-            OrgChart.templates.single.plus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
-            OrgChart.templates.single.minus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
-
-            // Cập nhật cấu hình nút mở rộng/thu gọn cho TẤT CẢ template
+            // Tùy chỉnh template cho nút mở rộng/thu gọn - ĐƠN GIẢN HÓA
             const plusMinusConfig = {
                 plus: '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>' +
                       '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>',
@@ -1188,14 +1149,42 @@
                        '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>'
             };
 
-            // Áp dụng cấu hình cho tất cả template
-            for (const templateName in OrgChart.templates) {
-                if (OrgChart.templates.hasOwnProperty(templateName) && 
-                    (templateName.startsWith('single_') || templateName.startsWith('couple_'))) {
-                    OrgChart.templates[templateName].plus = plusMinusConfig.plus;
-                    OrgChart.templates[templateName].minus = plusMinusConfig.minus;
-                }
-            }
+            // Thiết lập cho tất cả các template đã định nghĩa
+            OrgChart.templates.single.plus = plusMinusConfig.plus;
+            OrgChart.templates.single.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.single_male.plus = plusMinusConfig.plus;
+            OrgChart.templates.single_male.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.single_female.plus = plusMinusConfig.plus;
+            OrgChart.templates.single_female.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_one_spouse.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_one_spouse.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_male_one_spouse.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_male_one_spouse.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_female_one_spouse.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_female_one_spouse.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_two_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_two_spouses.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_male_two_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_male_two_spouses.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_female_two_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_female_two_spouses.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_many_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_many_spouses.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_male_many_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_male_many_spouses.minus = plusMinusConfig.minus;
+            
+            OrgChart.templates.couple_female_many_spouses.plus = plusMinusConfig.plus;
+            OrgChart.templates.couple_female_many_spouses.minus = plusMinusConfig.minus;
 
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
