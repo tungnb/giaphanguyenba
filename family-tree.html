@@ -785,14 +785,19 @@
             
             // Tìm person theo ID
             const person = familyData.find(p => p.id === nodeId);
-            if (!person || !person.children || person.children.length === 0) return [];
+            if (!person || !person.children || person.children.length === 0) {
+                console.log(`Node ${nodeId} không có con hoặc không tìm thấy.`);
+                return [];
+            }
             
+            console.log(`Tìm thấy ${person.children.length} con của node ${nodeId}`);
             const childrenData = [];
             
             // Lấy dữ liệu của các con trực tiếp
             person.children.forEach(childId => {
                 const child = familyData.find(p => p.id === childId);
                 if (child) {
+                    console.log(`Thêm con ${child.id} - ${child.name}`);
                     childrenData.push(child);
                     // Đánh dấu đã tải
                     loadedNodes.add(childId);
@@ -802,11 +807,14 @@
                         child.spouses.forEach(spouseId => {
                             const spouse = familyData.find(p => p.id === spouseId);
                             if (spouse) {
+                                console.log(`Thêm vợ/chồng ${spouse.id} - ${spouse.name} của con ${child.id}`);
                                 childrenData.push(spouse);
                                 loadedNodes.add(spouseId);
                             }
                         });
                     }
+                } else {
+                    console.log(`Không tìm thấy con với ID ${childId}`);
                 }
             });
             
@@ -1126,8 +1134,9 @@
                     allChildren: false
                 },
                 enableCollapsing: true,
-                plusVisibility: [2, 3, 4, 5, 6], // Hiển thị nút + bắt đầu từ thế hệ 2
-                minusVisibility: [2, 3, 4, 5, 6],
+                // Sửa cấu hình hiển thị nút +/-
+                plusVisibility: OrgChart.visibility.VISIBLE,
+                minusVisibility: OrgChart.visibility.VISIBLE,
                 mouseScroolBehaviour: OrgChart.action.ctrlZoom,
                 nodeMenu: {
                     pdf: null,
@@ -1200,6 +1209,20 @@
             chart.on('load', function() {
                 console.log("Biểu đồ gia phả đã tải xong");
                 
+                // Xác định các node ở thế hệ 2 có con để hiển thị nút mở rộng
+                familyData.forEach(person => {
+                    if (person.generation === 2 && person.children && person.children.length > 0) {
+                        // Đảm bảo node hiển thị nút mở rộng
+                        const nodeId = person.id;
+                        // Kiểm tra xem node có trong biểu đồ không
+                        if (chart.nodes[nodeId]) {
+                            console.log(`Đánh dấu node thế hệ 2 có con: ${nodeId}`);
+                            // Đảm bảo node thế hệ 2 có nút mở rộng hiển thị
+                            chart.addNodeTag(nodeId, "has_children");
+                        }
+                    }
+                });
+                
                 // Thu gọn các nhánh từ thế hệ 3 trở đi
                 let nodesToCollapse = [];
                 
@@ -1233,6 +1256,7 @@
                     let personId = id;
                     if (originalData && originalData.personId) {
                         personId = originalData.personId;
+                        console.log(`Node couple: chuyển từ ${id} sang personId ${personId}`);
                     }
                     
                     // Lấy dữ liệu con của node này
@@ -1246,16 +1270,20 @@
                         const updatedFamilyData = [...filteredFamilyData, ...childrenData];
                         const newFormattedData = formatFamilyData(updatedFamilyData);
                         
+                        console.log(`Cập nhật biểu đồ với ${newFormattedData.nodes.length} node`);
                         // Cập nhật lại biểu đồ với dữ liệu mới
                         chart.load(newFormattedData.nodes);
                         
                         // Mở rộng node này sau khi tải lại
                         setTimeout(() => {
+                            console.log(`Mở rộng node ${id} sau khi tải lại`);
                             chart.expand(id, true);
                         }, 100);
                         
                         // Trả về false để ngăn chặn hành vi mở rộng mặc định
                         return false;
+                    } else {
+                        console.log(`Không có con nào để tải cho node ${personId}`);
                     }
                 }
                 
