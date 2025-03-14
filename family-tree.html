@@ -283,6 +283,190 @@
             margin-top: 10px;
             display: none;
         }
+
+        /* CSS cho tab chuyển đổi chế độ xem */
+        .view-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .view-tab {
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .view-tab:hover {
+            background-color: #e9ecef;
+        }
+        
+        .view-tab.active {
+            border-bottom: 3px solid #0066cc;
+            font-weight: bold;
+            background-color: #fff;
+        }
+        
+        /* CSS cho danh sách */
+        .family-list-container {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 500px;
+        }
+        
+        .list-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .sort-controls,
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sort-controls select,
+        .filter-controls input {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        #search-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        
+        .family-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .family-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .family-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .family-card.male {
+            border-left: 5px solid #0066cc;
+        }
+        
+        .family-card.female {
+            border-left: 5px solid #e91e63;
+        }
+        
+        .family-card-content {
+            padding: 15px;
+        }
+        
+        .family-card-header {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .family-card-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f0f5ff;
+        }
+        
+        .family-card-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .family-card-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .family-card-relations {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .relation-count {
+            margin-right: 15px;
+        }
+        
+        .generation-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #0066cc;
+            color: white;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* CSS cho phần phân trang */
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .pagination-controls button {
+            padding: 8px 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .pagination-controls button:hover:not(:disabled) {
+            background-color: #e9ecef;
+        }
+        
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #page-info {
+            font-size: 14px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -328,6 +512,12 @@
         <div class="container">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
 
+            <!-- Thêm tab để chuyển đổi giữa chế độ xem -->
+            <div class="view-tabs">
+                <button id="tree-view-btn" class="view-tab active"><i class="fas fa-sitemap"></i> Xem dạng cây</button>
+                <button id="list-view-btn" class="view-tab"><i class="fas fa-list"></i> Xem dạng danh sách</button>
+            </div>
+
             <div id="loading-indicator" class="loading-indicator">
                 <div class="loading-spinner"></div>
                 <p>Đang tải dữ liệu gia phả...</p>
@@ -335,6 +525,39 @@
 
             <div id="family-tree-container" class="family-tree-container" style="display: none">
                 <div id="family-tree" class="chart"></div>
+            </div>
+
+            <!-- Thêm phần danh sách với phân trang -->
+            <div id="family-list-container" class="family-list-container" style="display: none">
+                <div class="list-controls">
+                    <div class="sort-controls">
+                        <label for="sort-field">Sắp xếp theo:</label>
+                        <select id="sort-field">
+                            <option value="id">ID</option>
+                            <option value="generation">Thế hệ</option>
+                            <option value="birthDate" selected>Ngày sinh</option>
+                            <option value="name">Tên</option>
+                        </select>
+                        <select id="sort-order">
+                            <option value="desc" selected>Mới đến cũ</option>
+                            <option value="asc">Cũ đến mới</option>
+                        </select>
+                    </div>
+                    <div class="filter-controls">
+                        <input type="text" id="search-input" placeholder="Tìm kiếm...">
+                        <button id="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div id="family-list" class="family-list">
+                    <!-- Danh sách người sẽ được thêm vào đây -->
+                </div>
+                
+                <div class="pagination-controls">
+                    <button id="prev-page" disabled><i class="fas fa-chevron-left"></i> Trang trước</button>
+                    <span id="page-info">Trang <span id="current-page">1</span> / <span id="total-pages">1</span></span>
+                    <button id="next-page" disabled>Trang sau <i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
 
             <div id="empty-state" class="empty-state" style="display: none">
@@ -393,6 +616,14 @@
         let familyData = [];
         let familyChart = null;
         let formattedChartData = null; // Biến toàn cục để lưu dữ liệu đã định dạng
+        
+        // Biến cho phân trang
+        const ITEMS_PER_PAGE = 25;
+        let currentPage = 1;
+        let filteredData = [];
+        let currentSortField = 'birthDate';
+        let currentSortOrder = 'desc';
+        let currentSearchTerm = '';
 
         // Thêm polyfill cho phương thức addPartnerAndParentNodes nếu nó không tồn tại trong OrgChart
         if (OrgChart && !OrgChart.prototype.addPartnerAndParentNodes) {
@@ -1460,6 +1691,12 @@
 
                 // Thiết lập sự kiện cho modal
                 setupModalEvents();
+                
+                // Thiết lập sự kiện cho tab view
+                setupViewTabs();
+                
+                // Khởi tạo danh sách phân trang
+                initializeList();
 
                 // Khởi tạo Google API
                 initGoogleAPI();
@@ -1476,6 +1713,271 @@
                 document.getElementById('family-tree-container').style.display = 'block';
             }
         });
+        
+        // Thiết lập sự kiện cho tab view
+        function setupViewTabs() {
+            const treeViewBtn = document.getElementById('tree-view-btn');
+            const listViewBtn = document.getElementById('list-view-btn');
+            const treeContainer = document.getElementById('family-tree-container');
+            const listContainer = document.getElementById('family-list-container');
+            
+            treeViewBtn.addEventListener('click', function() {
+                treeViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                treeContainer.style.display = 'block';
+                listContainer.style.display = 'none';
+            });
+            
+            listViewBtn.addEventListener('click', function() {
+                listViewBtn.classList.add('active');
+                treeViewBtn.classList.remove('active');
+                listContainer.style.display = 'block';
+                treeContainer.style.display = 'none';
+            });
+        }
+        
+        // Khởi tạo danh sách phân trang
+        function initializeList() {
+            // Khởi tạo filteredData
+            filteredData = [...familyData];
+            
+            // Sắp xếp dữ liệu
+            sortData();
+            
+            // Hiển thị trang đầu tiên
+            renderPage(1);
+            
+            // Thiết lập sự kiện cho phân trang
+            setupPaginationEvents();
+            
+            // Thiết lập sự kiện cho sắp xếp
+            setupSortEvents();
+            
+            // Thiết lập sự kiện cho tìm kiếm
+            setupSearchEvents();
+        }
+        
+        // Sắp xếp dữ liệu theo trường và thứ tự chỉ định
+        function sortData() {
+            filteredData.sort((a, b) => {
+                // Xử lý trường hợp giá trị null hoặc undefined
+                if (a[currentSortField] === undefined || a[currentSortField] === null) return 1;
+                if (b[currentSortField] === undefined || b[currentSortField] === null) return -1;
+                
+                let valueA, valueB;
+                
+                // Xử lý đặc biệt cho các trường ngày tháng
+                if (currentSortField === 'birthDate' || currentSortField === 'deathDate') {
+                    valueA = new Date(a[currentSortField] || '1900-01-01').getTime();
+                    valueB = new Date(b[currentSortField] || '1900-01-01').getTime();
+                } else {
+                    valueA = a[currentSortField];
+                    valueB = b[currentSortField];
+                    
+                    // Chuyển đổi sang kiểu số nếu có thể
+                    if (!isNaN(valueA)) valueA = Number(valueA);
+                    if (!isNaN(valueB)) valueB = Number(valueB);
+                    
+                    // Chuyển đổi sang chữ thường nếu là chuỗi
+                    if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+                    if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+                }
+                
+                // Sắp xếp tăng dần hoặc giảm dần
+                if (currentSortOrder === 'asc') {
+                    return valueA > valueB ? 1 : -1;
+                } else {
+                    return valueA < valueB ? 1 : -1;
+                }
+            });
+        }
+        
+        // Lọc dữ liệu theo từ khóa tìm kiếm
+        function filterData() {
+            if (!currentSearchTerm.trim()) {
+                filteredData = [...familyData];
+            } else {
+                const searchTermLower = currentSearchTerm.toLowerCase();
+                filteredData = familyData.filter(person => {
+                    return (
+                        (person.name && person.name.toLowerCase().includes(searchTermLower)) ||
+                        (person.id && person.id.toLowerCase().includes(searchTermLower)) ||
+                        (person.generation && person.generation.toString().includes(searchTermLower))
+                    );
+                });
+            }
+            
+            // Sắp xếp lại dữ liệu đã lọc
+            sortData();
+            
+            // Hiển thị lại trang đầu tiên
+            currentPage = 1;
+            renderPage(currentPage);
+            updatePaginationControls();
+        }
+        
+        // Hiển thị trang chỉ định
+        function renderPage(page) {
+            const listContainer = document.getElementById('family-list');
+            
+            // Tính chỉ số bắt đầu và kết thúc cho trang hiện tại
+            const startIndex = (page - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length);
+            
+            // Lấy dữ liệu cho trang hiện tại
+            const pageData = filteredData.slice(startIndex, endIndex);
+            
+            // Xóa nội dung cũ
+            listContainer.innerHTML = '';
+            
+            // Tạo card cho mỗi người
+            pageData.forEach(person => {
+                // Tạo HTML cho card
+                const cardElement = document.createElement('div');
+                cardElement.className = `family-card ${person.gender}`;
+                cardElement.dataset.id = person.id;
+                
+                // Tính ngày tháng hiển thị
+                let lifespan = '';
+                if (person.birthDate) {
+                    const birthYear = new Date(person.birthDate).getFullYear();
+                    if (person.deathDate) {
+                        const deathYear = new Date(person.deathDate).getFullYear();
+                        lifespan = `${birthYear} - ${deathYear}`;
+                    } else {
+                        lifespan = `Sinh năm ${birthYear}`;
+                    }
+                }
+                
+                // Lấy avatar
+                let photoUrl = person.photo;
+                if (!photoUrl) {
+                    if (person.gender === 'male') {
+                        photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                    } else {
+                        photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                    }
+                }
+                
+                // Đếm số lượng quan hệ
+                const spouseCount = person.spouses ? person.spouses.length : 0;
+                const childCount = person.children ? person.children.length : 0;
+                
+                // Tạo nội dung HTML cho card
+                cardElement.innerHTML = `
+                    <span class="generation-badge">Thế hệ ${person.generation}</span>
+                    <div class="family-card-content">
+                        <div class="family-card-header">
+                            <img src="${photoUrl}" alt="${person.name}" class="family-card-avatar">
+                            <div class="family-card-info">
+                                <h3>${person.name}</h3>
+                                <p>${lifespan}</p>
+                                <p>${person.gender === 'male' ? 'Nam' : 'Nữ'}</p>
+                            </div>
+                        </div>
+                        <div class="family-card-relations">
+                            <span class="relation-count"><i class="fas fa-user-friends"></i> ${spouseCount} vợ/chồng</span>
+                            <span class="relation-count"><i class="fas fa-child"></i> ${childCount} con</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Thêm sự kiện click cho card
+                cardElement.addEventListener('click', function() {
+                    showPersonDetail(this.dataset.id);
+                });
+                
+                // Thêm card vào container
+                listContainer.appendChild(cardElement);
+            });
+            
+            // Cập nhật trang hiện tại
+            currentPage = page;
+            document.getElementById('current-page').textContent = page;
+            
+            // Cập nhật tổng số trang
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+            document.getElementById('total-pages').textContent = totalPages;
+            
+            // Cập nhật trạng thái nút phân trang
+            updatePaginationControls();
+        }
+        
+        // Cập nhật trạng thái của các nút phân trang
+        function updatePaginationControls() {
+            const prevPageBtn = document.getElementById('prev-page');
+            const nextPageBtn = document.getElementById('next-page');
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+            
+            // Cập nhật nút trang trước
+            if (currentPage <= 1) {
+                prevPageBtn.disabled = true;
+            } else {
+                prevPageBtn.disabled = false;
+            }
+            
+            // Cập nhật nút trang sau
+            if (currentPage >= totalPages) {
+                nextPageBtn.disabled = true;
+            } else {
+                nextPageBtn.disabled = false;
+            }
+        }
+        
+        // Thiết lập sự kiện cho phân trang
+        function setupPaginationEvents() {
+            const prevPageBtn = document.getElementById('prev-page');
+            const nextPageBtn = document.getElementById('next-page');
+            
+            prevPageBtn.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    renderPage(currentPage - 1);
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', function() {
+                const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+                if (currentPage < totalPages) {
+                    renderPage(currentPage + 1);
+                }
+            });
+        }
+        
+        // Thiết lập sự kiện cho sắp xếp
+        function setupSortEvents() {
+            const sortFieldSelect = document.getElementById('sort-field');
+            const sortOrderSelect = document.getElementById('sort-order');
+            
+            sortFieldSelect.addEventListener('change', function() {
+                currentSortField = this.value;
+                sortData();
+                renderPage(1);
+            });
+            
+            sortOrderSelect.addEventListener('change', function() {
+                currentSortOrder = this.value;
+                sortData();
+                renderPage(1);
+            });
+        }
+        
+        // Thiết lập sự kiện cho tìm kiếm
+        function setupSearchEvents() {
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            
+            searchBtn.addEventListener('click', function() {
+                currentSearchTerm = searchInput.value;
+                filterData();
+            });
+            
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    currentSearchTerm = searchInput.value;
+                    filterData();
+                }
+            });
+        }
     </script>
 </body>
 </html>
