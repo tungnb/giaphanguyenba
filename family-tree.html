@@ -872,11 +872,21 @@
                             birth: lifespan,
                             personGender: person.gender,
                             spouses: spousesInfo, // Lưu trữ thông tin của tất cả vợ/chồng
-                            spouseId: spousesInfo[0].id, // Giữ lại để tương thích với code cũ
-                            spouseName: spousesInfo[0].name, // Giữ lại để tương thích với code cũ
-                            spouseImg: spousesInfo[0].img, // Giữ lại để tương thích với code cũ
-                            spouseBirth: spousesInfo[0].birth, // Giữ lại để tương thích với code cũ
-                            spouseGender: spousesInfo[0].gender, // Giữ lại để tương thích với code cũ
+                            // Thông tin vợ/chồng cho template specific
+                            // Thông tin vợ/chồng 1 (nếu có)
+                            spouseId: spousesInfo.length > 0 ? spousesInfo[0].id : '',
+                            spouseName: spousesInfo.length > 0 ? spousesInfo[0].name : '',
+                            spouseImg: spousesInfo.length > 0 ? spousesInfo[0].img : '',
+                            spouseBirth: spousesInfo.length > 0 ? spousesInfo[0].birth : '',
+                            spouseGender: spousesInfo.length > 0 ? spousesInfo[0].gender : '',
+                            // Thông tin vợ/chồng 2 (nếu có)
+                            spouse2Id: spousesInfo.length > 1 ? spousesInfo[1].id : '',
+                            spouse2Name: spousesInfo.length > 1 ? spousesInfo[1].name : '',
+                            spouse2Img: spousesInfo.length > 1 ? spousesInfo[1].img : '',
+                            spouse2Birth: spousesInfo.length > 1 ? spousesInfo[1].birth : '',
+                            spouse2Gender: spousesInfo.length > 1 ? spousesInfo[1].gender : '',
+                            // Số người còn lại nếu có nhiều hơn 2
+                            spouseCount: spousesInfo.length > 2 ? spousesInfo.length - 2 : 0,
                             generation: person.generation,
                             tags: [person.gender === 'male' ? 'couple_male' : 'couple_female'],
                             // Gộp danh sách con từ tất cả các vợ/chồng
@@ -1162,6 +1172,31 @@
             OrgChart.templates.couple_female.plus = OrgChart.templates.couple.plus;
             OrgChart.templates.couple_female.minus = OrgChart.templates.couple.minus;
 
+            // Tùy chỉnh template cho nút mở rộng/thu gọn
+            OrgChart.templates.single.plus = 
+                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
+            OrgChart.templates.single.minus = 
+                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
+                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
+
+            // Cập nhật cấu hình nút mở rộng/thu gọn cho TẤT CẢ template
+            const plusMinusConfig = {
+                plus: '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>' +
+                      '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>',
+                minus: '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>' +
+                       '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>'
+            };
+
+            // Áp dụng cấu hình cho tất cả template
+            for (const templateName in OrgChart.templates) {
+                if (OrgChart.templates.hasOwnProperty(templateName) && 
+                    (templateName.startsWith('single_') || templateName.startsWith('couple_'))) {
+                    OrgChart.templates[templateName].plus = plusMinusConfig.plus;
+                    OrgChart.templates[templateName].minus = plusMinusConfig.minus;
+                }
+            }
+
             const chart = new OrgChart(document.getElementById("family-tree"), {
                 template: "olivia",
                 enableSearch: false,
@@ -1244,26 +1279,54 @@
                 maxDepth: 1
             });
             
-            // Hàm render HTML cho các node couple
-            function renderCoupleNodes() {
-                for (let id in chart.nodes) {
-                    const node = chart.nodes[id];
-                    const data = chart.get(id);
+            // Sự kiện khi node được khởi tạo để gán template đúng dựa trên số lượng vợ/chồng
+            chart.on('node-initialized', function(sender, args) {
+                const nodeId = args.data.id;
+                const node = args.data;
+                
+                // Kiểm tra xem node có tag couple không
+                if (node.tags && (node.tags.includes('couple_male') || node.tags.includes('couple_female'))) {
+                    const gender = node.tags.includes('couple_male') ? 'male' : 'female';
+                    const spouses = node.spouses || [];
                     
-                    if (data && data.tags && (data.tags.includes('couple_male') || data.tags.includes('couple_female'))) {
-                        // Thêm HTML cho phần vợ/chồng
-                        const htmlDiv = document.getElementById(`htmlContent_${id}`);
-                        if (htmlDiv) {
-                            htmlDiv.innerHTML = OrgChart.templates.couple.spousesString(data);
-                        }
+                    // Gán template dựa trên số lượng vợ/chồng
+                    if (spouses.length === 1) {
+                        node.tags = [`couple_${gender}_one_spouse`];
+                        
+                        // Cập nhật binding cho template one_spouse
+                        node.spouseName = spouses[0].name;
+                        node.spouseBirth = spouses[0].birth;
+                        node.spouseImg = spouses[0].img;
+                    } 
+                    else if (spouses.length === 2) {
+                        node.tags = [`couple_${gender}_two_spouses`];
+                        
+                        // Cập nhật binding cho template two_spouses
+                        node.spouseName = spouses[0].name;
+                        node.spouseBirth = spouses[0].birth;
+                        node.spouseImg = spouses[0].img;
+                        
+                        node.spouse2Name = spouses[1].name;
+                        node.spouse2Birth = spouses[1].birth;
+                        node.spouse2Img = spouses[1].img;
+                    }
+                    else if (spouses.length > 2) {
+                        node.tags = [`couple_${gender}_many_spouses`];
+                        
+                        // Cập nhật binding cho template many_spouses
+                        node.spouseName = spouses[0].name;
+                        node.spouseBirth = spouses[0].birth;
+                        node.spouseImg = spouses[0].img;
+                        
+                        node.spouse2Name = spouses[1].name;
+                        node.spouse2Birth = spouses[1].birth;
+                        node.spouse2Img = spouses[1].img;
+                        
+                        // Số lượng vợ/chồng còn lại
+                        node.spouseCount = spouses.length - 2;
                     }
                 }
-            }
-
-            // Render HTML cho các node couple sau mỗi lần vẽ và khi draw xong
-            chart.on('render', renderCoupleNodes);
-            chart.on('redraw', renderCoupleNodes);
-            chart.on('update', renderCoupleNodes);
+            });
 
             // Sự kiện đơn giản - khi chart được tải
             chart.on('load', function() {
@@ -1289,9 +1352,6 @@
                     chart.collapse(id, true);
                     console.log("Thu gọn node thế hệ > 2:", id);
                 });
-                
-                // Render lại các node couple sau khi tải xong
-                renderCoupleNodes();
             });
 
             // Xử lý sự kiện mở rộng và thu gọn nhánh
