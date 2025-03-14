@@ -590,6 +590,7 @@
         let familyData = [];
         let familyChart = null;
         let formattedChartData = null; // Biến toàn cục để lưu dữ liệu đã định dạng
+        let loadedNodes = new Set(); // Lưu danh sách các node đã được tải
         
         // Biến cho phân trang
         const ITEMS_PER_PAGE = 25;
@@ -768,6 +769,48 @@
                     }
                 ];
             }
+        }
+
+        // Lọc dữ liệu gia phả để chỉ giữ lại các thế hệ đầu tiên và các node đã tải
+        function filterInitialFamilyData(familyDataArray, maxGeneration = 2) {
+            // Trả về các node thuộc các thế hệ đầu tiên
+            return familyDataArray.filter(person => 
+                person.generation <= maxGeneration || loadedNodes.has(person.id)
+            );
+        }
+
+        // Tìm và thêm dữ liệu con của một node
+        function getChildrenData(nodeId) {
+            if (!familyData || !nodeId) return [];
+            
+            // Tìm person theo ID
+            const person = familyData.find(p => p.id === nodeId);
+            if (!person || !person.children || person.children.length === 0) return [];
+            
+            const childrenData = [];
+            
+            // Lấy dữ liệu của các con trực tiếp
+            person.children.forEach(childId => {
+                const child = familyData.find(p => p.id === childId);
+                if (child) {
+                    childrenData.push(child);
+                    // Đánh dấu đã tải
+                    loadedNodes.add(childId);
+                    
+                    // Nếu con có vợ/chồng, thêm dữ liệu vợ/chồng
+                    if (child.spouses && child.spouses.length > 0) {
+                        child.spouses.forEach(spouseId => {
+                            const spouse = familyData.find(p => p.id === spouseId);
+                            if (spouse) {
+                                childrenData.push(spouse);
+                                loadedNodes.add(spouseId);
+                            }
+                        });
+                    }
+                }
+            });
+            
+            return childrenData;
         }
 
         // Tạo danh sách node từ dữ liệu gia phả
@@ -1077,19 +1120,15 @@
                     field_3: "spouseBirth",
                     img_1: "spouseImg"
                 },
-                // Cấu hình collapse - điều chỉnh để phù hợp với database
+                // Giới hạn hiển thị đến thế hệ 2
                 collapse: {
-                    level: 2, // Hiển thị đến thế hệ 2 (vì thế hệ gốc là 1 trong database)
+                    level: 2,
                     allChildren: false
                 },
-                // Thêm nút mở rộng/thu gọn nhánh
                 enableCollapsing: true,
-                // Cấu hình hiển thị nút mở rộng/thu gọn - điều chỉnh theo thế hệ trong database
-                plusVisibility: [3, 4, 5, 6], // Hiển thị nút + cho các thế hệ 3 trở đi
-                minusVisibility: [3, 4, 5, 6], // Hiển thị nút - cho các thế hệ 3 trở đi
-                // Thêm kiểu di chuột vào nút mở rộng
+                plusVisibility: [2, 3, 4, 5, 6], // Hiển thị nút + bắt đầu từ thế hệ 2
+                minusVisibility: [2, 3, 4, 5, 6],
                 mouseScroolBehaviour: OrgChart.action.ctrlZoom,
-                // Cho phép xử lý thao tác với nút +/-
                 nodeMenu: {
                     pdf: null,
                     png: null,
@@ -1098,10 +1137,9 @@
                     json: null,
                     details: null
                 },
-                // Cấu hình expand để chỉ mở rộng một cấp
                 expand: {
-                    nodes: [], // Bắt đầu với mảng rỗng
-                    allChildren: false // Không mở rộng tất cả con cháu
+                    nodes: [],
+                    allChildren: false
                 },
                 nodes: formattedData.nodes,
                 tags: {
@@ -1153,15 +1191,16 @@
                 // Cấu hình hiển thị
                 levelSeparation: 100,
                 siblingSeparation: 50,
-                subtreeSeparation: 80
+                subtreeSeparation: 80,
+                // Thêm lazy loading
+                lazyLoading: true
             });
             
             // Sự kiện đơn giản - khi chart được tải
             chart.on('load', function() {
                 console.log("Biểu đồ gia phả đã tải xong");
                 
-                // Thu gọn các nhánh từ thế hệ 3 trở đi để hiển thị đúng 2 thế hệ đầu tiên (thế hệ 1 và 2)
-                // Lặp qua tất cả các node và thu gọn các node có generation > 2
+                // Thu gọn các nhánh từ thế hệ 3 trở đi
                 let nodesToCollapse = [];
                 
                 // Thu thập tất cả các node trong chart
@@ -1182,49 +1221,45 @@
                 });
             });
 
-            // Xử lý sự kiện mở rộng và thu gọn nhánh
+            // Xử lý sự kiện mở rộng và thu gọn nhánh - triển khai lazy loading
             chart.on('expcollclick', function(sender, collapse, id, ids) {
                 console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
                 
                 if (!collapse) {
                     // Nếu đang mở rộng (không phải thu gọn)
-                    // Lấy danh sách các ID mà sẽ được mở rộng
-                    const currentNode = chart.getNode(id);
-                    if (currentNode) {
-                        // Lấy danh sách tất cả con trực tiếp
-                        const childrenIds = [];
+                    const originalData = formattedChartData.nodes.find(n => n.id === id);
+                    
+                    // Kiểm tra xem có phải là couple node không
+                    let personId = id;
+                    if (originalData && originalData.personId) {
+                        personId = originalData.personId;
+                    }
+                    
+                    // Lấy dữ liệu con của node này
+                    const childrenData = getChildrenData(personId);
+                    
+                    if (childrenData.length > 0) {
+                        console.log(`Đang tải ${childrenData.length} con của node ${personId}`);
                         
-                        // Tìm tất cả con trực tiếp của node này
-                        const originalData = formattedChartData.nodes.find(n => n.id === id);
-                        if (originalData && originalData.children && originalData.children.length > 0) {
-                            // Chỉ lấy ID của con trực tiếp
-                            originalData.children.forEach(childId => {
-                                childrenIds.push(childId);
-                            });
-                        }
+                        // Định dạng dữ liệu con mới
+                        const filteredFamilyData = filterInitialFamilyData(familyData);
+                        const updatedFamilyData = [...filteredFamilyData, ...childrenData];
+                        const newFormattedData = formatFamilyData(updatedFamilyData);
                         
-                        console.log("Chỉ mở rộng các con trực tiếp:", childrenIds);
+                        // Cập nhật lại biểu đồ với dữ liệu mới
+                        chart.load(newFormattedData.nodes);
                         
-                        // Thực hiện mở rộng thủ công chỉ với các con trực tiếp
-                        chart.expand(id, childrenIds, true);
-                        
-                        // Thu gọn tất cả các node có con
+                        // Mở rộng node này sau khi tải lại
                         setTimeout(() => {
-                            childrenIds.forEach(childId => {
-                                const childData = formattedChartData.nodes.find(n => n.id === childId);
-                                if (childData && childData.children && childData.children.length > 0) {
-                                    // Nếu con này có con của nó, thu gọn nó
-                                    chart.collapse(childId, true);
-                                }
-                            });
-                        }, 100); // Đợi một chút để OrgChart kịp render
+                            chart.expand(id, true);
+                        }, 100);
                         
                         // Trả về false để ngăn chặn hành vi mở rộng mặc định
                         return false;
                     }
                 }
                 
-                // Nếu là thu gọn hoặc không tìm thấy node, để thư viện xử lý mặc định
+                // Nếu là thu gọn hoặc không có con, để thư viện xử lý mặc định
                 return true;
             });
 
@@ -1739,8 +1774,20 @@
                     return;
                 }
 
+                // Khởi tạo danh sách các node đã tải
+                // Đánh dấu các node thuộc thế hệ 1 và 2 là đã tải
+                familyData.forEach(person => {
+                    if (person.generation <= 2) {
+                        loadedNodes.add(person.id);
+                    }
+                });
+
+                // Lọc dữ liệu chỉ lấy 2 thế hệ đầu (giảm số lượng node ban đầu)
+                const filteredFamilyData = filterInitialFamilyData(familyData);
+                console.log(`Hiển thị ban đầu ${filteredFamilyData.length}/${familyData.length} người`);
+
                 // Chuyển đổi dữ liệu cho OrgChart.js
-                const formattedData = formatFamilyData(familyData);
+                const formattedData = formatFamilyData(filteredFamilyData);
                 
                 // Khởi tạo OrgChart
                 document.getElementById('family-tree-container').style.display = 'block';
