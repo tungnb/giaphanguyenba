@@ -864,17 +864,26 @@
                             spouseGender: spouse.gender,
                             generation: person.generation,
                             tags: [person.gender === 'male' ? 'couple_male' : 'couple_female'],
-                            // Gộp danh sách con từ cả hai người
-                            children: [...(person.children || []), ...(spouse.children || [])]
+                            // Gộp danh sách con từ tất cả các vợ/chồng
+                            children: [...(person.children || [])]
                         };
+                        
+                        // Thêm tất cả con của vợ/chồng
+                        if (spouse.children) {
+                            coupleNode.children = [...coupleNode.children, ...spouse.children];
+                        }
                         
                         // Thêm node vợ chồng vào mảng
                         nodes.push(coupleNode);
                         coupleNodes.set(coupleId, coupleNode);
                         
-                        // Đánh dấu cả hai đã được xử lý
+                        // Đánh dấu người nội tộc đã được xử lý
                         processedIds.add(person.id);
-                        processedIds.add(spouse.id);
+                        
+                        // Đánh dấu TẤT CẢ vợ/chồng của người này đã được xử lý
+                        if (person.spouses) {
+                            person.spouses.forEach(id => processedIds.add(id));
+                        }
                     }
                 }
                 // Nếu không có vợ/chồng, tạo node bình thường
