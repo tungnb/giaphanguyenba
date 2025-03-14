@@ -1252,7 +1252,10 @@
                     // Người ngoại tộc là người không có dữ liệu cha mẹ trong gia phả
                     const isOutsider = !m.parents || m.parents.length === 0;
                     
-                    return sameGeneration && notAlreadySpouse && notMarried && isOutsider;
+                    // Điều kiện khác giới tính với thành viên hiện tại
+                    const differentGender = m.gender !== currentMember.gender;
+                    
+                    return sameGeneration && notAlreadySpouse && notMarried && isOutsider && differentGender;
                 });
             }
             
