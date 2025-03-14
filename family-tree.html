@@ -9,6 +9,10 @@
     
     <!-- Thư viện OrgChart.js -->
     <script src="js/OrgChart.js"></script>
+    
+    <!-- Thêm Google API Client và Google Picker API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 
     <style>
         #family-tree-container {
@@ -177,6 +181,108 @@
             border: 2px solid #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+        
+        /* CSS cho chức năng upload ảnh */
+        .upload-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .upload-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .upload-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .upload-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .upload-progress {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        .progress-bar-fill {
+            height: 10px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .upload-result {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .select-file-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .select-file-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .file-name {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .success-message {
+            color: #2ecc71;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -244,6 +350,32 @@
             <span class="close-modal" id="close-modal">&times;</span>
             <div id="person-detail-content">
                 <!-- Chi tiết người sẽ được thêm vào đây -->
+            </div>
+            
+            <!-- Thêm phần upload ảnh -->
+            <div id="upload-section" class="upload-section">
+                <h3>Cập nhật ảnh đại diện</h3>
+                <p>Tải lên ảnh mới cho người này (kích thước sẽ được điều chỉnh về 640px)</p>
+                
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <label for="fileInput" class="select-file-btn"><i class="fas fa-image"></i> Chọn ảnh</label>
+                <span id="fileName" class="file-name"></span>
+                
+                <div id="imagePreviewContainer" style="display: none;">
+                    <img id="imagePreview" class="preview-image">
+                </div>
+                
+                <button id="uploadBtn" class="upload-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Tải lên Google Drive</button>
+                
+                <div id="uploadProgress" class="upload-progress">
+                    <p>Đang tải lên...</p>
+                    <div class="progress-bar">
+                        <div id="progressBarFill" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+                
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
             </div>
         </div>
     </div>
@@ -861,6 +993,293 @@
             return chart;
         }
 
+        // API Key và Client ID cho Google Drive API
+        const API_KEY = 'YOUR_API_KEY'; // Thay bằng API key thực tế của bạn
+        const CLIENT_ID = 'YOUR_CLIENT_ID'; // Thay bằng Client ID thực tế của bạn
+        const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        
+        // Biến lưu trữ ID của người đang được hiển thị chi tiết
+        let currentPersonId = null;
+        
+        // Hàm khởi tạo Google API Client
+        function initGoogleAPI() {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: API_KEY,
+                    clientId: CLIENT_ID,
+                    discoveryDocs: DISCOVERY_DOCS,
+                    scope: SCOPES
+                }).then(() => {
+                    // API đã được khởi tạo thành công
+                    console.log('Google API đã được khởi tạo');
+                    
+                    // Lắng nghe sự kiện đăng nhập/đăng xuất
+                    gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+                    
+                    // Kiểm tra trạng thái đăng nhập ban đầu
+                    updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+                    
+                }).catch(error => {
+                    console.error('Lỗi khi khởi tạo Google API:', error);
+                    document.getElementById('errorMessage').textContent = 'Không thể kết nối với Google API. Vui lòng thử lại sau.';
+                    document.getElementById('errorMessage').style.display = 'block';
+                });
+            });
+        }
+        
+        // Cập nhật trạng thái đăng nhập
+        function updateSigninStatus(isSignedIn) {
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (isSignedIn) {
+                // Đã đăng nhập, kích hoạt nút upload nếu có file
+                if (document.getElementById('fileInput').files.length > 0) {
+                    uploadBtn.disabled = false;
+                }
+                
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Tải lên Google Drive';
+            } else {
+                // Chưa đăng nhập, sửa nút upload để đăng nhập
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập với Google để tải lên';
+                
+                // Thay đổi hành động của nút upload thành đăng nhập
+                uploadBtn.onclick = () => {
+                    gapi.auth2.getAuthInstance().signIn();
+                };
+            }
+        }
+        
+        // Hàm thay đổi kích thước ảnh
+        function resizeImage(file, maxWidth, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    // Tính toán tỷ lệ để giữ nguyên tỷ lệ khi thay đổi kích thước
+                    const width = img.width;
+                    const height = img.height;
+                    let newWidth = width;
+                    let newHeight = height;
+                    
+                    if (width > maxWidth) {
+                        newWidth = maxWidth;
+                        newHeight = (height * maxWidth) / width;
+                    }
+                    
+                    // Tạo canvas để vẽ ảnh với kích thước mới
+                    const canvas = document.createElement('canvas');
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                    
+                    // Chuyển đổi canvas thành Blob
+                    canvas.toBlob(callback, file.type);
+                };
+            };
+        }
+        
+        // Hàm tải ảnh lên Google Drive
+        function uploadImageToDrive(file) {
+            const uploadProgress = document.getElementById('uploadProgress');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            // Hiển thị thanh tiến trình
+            uploadProgress.style.display = 'block';
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            uploadBtn.disabled = true;
+            
+            // Tạo tên file dựa trên thông tin người
+            const person = familyData.find(p => p.id === currentPersonId);
+            const timestamp = new Date().getTime();
+            const fileName = `${person.name}_${person.id}_${timestamp}.jpg`;
+            
+            // Chuẩn bị metadata cho file
+            const metadata = {
+                name: fileName,
+                mimeType: file.type,
+                description: `Ảnh đại diện của ${person.name} (ID: ${person.id}) trong gia phả họ Nguyễn Bá`
+            };
+            
+            // Tạo form data
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', file);
+            
+            // Tạo và gửi request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+            
+            // Thêm token xác thực
+            const token = gapi.auth.getToken();
+            if (token) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token.access_token);
+            }
+            
+            // Xử lý sự kiện upload
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBarFill.style.width = percentComplete + '%';
+                }
+            };
+            
+            xhr.onload = function() {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    const response = JSON.parse(xhr.response);
+                    console.log('File đã được tải lên:', response);
+                    
+                    // Cập nhật URL ảnh trong dữ liệu
+                    const fileId = response.id;
+                    const fileUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                    
+                    // Cập nhật dữ liệu người với URL ảnh mới
+                    updatePersonPhoto(currentPersonId, fileUrl);
+                    
+                    // Hiển thị thông báo thành công
+                    successMessage.textContent = 'Ảnh đã được tải lên thành công và cập nhật cho người này.';
+                    successMessage.style.display = 'block';
+                    
+                    // Ẩn thanh tiến trình
+                    uploadProgress.style.display = 'none';
+                    uploadBtn.disabled = false;
+                } else {
+                    console.error('Lỗi khi tải lên:', xhr.status, xhr.statusText);
+                    errorMessage.textContent = `Lỗi khi tải lên: ${xhr.statusText}`;
+                    errorMessage.style.display = 'block';
+                    uploadProgress.style.display = 'none';
+                    uploadBtn.disabled = false;
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Lỗi kết nối khi tải lên');
+                errorMessage.textContent = 'Lỗi kết nối khi tải lên. Vui lòng kiểm tra kết nối mạng và thử lại.';
+                errorMessage.style.display = 'block';
+                uploadProgress.style.display = 'none';
+                uploadBtn.disabled = false;
+            };
+            
+            xhr.send(form);
+        }
+        
+        // Hàm cập nhật URL ảnh cho người
+        function updatePersonPhoto(personId, photoUrl) {
+            // Cập nhật dữ liệu trong bộ nhớ
+            const personIndex = familyData.findIndex(p => p.id === personId);
+            if (personIndex !== -1) {
+                familyData[personIndex].photo = photoUrl;
+                
+                // Cập nhật lại cây gia phả
+                const formattedData = formatFamilyData(familyData);
+                
+                // Khởi tạo lại OrgChart với dữ liệu mới
+                document.getElementById('family-tree').innerHTML = '';
+                familyChart = initializeOrgChart(formattedData);
+                
+                // Cập nhật ảnh trong modal chi tiết
+                const personImage = document.querySelector('#person-detail-content .node-image');
+                if (personImage) {
+                    personImage.src = photoUrl;
+                }
+                
+                // Gửi API cập nhật dữ liệu nếu có
+                try {
+                    fetch(`/api/family/${personId}/photo`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ photo: photoUrl })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.warn('Lưu ý: Không thể cập nhật dữ liệu trên máy chủ.');
+                        }
+                    })
+                    .catch(error => {
+                        console.warn('Lưu ý: Lỗi khi gửi cập nhật đến máy chủ:', error);
+                    });
+                } catch (error) {
+                    console.warn('Lưu ý: Không thể gửi cập nhật đến máy chủ:', error);
+                }
+            }
+        }
+        
+        // Hàm thiết lập sự kiện cho phần upload ảnh
+        function setupImageUploadEvents() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileName = document.getElementById('fileName');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            
+            // Sự kiện khi chọn file
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    
+                    // Kiểm tra loại file
+                    if (!file.type.match('image.*')) {
+                        document.getElementById('errorMessage').textContent = 'Vui lòng chọn file ảnh hợp lệ.';
+                        document.getElementById('errorMessage').style.display = 'block';
+                        this.value = '';
+                        fileName.textContent = '';
+                        imagePreviewContainer.style.display = 'none';
+                        uploadBtn.disabled = true;
+                        return;
+                    }
+                    
+                    // Hiển thị tên file
+                    fileName.textContent = file.name;
+                    
+                    // Hiển thị preview ảnh
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreviewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Kiểm tra trạng thái đăng nhập Google để kích hoạt nút upload
+                    if (gapi.auth2 && gapi.auth2.getAuthInstance() && gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Tải lên Google Drive';
+                        
+                        // Thiết lập sự kiện click để upload
+                        uploadBtn.onclick = function() {
+                            // Thay đổi kích thước ảnh trước khi upload
+                            resizeImage(file, 640, function(resizedFile) {
+                                uploadImageToDrive(resizedFile);
+                            });
+                        };
+                    } else {
+                        // Chưa đăng nhập Google
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập với Google để tải lên';
+                        
+                        // Thay đổi hành động của nút upload thành đăng nhập
+                        uploadBtn.onclick = function() {
+                            gapi.auth2.getAuthInstance().signIn();
+                        };
+                    }
+                } else {
+                    fileName.textContent = '';
+                    imagePreviewContainer.style.display = 'none';
+                    uploadBtn.disabled = true;
+                }
+            });
+        }
+
         // Hiển thị chi tiết một người
         function showPersonDetail(personId) {
             const person = familyData.find(p => p.id === personId);
@@ -868,6 +1287,9 @@
             if (!person) {
                 return;
             }
+            
+            // Lưu ID người đang xem
+            currentPersonId = personId;
 
             const modal = document.getElementById('person-detail-modal');
             const contentContainer = document.getElementById('person-detail-content');
@@ -973,6 +1395,21 @@
                 </div>
             `;
 
+            // Khởi tạo các yếu tố upload ảnh
+            setupImageUploadEvents();
+            
+            // Hiển thị phần upload ảnh
+            document.getElementById('upload-section').style.display = 'block';
+            
+            // Reset các trạng thái của form upload
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('uploadBtn').disabled = true;
+            
             // Hiển thị modal
             modal.style.display = 'block';
         }
@@ -1023,6 +1460,9 @@
 
                 // Thiết lập sự kiện cho modal
                 setupModalEvents();
+
+                // Khởi tạo Google API
+                initGoogleAPI();
             } catch (error) {
                 console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
