@@ -574,32 +574,6 @@
             <div id="person-detail-content">
                 <!-- Chi tiết người sẽ được thêm vào đây -->
             </div>
-            
-            <!-- Thêm phần upload ảnh -->
-            <div id="upload-section" class="upload-section">
-                <h3>Cập nhật ảnh đại diện</h3>
-                <p>Tải lên ảnh mới cho người này (kích thước sẽ được điều chỉnh về 640px)</p>
-                
-                <input type="file" id="fileInput" class="file-input" accept="image/*">
-                <label for="fileInput" class="select-file-btn"><i class="fas fa-image"></i> Chọn ảnh</label>
-                <span id="fileName" class="file-name"></span>
-                
-                <div id="imagePreviewContainer" style="display: none;">
-                    <img id="imagePreview" class="preview-image">
-                </div>
-                
-                <button id="uploadBtn" class="upload-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Tải lên Google Drive</button>
-                
-                <div id="uploadProgress" class="upload-progress">
-                    <p>Đang tải lên...</p>
-                    <div class="progress-bar">
-                        <div id="progressBarFill" class="progress-bar-fill"></div>
-                    </div>
-                </div>
-                
-                <div id="errorMessage" class="error-message"></div>
-                <div id="successMessage" class="success-message"></div>
-            </div>
         </div>
     </div>
 
@@ -1625,21 +1599,6 @@
                     ${childrenHTML}
                 </div>
             `;
-
-            // Khởi tạo các yếu tố upload ảnh
-            setupImageUploadEvents();
-            
-            // Hiển thị phần upload ảnh
-            document.getElementById('upload-section').style.display = 'block';
-            
-            // Reset các trạng thái của form upload
-            document.getElementById('fileInput').value = '';
-            document.getElementById('fileName').textContent = '';
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-            document.getElementById('uploadProgress').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('uploadBtn').disabled = true;
             
             // Hiển thị modal
             modal.style.display = 'block';
@@ -1697,9 +1656,6 @@
                 
                 // Khởi tạo danh sách phân trang
                 initializeList();
-
-                // Khởi tạo Google API
-                initGoogleAPI();
             } catch (error) {
                 console.error('Lỗi khi hiển thị cây gia phả:', error);
                 document.getElementById('loading-indicator').style.display = 'none';
