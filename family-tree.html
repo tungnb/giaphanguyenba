@@ -1098,6 +1098,11 @@
                     json: null,
                     details: null
                 },
+                // Cấu hình expand để chỉ mở rộng một cấp
+                expand: {
+                    nodes: [], // Bắt đầu với mảng rỗng
+                    allChildren: false // Không mở rộng tất cả con cháu
+                },
                 nodes: formattedData.nodes,
                 tags: {
                     male: {
@@ -1180,7 +1185,47 @@
             // Xử lý sự kiện mở rộng và thu gọn nhánh
             chart.on('expcollclick', function(sender, collapse, id, ids) {
                 console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
-                return true; // Cho phép mở rộng/thu gọn
+                
+                if (!collapse) {
+                    // Nếu đang mở rộng (không phải thu gọn)
+                    // Lấy danh sách các ID mà sẽ được mở rộng
+                    const currentNode = chart.getNode(id);
+                    if (currentNode) {
+                        // Lấy danh sách tất cả con trực tiếp
+                        const childrenIds = [];
+                        
+                        // Tìm tất cả con trực tiếp của node này
+                        const originalData = formattedChartData.nodes.find(n => n.id === id);
+                        if (originalData && originalData.children && originalData.children.length > 0) {
+                            // Chỉ lấy ID của con trực tiếp
+                            originalData.children.forEach(childId => {
+                                childrenIds.push(childId);
+                            });
+                        }
+                        
+                        console.log("Chỉ mở rộng các con trực tiếp:", childrenIds);
+                        
+                        // Thực hiện mở rộng thủ công chỉ với các con trực tiếp
+                        chart.expand(id, childrenIds, true);
+                        
+                        // Thu gọn tất cả các node có con
+                        setTimeout(() => {
+                            childrenIds.forEach(childId => {
+                                const childData = formattedChartData.nodes.find(n => n.id === childId);
+                                if (childData && childData.children && childData.children.length > 0) {
+                                    // Nếu con này có con của nó, thu gọn nó
+                                    chart.collapse(childId, true);
+                                }
+                            });
+                        }, 100); // Đợi một chút để OrgChart kịp render
+                        
+                        // Trả về false để ngăn chặn hành vi mở rộng mặc định
+                        return false;
+                    }
+                }
+                
+                // Nếu là thu gọn hoặc không tìm thấy node, để thư viện xử lý mặc định
+                return true;
             });
 
             // Xử lý sự kiện khi click vào node
