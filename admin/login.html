@@ -93,6 +93,14 @@
     </div>
 
     <script>
+        // Lấy tham số từ URL để xác định trang chuyển hướng sau khi đăng nhập
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -100,6 +108,9 @@
             const password = document.getElementById('password').value;
             const loginButton = document.getElementById('login-button');
             const errorMessage = document.getElementById('error-message');
+            
+            // Xác định trang đích sau khi đăng nhập
+            let redirectUrl = getUrlParameter('redirect') || 'family-tree.html';
             
             try {
                 // Hiển thị trạng thái đang đăng nhập
@@ -123,8 +134,8 @@
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('username', data.username);
                     
-                    // Chuyển hướng đến trang dashboard
-                    window.location.href = 'dashboard.html';
+                    // Chuyển hướng đến trang quản lý gia phả
+                    window.location.href = redirectUrl;
                 } else {
                     // Hiển thị lỗi
                     errorMessage.textContent = data.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
