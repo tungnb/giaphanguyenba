@@ -1237,11 +1237,23 @@
                     return generationCheck && notAlreadyChild && noFatherCheck;
                 });
             } else if (type === 'spouse') {
-                // Vợ/chồng nên cùng thế hệ
-                filteredMembers = filteredMembers.filter(m => 
-                    parseInt(m.generation) === parseInt(currentMember.generation) &&
-                    !(currentMember.spouses || []).includes(m.id)
-                );
+                // Vợ/chồng nên cùng thế hệ và chưa kết hôn
+                filteredMembers = filteredMembers.filter(m => {
+                    // Điều kiện cùng thế hệ
+                    const sameGeneration = parseInt(m.generation) === parseInt(currentMember.generation);
+                    
+                    // Điều kiện không phải là vợ/chồng đã có
+                    const notAlreadySpouse = !(currentMember.spouses || []).includes(m.id);
+                    
+                    // Điều kiện chưa kết hôn với ai (không có vợ/chồng hoặc danh sách vợ/chồng rỗng)
+                    const notMarried = !m.spouses || m.spouses.length === 0;
+                    
+                    // Điều kiện là người ngoại tộc (không phải dòng họ Nguyễn Bá)
+                    // Người ngoại tộc là người không có dữ liệu cha mẹ trong gia phả
+                    const isOutsider = !m.parents || m.parents.length === 0;
+                    
+                    return sameGeneration && notAlreadySpouse && notMarried && isOutsider;
+                });
             }
             
             // Cập nhật danh sách trong dropdown
