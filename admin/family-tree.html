@@ -659,6 +659,17 @@
         </div>
     </div>
     
+    <!-- Thêm modal hiển thị chi tiết người -->
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-detail-modal">&times;</span>
+            <h3>Thông tin chi tiết</h3>
+            <div id="person-detail-container" class="person-detail-container" style="padding: 15px;">
+                <!-- Thông tin chi tiết người sẽ được tạo động bằng JavaScript -->
+            </div>
+        </div>
+    </div>
+    
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="spinner"></div>
@@ -942,7 +953,7 @@
                 card.innerHTML = `
                     <img src="${photoUrl}" alt="${member.name}" class="member-photo">
                     <div class="member-info">
-                        <div class="member-name">${member.name}</div>
+                        <div class="member-name" data-id="${member.id}">${member.name}</div>
                         <div class="member-meta">
                             <i class="fas fa-${genderIcon}"></i> ${genderText} | 
                             Thế hệ: ${member.generation} | 
@@ -971,6 +982,11 @@
                     if (confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
                         deleteMember(this.getAttribute('data-id'));
                     }
+                });
+                
+                // Thêm sự kiện click cho tên thẻ
+                card.querySelector('.member-name').addEventListener('click', function() {
+                    showPersonDetail(this.getAttribute('data-id'));
                 });
             });
         }
@@ -1527,6 +1543,115 @@
                     parents: [],
                 }
             ];
+        }
+        
+        // Hàm hiển thị chi tiết thông tin người khi click vào tên
+        function showPersonDetail(personId) {
+            const member = allMembers.find(m => m.id === personId);
+            if (!member) return;
+            
+            const detailContainer = document.getElementById('person-detail-container');
+            const modal = document.getElementById('detail-modal');
+            
+            // Chuẩn bị thông tin chi tiết về ngày sinh
+            let birthInfo = 'Không có thông tin';
+            if (member.birthdate) {
+                const birthDate = new Date(member.birthdate);
+                const day = birthDate.getDate();
+                const month = birthDate.getMonth() + 1;
+                const year = birthDate.getFullYear();
+                
+                const currentYear = new Date().getFullYear();
+                const age = member.deathdate ? 
+                    (new Date(member.deathdate).getFullYear() - year) : 
+                    (currentYear - year);
+                
+                birthInfo = `${day}/${month}/${year} (${age} tuổi)`;
+            }
+            
+            // Chuẩn bị thông tin chi tiết về ngày mất
+            let deathInfo = member.deathdate ? 
+                `${formatDate(member.deathdate)}` : 
+                'Còn sống';
+                
+            // Chuẩn bị thông tin về quan hệ
+            const parents = (member.parents || []).map(pid => {
+                const parent = allMembers.find(m => m.id === pid);
+                return parent ? parent.name : 'Không rõ';
+            }).join(', ') || 'Không có thông tin';
+            
+            const spouses = (member.spouses || []).map(sid => {
+                const spouse = allMembers.find(m => m.id === sid);
+                return spouse ? spouse.name : 'Không rõ';
+            }).join(', ') || 'Không có thông tin';
+            
+            const children = (member.children || []).map(cid => {
+                const child = allMembers.find(m => m.id === cid);
+                return child ? child.name : 'Không rõ';
+            }).join(', ') || 'Không có thông tin';
+            
+            // Tạo HTML chi tiết
+            detailContainer.innerHTML = `
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <img src="${member.photo || `https://via.placeholder.com/100/cccccc/ffffff?text=${member.name.charAt(0)}`}" 
+                         alt="${member.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    <div>
+                        <h2 style="margin: 0 0 10px 0; color: #333;">${member.name}</h2>
+                        <p style="margin: 5px 0; color: #666;">
+                            <strong>Giới tính:</strong> ${member.gender === 'male' ? 'Nam' : 'Nữ'}
+                        </p>
+                        <p style="margin: 5px 0; color: #666;">
+                            <strong>Thế hệ:</strong> ${member.generation}
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="background-color: #f5f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 10px 0; color: #0066cc;">Thông tin ngày sinh</h3>
+                    <p style="margin: 5px 0; font-size: 18px; color: #333;">
+                        <i class="fas fa-birthday-cake" style="color: #0066cc;"></i> 
+                        <strong>${birthInfo}</strong>
+                    </p>
+                    <p style="margin: 5px 0; color: #666;">
+                        <i class="fas fa-cross" style="color: #777;"></i> 
+                        <strong>Ngày mất:</strong> ${deathInfo}
+                    </p>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h3 style="margin: 0 0 10px 0; color: #333;">Quan hệ gia đình</h3>
+                    <p style="margin: 5px 0; color: #666;">
+                        <strong>Cha mẹ:</strong> ${parents}
+                    </p>
+                    <p style="margin: 5px 0; color: #666;">
+                        <strong>Vợ/Chồng:</strong> ${spouses}
+                    </p>
+                    <p style="margin: 5px 0; color: #666;">
+                        <strong>Con cái:</strong> ${children}
+                    </p>
+                </div>
+                
+                ${member.bio ? `
+                <div style="margin-top: 15px;">
+                    <h3 style="margin: 0 0 10px 0; color: #333;">Tiểu sử</h3>
+                    <p style="margin: 5px 0; color: #666;">${member.bio}</p>
+                </div>` : ''}
+            `;
+            
+            // Hiển thị modal
+            modal.style.display = 'block';
+            
+            // Thêm sự kiện đóng modal
+            document.getElementById('close-detail-modal').addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // Đóng modal khi click bên ngoài
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
         }
     </script>
 </body>

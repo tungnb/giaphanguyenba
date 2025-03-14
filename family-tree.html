@@ -1501,8 +1501,24 @@
 
             // Tính tuổi hoặc năm sống
             let lifespan = '';
+            let detailedBirthInfo = 'Không có thông tin';
+            
             if (person.birthDate) {
-                const birthYear = new Date(person.birthDate).getFullYear();
+                const birthDate = new Date(person.birthDate);
+                const birthDay = birthDate.getDate();
+                const birthMonth = birthDate.getMonth() + 1;
+                const birthYear = birthDate.getFullYear();
+                
+                // Tính tuổi
+                const currentYear = new Date().getFullYear();
+                const age = person.deathDate ? 
+                    (new Date(person.deathDate).getFullYear() - birthYear) : 
+                    (currentYear - birthYear);
+                
+                // Format thông tin chi tiết ngày sinh
+                detailedBirthInfo = `${birthDay}/${birthMonth}/${birthYear} (${age} tuổi)`;
+                
+                // Format lifespan đơn giản như trước
                 if (person.deathDate) {
                     const deathYear = new Date(person.deathDate).getFullYear();
                     lifespan = `${birthYear} - ${deathYear}`;
@@ -1582,6 +1598,19 @@
                         <p>Thế hệ: ${person.generation}</p>
                         <p>Giới tính: ${person.gender === 'male' ? 'Nam' : 'Nữ'}</p>
                     </div>
+                </div>
+                
+                <div class="person-detail-section" style="background-color: #f5f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="margin-top: 0; color: #0066cc;">Thông tin ngày sinh</h3>
+                    <p style="font-size: 16px; margin-bottom: 8px;">
+                        <i class="fas fa-birthday-cake" style="color: #0066cc; margin-right: 8px;"></i>
+                        <strong>${detailedBirthInfo}</strong>
+                    </p>
+                    <p style="font-size: 14px; color: #666;">
+                        ${person.deathDate ? 
+                          `<i class="fas fa-cross" style="margin-right: 8px;"></i>Ngày mất: ${new Date(person.deathDate).getDate()}/${new Date(person.deathDate).getMonth() + 1}/${new Date(person.deathDate).getFullYear()}` : 
+                          ''}
+                    </p>
                 </div>
                 
                 <div class="person-detail-section">
