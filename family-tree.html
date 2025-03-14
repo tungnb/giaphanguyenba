@@ -1234,16 +1234,18 @@
                 // Cấu hình hiển thị
                 levelSeparation: 100,
                 siblingSeparation: 50,
-                subtreeSeparation: 80
+                subtreeSeparation: 80,
+                // Quan trọng: Cấu hình này giới hạn chỉ hiển thị con, không hiển thị cháu
+                maxDepth: 1
             });
             
-            // Render HTML cho các node couple
-            chart.on('renderbuttons', function() {
+            // Hàm render HTML cho các node couple
+            function renderCoupleNodes() {
                 for (let id in chart.nodes) {
                     const node = chart.nodes[id];
                     const data = chart.get(id);
                     
-                    if (data.tags && (data.tags.includes('couple_male') || data.tags.includes('couple_female'))) {
+                    if (data && data.tags && (data.tags.includes('couple_male') || data.tags.includes('couple_female'))) {
                         // Thêm HTML cho phần vợ/chồng
                         const htmlDiv = document.getElementById(`htmlContent_${id}`);
                         if (htmlDiv) {
@@ -1251,8 +1253,13 @@
                         }
                     }
                 }
-            });
-            
+            }
+
+            // Render HTML cho các node couple sau mỗi lần vẽ và khi draw xong
+            chart.on('render', renderCoupleNodes);
+            chart.on('redraw', renderCoupleNodes);
+            chart.on('update', renderCoupleNodes);
+
             // Sự kiện đơn giản - khi chart được tải
             chart.on('load', function() {
                 console.log("Biểu đồ gia phả đã tải xong");
@@ -1277,37 +1284,27 @@
                     chart.collapse(id, true);
                     console.log("Thu gọn node thế hệ > 2:", id);
                 });
+                
+                // Render lại các node couple sau khi tải xong
+                renderCoupleNodes();
             });
 
             // Xử lý sự kiện mở rộng và thu gọn nhánh
             chart.on('expcollclick', function(sender, collapse, id, ids) {
                 console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
                 
-                // Cho phép OrgChart xử lý việc mở rộng/thu gọn như bình thường trước
-                const result = true;
-                
-                // Nếu đang mở rộng (không phải thu gọn), thêm hành động bổ sung sau khi mở rộng
-                if (!collapse) {
-                    // Sử dụng setTimeout để đảm bảo hành động này xảy ra sau khi OrgChart đã mở rộng node
-                    setTimeout(function() {
-                        // Lấy thông tin node hiện tại sau khi đã mở rộng
-                        const node = chart.getNode(id);
-                        if (node && node.childrenIds && node.childrenIds.length > 0) {
-                            // Thu gọn tất cả các nút con (nếu chúng có con cháu)
-                            node.childrenIds.forEach(childId => {
-                                const childNode = chart.getNode(childId);
-                                if (childNode && childNode.childrenIds && childNode.childrenIds.length > 0) {
-                                    chart.collapse(childId, true);
-                                }
-                            });
-                            
-                            // Cập nhật lại biểu đồ sau khi thu gọn
-                            chart.draw();
-                        }
-                    }, 100); // Đợi 100ms để đảm bảo OrgChart đã mở rộng xong
+                if (collapse) {
+                    // Nếu là thu gọn, để OrgChart xử lý
+                    return true;
+                } else {
+                    // Nếu là mở rộng, chỉ mở 1 cấp
+                    chart.config.maxDepth = 1; // Đảm bảo chỉ hiển thị 1 cấp
+                    chart.expand(id, ids, function() {
+                        // Sau khi mở rộng, render lại các node couple
+                        renderCoupleNodes();
+                    });
+                    return false; // Không để OrgChart xử lý mặc định
                 }
-                
-                return result;
             });
 
             // Xử lý sự kiện khi click vào node
