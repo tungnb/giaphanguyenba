@@ -510,11 +510,29 @@
                     <option value="4">Thế hệ 4</option>
                     <option value="5">Thế hệ 5</option>
                 </select>
+                <select id="gender-filter" class="filter-select">
+                    <option value="">Tất cả giới tính</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                </select>
+                <select id="sort-option" class="filter-select">
+                    <option value="newest">Mới nhất trước</option>
+                    <option value="oldest">Cũ nhất trước</option>
+                    <option value="name_asc">Tên (A-Z)</option>
+                    <option value="name_desc">Tên (Z-A)</option>
+                </select>
                 <input type="text" id="search-member" placeholder="Tìm kiếm thành viên..." class="filter-select" style="flex: 1;">
             </div>
             
             <div id="members-container">
                 <!-- Danh sách thành viên sẽ được tạo động bằng JavaScript -->
+            </div>
+            
+            <!-- Thêm phân trang -->
+            <div class="pagination-container" style="display: flex; justify-content: center; margin-top: 20px; gap: 10px;">
+                <button id="prev-page" class="btn" disabled><i class="fas fa-chevron-left"></i> Trang trước</button>
+                <span id="page-info" style="line-height: 34px;">Trang <span id="current-page">1</span>/<span id="total-pages">1</span></span>
+                <button id="next-page" class="btn">Trang sau <i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
         
@@ -649,6 +667,12 @@
         let currentMemberId = null;
         let currentRelationType = null;
         
+        // Biến cho phân trang
+        const ITEMS_PER_PAGE = 25;
+        let currentPage = 1;
+        let filteredMembers = [];
+        let currentSortOption = "newest";
+
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             // Tab navigation
@@ -700,12 +724,43 @@
             
             // Generation filter
             document.getElementById('generation-filter').addEventListener('change', function() {
-                filterMembers();
+                currentPage = 1;
+                filterAndRenderMembers();
+            });
+            
+            // Gender filter
+            document.getElementById('gender-filter').addEventListener('change', function() {
+                currentPage = 1;
+                filterAndRenderMembers();
+            });
+            
+            // Sort option
+            document.getElementById('sort-option').addEventListener('change', function() {
+                currentSortOption = this.value;
+                currentPage = 1;
+                filterAndRenderMembers();
             });
             
             // Search input
             document.getElementById('search-member').addEventListener('input', function() {
-                filterMembers();
+                currentPage = 1;
+                filterAndRenderMembers();
+            });
+            
+            // Phân trang
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderMembers();
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', function() {
+                const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderMembers();
+                }
             });
             
             // Photo upload
@@ -764,32 +819,112 @@
                 }
                 const data = await response.json();
                 allMembers = data || [];
-                renderMembers();
+                
+                // Thêm timestamp cho mỗi member nếu chưa có
+                allMembers = allMembers.map(member => {
+                    if (!member.timestamp) {
+                        // Tạo timestamp ngẫu nhiên trong quá khứ nếu chưa có
+                        const randomDays = Math.floor(Math.random() * 365);
+                        const timestamp = new Date(Date.now() - randomDays * 24 * 60 * 60 * 1000).getTime();
+                        return {...member, timestamp};
+                    }
+                    return member;
+                });
+                
+                filterAndRenderMembers();
                 hideLoading();
             } catch (error) {
                 console.error('Error loading members:', error);
                 showError('Không thể tải dữ liệu thành viên: ' + error.message);
                 // Fallback to sample data if API fails
                 allMembers = getSampleMembers();
-                renderMembers();
+                filterAndRenderMembers();
                 hideLoading();
             }
         }
         
-        // Render members list
+        // Lọc và sắp xếp thành viên theo các bộ lọc
+        function filterAndRenderMembers() {
+            const generationFilter = document.getElementById('generation-filter').value;
+            const genderFilter = document.getElementById('gender-filter').value;
+            const searchTerm = document.getElementById('search-member').value.toLowerCase();
+            
+            // Lọc theo các điều kiện
+            filteredMembers = allMembers.filter(member => {
+                const matchesGeneration = !generationFilter || member.generation.toString() === generationFilter;
+                const matchesGender = !genderFilter || member.gender === genderFilter;
+                const matchesSearch = !searchTerm || 
+                    member.name.toLowerCase().includes(searchTerm) || 
+                    (member.bio && member.bio.toLowerCase().includes(searchTerm));
+                
+                return matchesGeneration && matchesGender && matchesSearch;
+            });
+            
+            // Sắp xếp theo tùy chọn
+            sortMembers();
+            
+            // Hiển thị kết quả
+            renderMembers();
+        }
+        
+        // Sắp xếp thành viên theo lựa chọn
+        function sortMembers() {
+            switch (currentSortOption) {
+                case "newest":
+                    filteredMembers.sort((a, b) => {
+                        const timeA = a.timestamp || 0;
+                        const timeB = b.timestamp || 0;
+                        return timeB - timeA;
+                    });
+                    break;
+                case "oldest":
+                    filteredMembers.sort((a, b) => {
+                        const timeA = a.timestamp || 0;
+                        const timeB = b.timestamp || 0;
+                        return timeA - timeB;
+                    });
+                    break;
+                case "name_asc":
+                    filteredMembers.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case "name_desc":
+                    filteredMembers.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+            }
+        }
+        
+        // Render members list with pagination
         function renderMembers() {
             const container = document.getElementById('members-container');
             container.innerHTML = '';
             
-            // Apply filters
-            const filteredMembers = filterMembers(true);
-            
             if (filteredMembers.length === 0) {
                 container.innerHTML = '<p style="text-align: center; padding: 20px;">Không tìm thấy thành viên nào.</p>';
+                document.getElementById('current-page').textContent = '0';
+                document.getElementById('total-pages').textContent = '0';
+                document.getElementById('prev-page').disabled = true;
+                document.getElementById('next-page').disabled = true;
                 return;
             }
             
-            filteredMembers.forEach(member => {
+            // Tính toán phân trang
+            const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredMembers.length);
+            const currentPageMembers = filteredMembers.slice(startIndex, endIndex);
+            
+            // Cập nhật thông tin phân trang
+            document.getElementById('current-page').textContent = currentPage;
+            document.getElementById('total-pages').textContent = totalPages;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+            
+            // Hiển thị thành viên
+            currentPageMembers.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card';
                 
@@ -831,27 +966,6 @@
                     }
                 });
             });
-        }
-        
-        // Filter members
-        function filterMembers(returnFiltered = false) {
-            const generationFilter = document.getElementById('generation-filter').value;
-            const searchTerm = document.getElementById('search-member').value.toLowerCase();
-            
-            const filtered = allMembers.filter(member => {
-                const matchesGeneration = !generationFilter || member.generation.toString() === generationFilter;
-                const matchesSearch = !searchTerm || 
-                    member.name.toLowerCase().includes(searchTerm) || 
-                    (member.bio && member.bio.toLowerCase().includes(searchTerm));
-                
-                return matchesGeneration && matchesSearch;
-            });
-            
-            if (returnFiltered) {
-                return filtered;
-            } else {
-                renderMembers();
-            }
         }
         
         // Thêm hàm upload ảnh thực tế
