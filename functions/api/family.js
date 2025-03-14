@@ -186,6 +186,37 @@ export async function onRequest(context) {
           });
         }
         
+        // Lấy thông tin về spreadsheet để xác định sheetId
+        const sheetInfoResponse = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        
+        const sheetData = await sheetInfoResponse.json();
+        
+        // Tìm sheetId của sheet FamilyMembers
+        let familyMembersSheetId = null;
+        for (const sheet of sheetData.sheets) {
+          if (sheet.properties && sheet.properties.title === 'FamilyMembers') {
+            familyMembersSheetId = sheet.properties.sheetId;
+            break;
+          }
+        }
+        
+        if (familyMembersSheetId === null) {
+          return new Response(JSON.stringify({ error: 'FamilyMembers sheet not found' }), {
+            status: 404,
+            headers: { 
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        }
+        
         // Tìm hàng của thành viên cần xóa
         const response = await fetch(
           `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/FamilyMembers!A:A`,
@@ -217,7 +248,7 @@ export async function onRequest(context) {
           });
         }
         
-        // Xóa hàng
+        // Xóa hàng sử dụng sheetId chính xác của FamilyMembers
         await fetch(
           `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
           {
@@ -231,7 +262,7 @@ export async function onRequest(context) {
                 {
                   deleteDimension: {
                     range: {
-                      sheetId: 0, // Lấy sheetId thực tế nếu cần
+                      sheetId: familyMembersSheetId,
                       dimension: 'ROWS',
                       startIndex: rowIndex - 1,
                       endIndex: rowIndex

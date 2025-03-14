@@ -1146,11 +1146,41 @@
             // Remove the relation
             member[type] = (member[type] || []).filter(id => id !== relationId);
             
+            // Xử lý quan hệ hai chiều - cập nhật thành viên liên quan
+            const relatedMember = allMembers.find(m => m.id === relationId);
+            if (relatedMember) {
+                // Nếu xóa cha/mẹ, xóa con trong danh sách con của cha/mẹ đó
+                if (type === 'parents') {
+                    relatedMember.children = (relatedMember.children || []).filter(id => id !== member.id);
+                }
+                // Nếu xóa con, xóa cha/mẹ trong danh sách cha/mẹ của con đó
+                else if (type === 'children') {
+                    relatedMember.parents = (relatedMember.parents || []).filter(id => id !== member.id);
+                }
+                // Nếu xóa vợ/chồng, xóa vợ/chồng trong danh sách vợ/chồng của người đó
+                else if (type === 'spouses') {
+                    relatedMember.spouses = (relatedMember.spouses || []).filter(id => id !== member.id);
+                }
+                
+                // Cập nhật thành viên liên quan trong mảng allMembers
+                allMembers = allMembers.map(m => m.id === relatedMember.id ? relatedMember : m);
+                
+                // Cập nhật thành viên hiện tại vào database
+                updateMemberInDatabase(member).catch(err => 
+                    console.error(`Lỗi khi cập nhật thành viên hiện tại (${member.id}):`, err)
+                );
+            }
+            
             // Update the UI
             populateRelations(type, member[type]);
             
             // Update the allMembers array
             allMembers = allMembers.map(m => m.id === member.id ? member : m);
+            
+            // Cập nhật thành viên hiện tại vào database
+            updateMemberInDatabase(member).catch(err => 
+                console.error(`Lỗi khi cập nhật thành viên hiện tại (${member.id}):`, err)
+            );
         }
         
         // Open relation modal
