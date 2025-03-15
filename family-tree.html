@@ -1355,33 +1355,71 @@
                 const link = svg.selectAll(".link")
                     .data(links, d => d.target.data.id);
                 
-                // Hàm tạo đường cong cho link
+                // Hàm tạo đường cong cho link - điều chỉnh để nối từ chân node cha đến đầu node con
                 const diagonal = d3.linkVertical()
                     .x(d => d.x)
-                    .y(d => d.y);
+                    .y(d => {
+                        // Nếu là điểm bắt đầu (source), lấy tọa độ ở chân node cha
+                        if (d.source) {
+                            return d.y + 40; // +40 là nửa chiều cao node (80/2) để đến chân node
+                        }
+                        // Nếu là điểm kết thúc (target), lấy tọa độ ở đầu node con
+                        return d.y - 40; // -40 là nửa chiều cao node (80/2) để đến đầu node
+                    });
                 
                 // Enter new links
                 const linkEnter = link.enter()
                     .append("path")
                     .attr("class", "link")
                     .attr("d", d => {
-                        const o = {x: source.x0 || 0, y: source.y0 || 0};
-                        return diagonal({source: o, target: o});
-                    });
+                        const o = {
+                            x: source.x0 || 0, 
+                            y: source.y0 || 0,
+                            source: {y: (source.y0 || 0) + 40},
+                            target: {y: (source.y0 || 0) - 40}
+                        };
+                        return diagonal({
+                            source: o,
+                            target: o
+                        });
+                    })
+                    .style("stroke-width", 2)
+                    .style("stroke", "#ccc");
                 
                 // Transition links to their new position
                 linkEnter.merge(link)
                     .transition()
                     .duration(750)
-                    .attr("d", diagonal);
+                    .attr("d", d => {
+                        const source = {
+                            x: d.source.x,
+                            y: d.source.y,
+                        };
+                        const target = {
+                            x: d.target.x,
+                            y: d.target.y
+                        };
+                        return diagonal({
+                            source: source,
+                            target: target
+                        });
+                    });
                 
                 // Transition exiting links to parent's position
                 link.exit()
                     .transition()
                     .duration(750)
                     .attr("d", d => {
-                        const o = {x: source.x, y: source.y};
-                        return diagonal({source: o, target: o});
+                        const o = {
+                            x: source.x, 
+                            y: source.y,
+                            source: {y: source.y + 40},
+                            target: {y: source.y - 40}
+                        };
+                        return diagonal({
+                            source: o,
+                            target: o
+                        });
                     })
                     .remove();
                 
