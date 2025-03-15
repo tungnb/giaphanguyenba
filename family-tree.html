@@ -1124,23 +1124,37 @@
                     // Kiểm tra xem các node có phải là độc thân không
                     const aIsSingle = !a.data.hasSpouse || !a.data.spouses || a.data.spouses.length === 0;
                     const bIsSingle = !b.data.hasSpouse || !b.data.spouses || b.data.spouses.length === 0;
-                    const aPrev = a.parent && a.parent.children ? a.parent.children[a.parent.children.indexOf(a) - 1] : null;
                     
                     // Áp dụng khoảng cách nhỏ hơn cho các node độc thân
                     if (a.parent === b.parent) {
-                        // Trường hợp đặc biệt: nếu node trước có phối ngẫu và node hiện tại là độc thân
-                        if (aPrev && aPrev === b && !bIsSingle && aIsSingle) {
-                            // Tăng khoảng cách để tránh chồng lấp
-                            return 1.8;
+                        // Lấy index của a và b trong danh sách con của parent
+                        const indexA = a.parent.children.indexOf(a);
+                        const indexB = a.parent.children.indexOf(b);
+                        
+                        // Nếu a và b là các node liền kề
+                        if (Math.abs(indexA - indexB) === 1) {
+                            // Trường hợp 1: node trước có phối ngẫu, node sau độc thân
+                            if ((indexA > indexB && !bIsSingle && aIsSingle) || 
+                                (indexB > indexA && !aIsSingle && bIsSingle)) {
+                                // Tăng khoảng cách để tránh chồng lấp
+                                return 1.8;
+                            }
+                            
+                            // Trường hợp 2: node trước độc thân, node sau có phối ngẫu
+                            if ((indexA > indexB && bIsSingle && !aIsSingle) || 
+                                (indexB > indexA && aIsSingle && !bIsSingle)) {
+                                // Tăng khoảng cách để tránh chồng lấp
+                                return 1.8;
+                            }
                         }
                         
-                        // Trường hợp cùng cha mẹ
+                        // Các trường hợp thông thường
                         if (aIsSingle && bIsSingle) {
                             // Cả hai node đều độc thân - sử dụng khoảng cách nhỏ hơn
                             return 0.8;
                         } else if (aIsSingle || bIsSingle) {
                             // Một node độc thân, một node có phối ngẫu
-                            return 1.5; // Tăng từ 1.2 lên 1.5
+                            return 1.5;
                         } else {
                             // Cả hai đều có vợ/chồng
                             return 1.2 * 1.3;
