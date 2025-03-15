@@ -836,13 +836,23 @@
             // Tạo cấu trúc dữ liệu phù hợp với D3.js
             // D3.js sử dụng cấu trúc dạng cây phân cấp với nodes và links
             
-            // Thiết lập root node (node gốc)
-            const rootPersons = familyDataArray.filter(p => p.generation === 1);
+            // Tìm thế hệ thấp nhất trong dữ liệu để xác định người gốc
+            let minGeneration = Number.MAX_SAFE_INTEGER;
+            familyDataArray.forEach(person => {
+                if (person.generation && person.generation < minGeneration) {
+                    minGeneration = person.generation;
+                }
+            });
+            
+            // Thiết lập root node (node gốc) dựa vào thế hệ thấp nhất tìm được
+            const rootPersons = familyDataArray.filter(p => p.generation === minGeneration);
             
             if (rootPersons.length === 0) {
                 console.error("Không tìm thấy người thế hệ gốc");
                 return { root: null, nodeMap: new Map() };
             }
+            
+            console.log(`Đã tìm thấy ${rootPersons.length} người thuộc thế hệ gốc (thế hệ ${minGeneration})`);
             
             // Tạo một map lưu trữ tất cả các node để dễ dàng truy cập
             const nodeMap = new Map();
