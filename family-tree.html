@@ -1898,11 +1898,43 @@
                 parents: person.parents
             });
             
-            // Tìm người thế hệ 1 (gốc)
-            const rootPersons = familyData.filter(p => p.generation === 1);
+            // Tìm người thế hệ 1 (gốc) - xử lý cả trường hợp generation là chuỗi hoặc số
+            const rootPersons = familyData.filter(p => {
+                // Chuyển đổi sang số nếu là chuỗi
+                const gen = typeof p.generation === 'string' ? parseInt(p.generation, 10) : p.generation;
+                return gen === 1;
+            });
             console.log(`Tìm thấy ${rootPersons.length} người thuộc thế hệ gốc.`);
             
-            if (rootPersons.length > 0 && person.generation > 1) {
+            // Nếu không tìm thấy ai có generation=1, tìm người có thế hệ thấp nhất
+            let effectiveRootPersons = rootPersons;
+            if (rootPersons.length === 0) {
+                console.warn("Không tìm thấy ai có generation=1, tìm người có thế hệ thấp nhất hoặc không có parents");
+                
+                // Tìm thế hệ thấp nhất
+                let minGeneration = Number.MAX_SAFE_INTEGER;
+                familyData.forEach(p => {
+                    const gen = typeof p.generation === 'string' ? parseInt(p.generation, 10) : p.generation;
+                    if (gen && gen < minGeneration) {
+                        minGeneration = gen;
+                    }
+                });
+                
+                // Tìm người thuộc thế hệ thấp nhất hoặc không có parents
+                effectiveRootPersons = familyData.filter(p => {
+                    const gen = typeof p.generation === 'string' ? parseInt(p.generation, 10) : p.generation;
+                    return gen === minGeneration || (!p.parents || p.parents.length === 0);
+                });
+                
+                console.log(`Đã xác định ${effectiveRootPersons.length} người có thể là gốc (thế hệ ${minGeneration} hoặc không có parents).`);
+            }
+            
+            // Chuyển đổi generation của người hiện tại sang số nếu cần
+            const personGeneration = typeof person.generation === 'string' 
+                ? parseInt(person.generation, 10) 
+                : person.generation;
+            
+            if (effectiveRootPersons.length > 0 && personGeneration > 1) {
                 // Tạo mảng lưu người trong chuỗi phả hệ
                 let genealogyChain = [];
                 
@@ -1956,13 +1988,30 @@
                     genealogyHTML = '<div class="genealogy-chain">';
                     genealogyHTML += '<ol style="padding-left: 20px; margin-top: 5px;">';
                     
+                    // Nếu chuỗi phả hệ không chứa người gốc (do có thể bị đứt ở giữa), thêm đứng đầu một người từ effectiveRootPersons
+                    const lastPerson = genealogyChain[0];
+                    const lastPersonGen = typeof lastPerson.generation === 'string' 
+                        ? parseInt(lastPerson.generation, 10) 
+                        : lastPerson.generation;
+                    
+                    if (lastPersonGen > 1 && effectiveRootPersons.length > 0) {
+                        // Thêm người gốc vào đầu chuỗi
+                        genealogyChain.unshift(effectiveRootPersons[0]);
+                        console.log(`Thêm người gốc ${effectiveRootPersons[0].name} vào đầu chuỗi phả hệ`);
+                    }
+                    
                     genealogyChain.forEach((ancestor, index) => {
                         const isLastItem = index === genealogyChain.length - 1;
                         const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
                         
+                        // Hiển thị thế hệ chính xác
+                        const gen = typeof ancestor.generation === 'string' 
+                            ? parseInt(ancestor.generation, 10) 
+                            : ancestor.generation;
+                        
                         genealogyHTML += `
                             <li style="${itemStyle}">
-                                ${ancestor.name} (Thế hệ ${ancestor.generation})
+                                ${ancestor.name} (Thế hệ ${gen})
                             </li>
                         `;
                     });
