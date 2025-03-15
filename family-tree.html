@@ -85,6 +85,13 @@
         .node text {
             font-family: Arial, sans-serif;
             text-anchor: middle;
+            font-size: 12px !important;
+            /* Ngăn text bị xuống dòng */
+            white-space: nowrap;
+            /* Ngăn text bị overflow */
+            overflow: hidden;
+            /* Cắt bớt text quá dài */
+            text-overflow: ellipsis;
         }
 
         .node image {
@@ -996,14 +1003,66 @@
                     svg.attr("transform", event.transform);
                 });
             
-            d3.select("#family-tree svg")
+            // Lấy SVG container
+            const svgContainer = d3.select("#family-tree svg")
                 .call(zoom)
                 .on("dblclick.zoom", null);
+                
+            // Thiết lập zoom ban đầu để hiển thị toàn bộ cây
+            svgContainer.call(zoom.scaleTo, 0.8);
+            
+            // Thêm nút điều khiển zoom
+            const zoomControls = d3.select("#family-tree")
+                .append("div")
+                .attr("class", "zoom-controls")
+                .style("position", "absolute")
+                .style("bottom", "20px")
+                .style("right", "20px")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("gap", "10px");
+            
+            zoomControls.append("button")
+                .text("+")
+                .style("width", "30px")
+                .style("height", "30px")
+                .style("font-size", "18px")
+                .style("border-radius", "50%")
+                .style("border", "1px solid #ccc")
+                .style("background", "#fff")
+                .style("cursor", "pointer")
+                .on("click", () => {
+                    svgContainer.transition().call(zoom.scaleBy, 1.3);
+                });
+            
+            zoomControls.append("button")
+                .text("-")
+                .style("width", "30px")
+                .style("height", "30px")
+                .style("font-size", "18px")
+                .style("border-radius", "50%")
+                .style("border", "1px solid #ccc")
+                .style("background", "#fff")
+                .style("cursor", "pointer")
+                .on("click", () => {
+                    svgContainer.transition().call(zoom.scaleBy, 0.7);
+                });
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([120, 100])
-                .separation((a, b) => a.parent === b.parent ? 1.5 : 2);
+                .nodeSize([220, 100])  // Tăng khoảng cách ngang từ 120 lên 220
+                .separation((a, b) => {
+                    // Tăng khoảng cách giữa các node anh chị em khi có vợ/chồng
+                    let baseSeparation = a.parent === b.parent ? 1.5 : 2;
+                    
+                    // Tăng khoảng cách nếu một trong hai node có vợ/chồng
+                    if ((a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0) || 
+                        (b.data.hasSpouse && b.data.spouses && b.data.spouses.length > 0)) {
+                        baseSeparation *= 1.5; // Tăng thêm 50% khoảng cách
+                    }
+                    
+                    return baseSeparation;
+                });
             
             // Tạo hierarchy từ dữ liệu
             const root = d3.hierarchy(formattedData.root);
@@ -1090,7 +1149,11 @@
                 nodeEnter.append("text")
                     .attr("dy", 35)
                     .attr("text-anchor", "middle")
-                    .text(d => d.data.name)
+                    .text(d => {
+                        // Cắt ngắn tên nếu quá dài
+                        let name = d.data.name || '';
+                        return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                    })
                     .style("font-size", "12px")
                     .style("font-weight", "bold");
                 
@@ -1138,7 +1201,7 @@
                     .attr("class", "marriage-link")
                     .attr("x1", 60)
                     .attr("y1", 0)
-                    .attr("x2", 140)
+                    .attr("x2", 120)  // Giảm độ dài đường nối từ 140 xuống 120
                     .attr("y2", 0);
                 
                 // Thêm node vợ/chồng
@@ -1148,7 +1211,7 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", "translate(140, 0)");
+                        .attr("transform", "translate(120, 0)");  // Giảm khoảng cách từ 140 xuống 120
                     
                     // Thêm hình chữ nhật cho node vợ/chồng
                     spouseGroup.append("rect")
@@ -1173,7 +1236,11 @@
                     spouseGroup.append("text")
                         .attr("dy", 35)
                         .attr("text-anchor", "middle")
-                        .text(spouse.name)
+                        .text(() => {
+                            // Cắt ngắn tên nếu quá dài
+                            let name = spouse.name || '';
+                            return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                        })
                         .style("font-size", "12px")
                         .style("font-weight", "bold");
                     
