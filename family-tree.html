@@ -15,13 +15,48 @@
     <script src="https://accounts.google.com/gsi/client"></script>
 
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        
+        .content {
+            padding: 15px 0;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .back-link i {
+            margin-right: 8px;
+        }
+        
         #family-tree-container {
             width: 100%;
-            height: 700px;
+            height: 85vh; /* Sử dụng viewport height để tối ưu cho mobile */
             overflow: hidden;
             position: relative;
             border-radius: 5px;
             background-color: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         /* CSS cho Node */
@@ -113,6 +148,28 @@
 
         .node-button {
             cursor: pointer;
+        }
+        
+        /* Tùy chỉnh cho mobile */
+        @media (max-width: 768px) {
+            #family-tree-container {
+                height: 80vh;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .view-tabs button {
+                font-size: 14px;
+                padding: 8px;
+            }
+            
+            .zoom-controls {
+                bottom: 10px !important;
+                right: 10px !important;
+            }
         }
         
         /* Tùy chỉnh cho modal */
@@ -349,11 +406,12 @@
             display: none;
         }
 
-        /* CSS cho tab chuyển đổi chế độ xem */
+        /* Tối ưu các tab chuyển đổi */
         .view-tabs {
             display: flex;
             margin-bottom: 20px;
             border-bottom: 1px solid #ddd;
+            flex-wrap: wrap; /* Cho phép xuống dòng trên mobile */
         }
         
         .view-tab {
@@ -379,7 +437,7 @@
             background-color: #fff;
         }
         
-        /* CSS cho danh sách */
+        /* Tối ưu danh sách */
         .family-list-container {
             background-color: #f8f9fa;
             border-radius: 5px;
@@ -400,6 +458,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
         .sort-controls select,
@@ -418,6 +477,7 @@
             cursor: pointer;
         }
         
+        /* Tối ưu hiển thị danh sách */
         .family-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -532,49 +592,66 @@
             font-size: 14px;
             color: #555;
         }
+        
+        /* Media queries cho giao diện mobile */
+        @media (max-width: 768px) {
+            #family-tree-container {
+                height: 80vh;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .view-tab {
+                font-size: 14px;
+                padding: 8px;
+            }
+            
+            .zoom-controls {
+                bottom: 10px !important;
+                right: 10px !important;
+            }
+            
+            .view-tab {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .list-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .sort-controls, 
+            .filter-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .sort-controls select {
+                max-width: 45%;
+            }
+            
+            .filter-controls input {
+                flex-grow: 1;
+            }
+            
+            .family-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .pagination-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="navigation-menu">
-                    <a href="index.html" class="nav-item">Trang chủ</a>
-                    <a href="family-tree.html" class="nav-item active">Gia phả</a>
-                    <a href="all-posts.html" class="nav-item">Tất cả bài viết</a>
-                </div>
-
-                <div class="author-info">
-                    <div class="avatar-container">
-                        <img src="profile3.jpg" alt="Avatar" class="avatar-img">
-                    </div>
-                    <div class="author-text-content">
-                        <p class="author-title">Chào mừng bạn đến với website gia phả họ Nguyễn Bá</p>
-
-                        <div class="social-links">
-                            <a href="https://www.facebook.com/tungnb/" class="social-btn social-tooltip" title="Facebook">
-                                <i class="fab fa-facebook-f"></i>
-                                <span class="tooltip-text">Facebook</span>
-                            </a>
-
-                            <a href="mailto:tungnguyen@mayhoangtung.com" class="social-btn social-tooltip" title="Email">
-                                <i class="fas fa-envelope"></i>
-                                <span class="tooltip-text">tungnguyen@mayhoangtung.com</span>
-                            </a>
-
-                            <a href="tel:0983887485" class="social-btn social-tooltip" title="Điện thoại">
-                                <i class="fas fa-phone"></i>
-                                <span class="tooltip-text">0983887485</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <section class="content">
-        <div class="container">
+    <div class="container">
+        <section class="content">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
 
             <!-- Thêm tab để chuyển đổi giữa chế độ xem -->
@@ -630,8 +707,8 @@
                 <h3>Chưa có dữ liệu gia phả</h3>
                 <p>Dữ liệu gia phả đang được cập nhật. Vui lòng quay lại sau.</p>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
     <div id="person-detail-modal" class="modal">
         <div class="modal-content">
@@ -641,14 +718,6 @@
             </div>
         </div>
     </div>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <p class="copyright">Tạo vào © 2025 Nguyễn Bá Tùng</p>
-            </div>
-        </div>
-    </footer>
 
     <script>
         // Thiết lập cấu trúc dữ liệu cho gia phả
@@ -842,7 +911,7 @@
         function formatFamilyData(familyDataArray) {
             // Tạo cấu trúc dữ liệu phù hợp với D3.js
             // D3.js sử dụng cấu trúc dạng cây phân cấp với nodes và links
-            
+
             // Tìm thế hệ thấp nhất trong dữ liệu để xác định người gốc
             let minGeneration = Number.MAX_SAFE_INTEGER;
             familyDataArray.forEach(person => {
@@ -887,15 +956,15 @@
                         lifespan = `Sinh năm ${birthYear}`;
                     }
                 }
-                
+
                 // Tạo node mới
-                const node = {
-                    id: person.id,
-                    name: person.name,
-                    img: photoUrl,
-                    birth: lifespan,
-                    gender: person.gender,
-                    generation: person.generation,
+                        const node = {
+                            id: person.id,
+                            name: person.name,
+                            img: photoUrl,
+                            birth: lifespan,
+                            gender: person.gender,
+                            generation: person.generation,
                     data: person,  // Lưu toàn bộ dữ liệu gốc
                     children: []   // Sẽ được cập nhật sau
                 };
@@ -920,7 +989,7 @@
                 });
             });
             
-            // Thiết lập node gốc từ người thế hệ 1
+            // Thiết lập node gốc từ người thế hệ thấp nhất
             const rootNode = nodeMap.get(rootPersons[0].id);
             
             // Xử lý các cặp vợ chồng
@@ -1050,15 +1119,15 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([220, 100])  // Tăng khoảng cách ngang từ 120 lên 220
+                .nodeSize([180, 100])  // Giảm khoảng cách ngang từ 220 xuống 180
                 .separation((a, b) => {
                     // Tăng khoảng cách giữa các node anh chị em khi có vợ/chồng
-                    let baseSeparation = a.parent === b.parent ? 1.5 : 2;
+                    let baseSeparation = a.parent === b.parent ? 1.2 : 1.8;
                     
                     // Tăng khoảng cách nếu một trong hai node có vợ/chồng
                     if ((a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0) || 
                         (b.data.hasSpouse && b.data.spouses && b.data.spouses.length > 0)) {
-                        baseSeparation *= 1.5; // Tăng thêm 50% khoảng cách
+                        baseSeparation *= 1.2; // Giảm hệ số từ 1.5 xuống 1.2
                     }
                     
                     return baseSeparation;
@@ -1072,6 +1141,15 @@
                 if (d.depth < 2) {
                     d._children = d.children;
                 } else {
+                    d._children = d.children;
+                    d.children = null;
+                }
+            });
+            
+            // Thiết lập cấp độ thu gọn ban đầu - đảm bảo chỉ hiển thị 2 đời đầu tiên
+            root.descendants().forEach(d => {
+                // Các node ở cấp độ 2 trở lên (đời thứ 3 trở đi) sẽ được thu gọn
+                if (d.depth >= 2) {
                     d._children = d.children;
                     d.children = null;
                 }
@@ -1334,20 +1412,20 @@
                             if (value) {
                                 node._children = node.children;
                                 node.children = null;
-                            } else {
+                        } else {
                                 node.children = node._children;
-                            }
+                        }
                             updateTree(node);
                             return true;
-                        }
+                    }
                         if (node.children) {
                             for (const child of node.children) {
                                 if (findAndCollapseNode(child)) return true;
-                            }
+                }
                         }
                         return false;
                     };
-                    
+
                     findAndCollapseNode(root);
                     return this;
                 }
