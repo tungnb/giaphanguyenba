@@ -314,28 +314,166 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
+            overflow-y: auto; /* Cho phép modal có thể cuộn được */
         }
         
         .modal-content {
             background-color: #fff;
-            margin: 10% auto;
+            margin: 40px auto;
             padding: 20px;
             border-radius: 8px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            position: relative;
+            max-height: 85vh; /* Giới hạn chiều cao của modal */
+            overflow-y: auto; /* Cho phép cuộn nội dung modal */
         }
         
-        .close {
-            color: #aaa;
-            float: right;
+        .modal .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
             font-size: 28px;
             font-weight: bold;
+            color: #999;
             cursor: pointer;
+            z-index: 10;
         }
         
-        .close:hover {
-            color: #000;
+        .modal .close:hover {
+            color: #333;
+        }
+        
+        .person-detail-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 5px;
+        }
+        
+        .person-detail-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .person-detail-info {
+            flex: 1;
+        }
+        
+        .person-detail-name {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.8rem;
+        }
+        
+        .person-detail-dates {
+            color: #666;
+            font-weight: 500;
+            margin: 5px 0;
+            font-size: 1.1rem;
+        }
+        
+        .person-detail-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f8ff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .person-detail-section:hover {
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        
+        .person-detail-section h3 {
+            margin: 0 0 15px 0;
+            color: #0066cc;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .person-detail-section h3 i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .relation-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .relation-item {
+            background-color: #e6f7ff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #0066cc;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .relation-item:hover {
+            background-color: #d1e9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        
+        .genealogy-chain {
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .genealogy-chain ol {
+            padding-left: 25px;
+            margin: 0;
+        }
+        
+        .genealogy-chain li {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .genealogy-chain li:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .person-attribute {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .person-attribute i {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+            color: #0066cc;
+        }
+        
+        .person-attribute span {
+            font-weight: 500;
+        }
+        
+        .person-bio {
+            white-space: pre-line;
+            line-height: 1.7;
+            color: #444;
         }
         
         /* Style cho phần hiển thị thành viên */
@@ -500,78 +638,6 @@
             background-color: #0066cc;
             width: 0%;
             transition: width 0.3s ease;
-        }
-        
-        /* Thêm CSS cho modal chi tiết người */
-        .person-detail-container {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-        }
-        
-        .person-detail-header {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        
-        .person-detail-info {
-            flex: 1;
-        }
-        
-        .person-detail-name {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 1.5rem;
-        }
-        
-        .person-detail-dates {
-            color: #666;
-            font-weight: 500;
-            margin: 5px 0;
-        }
-        
-        .person-detail-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f5f8ff;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .person-detail-section h3 {
-            margin: 0 0 10px 0;
-            color: #0066cc;
-            font-size: 1.1rem;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        
-        .relation-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .relation-item {
-            background-color: #e6f7ff;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            color: #0066cc;
-        }
-        
-        .genealogy-chain {
-            margin-top: 10px;
-        }
-        
-        .genealogy-chain ol {
-            padding-left: 20px;
-        }
-        
-        .genealogy-chain li {
-            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -760,8 +826,8 @@
     <div id="detail-modal" class="modal">
         <div class="modal-content">
             <span class="close" id="close-detail-modal">&times;</span>
-            <h3>Thông tin chi tiết</h3>
-            <div id="person-detail-container" class="person-detail-container" style="padding: 15px;">
+            <h3 style="text-align: center; margin-bottom: 20px;">Thông tin chi tiết thành viên gia phả</h3>
+            <div id="person-detail-container" class="person-detail-container">
                 <!-- Thông tin chi tiết người sẽ được tạo động bằng JavaScript -->
             </div>
         </div>
@@ -1854,7 +1920,7 @@
                         const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
                         
                         genealogyHTML += `
-                            <li style="${itemStyle}">
+                            <li style="${itemStyle}" ${isLastItem ? '' : `onclick="showPersonDetail('${ancestor.id}')" title="Xem chi tiết" style="cursor: pointer;"`}>
                                 ${ancestor.name} (Thế hệ ${ancestor.generation})
                             </li>
                         `;
@@ -1873,59 +1939,85 @@
             detailContainer.innerHTML = `
                 <div class="person-detail-header">
                     <img src="${photoUrl}" 
-                         alt="${member.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                         alt="${member.name}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #e6f7ff;">
                     <div class="person-detail-info">
                         <h2 class="person-detail-name">${member.name}</h2>
                         <p class="person-detail-dates">${lifespan}</p>
-                        <p><strong>Thế hệ:</strong> ${member.generation}</p>
-                        <p><strong>Giới tính:</strong> ${member.gender === 'male' ? 'Nam' : 'Nữ'}</p>
+                        <div class="person-attribute">
+                            <i class="fas fa-users"></i>
+                            <span>Thế hệ: ${member.generation}</span>
+                        </div>
+                        <div class="person-attribute">
+                            <i class="fas fa-${member.gender === 'male' ? 'male' : 'female'}"></i>
+                            <span>Giới tính: ${member.gender === 'male' ? 'Nam' : 'Nữ'}</span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="person-detail-section">
-                    <h3>Thông tin ngày sinh</h3>
-                    <p style="font-size: 16px;">
-                        <i class="fas fa-birthday-cake" style="color: #0066cc;"></i> 
-                        <strong>${birthInfo}</strong>
-                    </p>
-                    <p>
-                        <i class="fas fa-cross" style="color: #777;"></i> 
-                        <strong>Ngày mất:</strong> ${deathInfo}
-                    </p>
+                    <h3><i class="fas fa-birthday-cake"></i> Thông tin ngày sinh</h3>
+                    <div class="person-attribute">
+                        <i class="fas fa-calendar-day"></i>
+                        <span><strong>Sinh:</strong> ${birthInfo}</span>
+                    </div>
+                    <div class="person-attribute">
+                        <i class="fas fa-${member.deathdate ? 'cross' : 'heart'}"></i>
+                        <span><strong>Trạng thái:</strong> ${member.deathdate ? `Mất ngày ${deathInfo}` : 'Còn sống'}</span>
+                    </div>
                 </div>
                 
                 <div class="person-detail-section">
-                    <h3>Phả hệ</h3>
+                    <h3><i class="fas fa-sitemap"></i> Phả hệ</h3>
                     ${genealogyHTML}
                 </div>
                 
                 <div class="person-detail-section">
-                    <h3>Quan hệ gia đình</h3>
+                    <h3><i class="fas fa-user-friends"></i> Quan hệ gia đình</h3>
                     <div style="margin: 10px 0;">
-                        <p><strong>Cha mẹ:</strong></p>
+                        <div class="person-attribute">
+                            <i class="fas fa-user-tie"></i>
+                            <span><strong>Cha mẹ:</strong></span>
+                        </div>
                         ${parentsHTML}
                     </div>
                     
-                    <div style="margin: 10px 0;">
-                        <p><strong>Vợ/Chồng:</strong></p>
+                    <div style="margin: 15px 0;">
+                        <div class="person-attribute">
+                            <i class="fas fa-heart"></i>
+                            <span><strong>Vợ/Chồng:</strong></span>
+                        </div>
                         ${spousesHTML}
                     </div>
                     
-                    <div style="margin: 10px 0;">
-                        <p><strong>Con cái:</strong></p>
+                    <div style="margin: 15px 0;">
+                        <div class="person-attribute">
+                            <i class="fas fa-baby"></i>
+                            <span><strong>Con cái:</strong></span>
+                        </div>
                         ${childrenHTML}
                     </div>
                 </div>
                 
                 ${member.bio ? `
                 <div class="person-detail-section">
-                    <h3>Tiểu sử</h3>
-                    <p>${member.bio}</p>
+                    <h3><i class="fas fa-book"></i> Tiểu sử</h3>
+                    <p class="person-bio">${member.bio}</p>
                 </div>` : ''}
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="document.getElementById('detail-modal').style.display='none'">
+                        <i class="fas fa-times"></i> Đóng
+                    </button>
+                </div>
             `;
             
             // Hiển thị modal
             modal.style.display = 'block';
+            
+            // Thêm sự kiện đóng modal khi click vào nút X
+            document.getElementById('close-detail-modal').addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
             
             // Thêm sự kiện đóng modal khi click bên ngoài
             window.addEventListener('click', function(event) {
