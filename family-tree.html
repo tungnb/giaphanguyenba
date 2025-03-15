@@ -1119,10 +1119,10 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([180, 100])  // Tăng khoảng cách ngang từ 150 lên 180 và khoảng cách dọc từ 80 lên 100
+                .nodeSize([180, 70])  // Giảm khoảng cách dọc từ 100 xuống 70 (70%)
                 .separation((a, b) => {
                     // Tăng khoảng cách giữa các node anh chị em khi có vợ/chồng
-                    let baseSeparation = a.parent === b.parent ? 1.2 : 2.0;
+                    let baseSeparation = a.parent === b.parent ? 1.2 : 1.8;
                     
                     // Tăng khoảng cách nếu một trong hai node có vợ/chồng
                     if ((a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0) || 
@@ -1158,7 +1158,7 @@
                 
                 // Thiết lập vị trí y dựa trên depth
                 nodes.forEach(d => {
-                    d.y = d.depth * 200; // Khoảng cách giữa các đời
+                    d.y = d.depth * 140; // Giảm khoảng cách giữa các đời từ 200 xuống 140 (70%)
                 });
                 
                 // ===== NODES =====
@@ -1386,14 +1386,14 @@
                         const targetX = d.target.x;
                         const targetY = d.target.y - 40; // Đầu node con
                         
-                        // Tạo đường cong Bezier
+                        // Tạo đường cong Bezier với điểm kiểm soát gần hơn để phù hợp với khoảng cách ngắn hơn
                         // Điểm kiểm soát 1: Xuống dưới từ nguồn
                         const controlX1 = sourceX;
-                        const controlY1 = sourceY + 40;
+                        const controlY1 = sourceY + 30; // Giảm từ 40 xuống 30
                         
                         // Điểm kiểm soát 2: Lên trên từ đích
                         const controlX2 = targetX;
-                        const controlY2 = targetY - 40;
+                        const controlY2 = targetY - 30; // Giảm từ 40 xuống 30
                         
                         return `M${sourceX},${sourceY} C${controlX1},${controlY1} ${controlX2},${controlY2} ${targetX},${targetY}`;
                     });
