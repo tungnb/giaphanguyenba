@@ -768,7 +768,19 @@
                     
                     const data = await response.json();
                     console.log(`Đã nhận ${data.length} người từ API`);
-                    return data;
+                    
+                    // Đảm bảo mỗi người đều có các mảng cần thiết
+                    const processedData = data.map(person => {
+                        // Đảm bảo có các trường bắt buộc
+                        return {
+                            ...person,
+                            parents: Array.isArray(person.parents) ? person.parents : [],
+                            spouses: Array.isArray(person.spouses) ? person.spouses : [],
+                            children: Array.isArray(person.children) ? person.children : []
+                        };
+                    });
+                    
+                    return processedData;
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
                     
@@ -784,8 +796,8 @@
             } catch (error) {
                 console.warn('Sử dụng dữ liệu mẫu do lỗi:', error.message);
 
-                // Trả về dữ liệu mẫu đã có
-                return [
+                // Dữ liệu mẫu đã có - đảm bảo mỗi người đều có các mảng cần thiết
+                const sampleData = [
                     {
                         id: '1',
                         name: 'Nguyễn Bá Cụ',
@@ -794,7 +806,8 @@
                         birthDate: '1900-01-01',
                         deathDate: '1970-01-01',
                         spouses: ['100'],
-                        children: ['2', '3', '4']
+                        children: ['2', '3', '4'],
+                        parents: [] // người gốc nên không có cha mẹ
                     },
                     {
                         id: '100',
@@ -804,7 +817,8 @@
                         birthDate: '1905-01-01',
                         deathDate: '1975-01-01',
                         spouses: ['1'],
-                        children: ['2', '3', '4']
+                        children: ['2', '3', '4'],
+                        parents: [] // người gốc nên không có cha mẹ
                     },
                     {
                         id: '2',
@@ -823,7 +837,8 @@
                         generation: 2,
                         birthDate: '1935-01-01',
                         spouses: ['2'],
-                        children: ['5', '6']
+                        children: ['5', '6'],
+                        parents: [] // thêm mảng parents trống
                     },
                     {
                         id: '3',
@@ -842,7 +857,8 @@
                         generation: 2,
                         birthDate: '1940-01-01',
                         spouses: ['3'],
-                        children: ['7']
+                        children: ['7'],
+                        parents: [] // thêm mảng parents trống
                     },
                     {
                         id: '4',
@@ -861,7 +877,8 @@
                         generation: 2,
                         birthDate: '1945-01-01',
                         spouses: ['4'],
-                        children: ['8', '9']
+                        children: ['8', '9'],
+                        parents: [] // thêm mảng parents trống
                     },
                     {
                         id: '5',
@@ -869,7 +886,9 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1960-01-01',
-                        parents: ['2', '101']
+                        parents: ['2', '101'],
+                        spouses: [], // thêm mảng spouses trống
+                        children: [] // thêm mảng children trống
                     },
                     {
                         id: '6',
@@ -877,7 +896,9 @@
                         gender: 'female',
                         generation: 3,
                         birthDate: '1965-01-01',
-                        parents: ['2', '101']
+                        parents: ['2', '101'],
+                        spouses: [], // thêm mảng spouses trống
+                        children: [] // thêm mảng children trống
                     },
                     {
                         id: '7',
@@ -885,7 +906,9 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1965-01-01',
-                        parents: ['3', '102']
+                        parents: ['3', '102'],
+                        spouses: [], // thêm mảng spouses trống
+                        children: [] // thêm mảng children trống
                     },
                     {
                         id: '8',
@@ -893,7 +916,9 @@
                         gender: 'male',
                         generation: 3,
                         birthDate: '1970-01-01',
-                        parents: ['4', '103']
+                        parents: ['4', '103'],
+                        spouses: [], // thêm mảng spouses trống
+                        children: [] // thêm mảng children trống
                     },
                     {
                         id: '9',
@@ -901,9 +926,21 @@
                         gender: 'female',
                         generation: 3,
                         birthDate: '1975-01-01',
-                        parents: ['4', '103']
+                        parents: ['4', '103'],
+                        spouses: [], // thêm mảng spouses trống
+                        children: [] // thêm mảng children trống
                     }
                 ];
+                
+                // Đảm bảo mỗi người đều có các mảng cần thiết
+                return sampleData.map(person => {
+                    return {
+                        ...person,
+                        parents: Array.isArray(person.parents) ? person.parents : [],
+                        spouses: Array.isArray(person.spouses) ? person.spouses : [],
+                        children: Array.isArray(person.children) ? person.children : []
+                    };
+                });
             }
         }
 
@@ -1796,6 +1833,7 @@
             const person = familyData.find(p => p.id === personId);
 
             if (!person) {
+                console.error(`Không tìm thấy người với ID: ${personId}`);
                 return;
             }
             
@@ -1846,8 +1884,23 @@
             // --- Phần mới: xây dựng phả hệ từ thế hệ 1 đến người đó ---
             let genealogyHTML = '<p>Không có thông tin phả hệ</p>';
             
+            // Kiểm tra và khởi tạo trường parents nếu chưa có
+            if (!person.parents) {
+                person.parents = [];
+                console.warn(`Người có ID ${personId} không có thông tin parents. Khởi tạo mảng rỗng.`);
+            }
+            
+            // Log thông tin để gỡ lỗi
+            console.log(`Phả hệ cho người có ID ${personId}:`, {
+                name: person.name,
+                generation: person.generation,
+                hasParents: person.parents && person.parents.length > 0,
+                parents: person.parents
+            });
+            
             // Tìm người thế hệ 1 (gốc)
             const rootPersons = familyData.filter(p => p.generation === 1);
+            console.log(`Tìm thấy ${rootPersons.length} người thuộc thế hệ gốc.`);
             
             if (rootPersons.length > 0 && person.generation > 1) {
                 // Tạo mảng lưu người trong chuỗi phả hệ
@@ -1858,8 +1911,12 @@
                 
                 // Tìm ngược lên để xây dựng phả hệ
                 let currentPerson = person;
+                let iterationCount = 0; // Biến đếm vòng lặp để tránh lặp vô hạn
                 
-                while (currentPerson && currentPerson.generation > 1 && currentPerson.parents) {
+                while (currentPerson && currentPerson.generation > 1 && currentPerson.parents && currentPerson.parents.length > 0 && iterationCount < 10) {
+                    iterationCount++;
+                    console.log(`Vòng lặp ${iterationCount}, đang xử lý người: ${currentPerson.name} (Thế hệ ${currentPerson.generation})`);
+                    
                     // Tìm cha (ưu tiên lấy theo cha)
                     const fatherId = currentPerson.parents.find(parentId => {
                         const parent = familyData.find(p => p.id === parentId);
@@ -1872,35 +1929,46 @@
                     if (parentId) {
                         const parent = familyData.find(p => p.id === parentId);
                         if (parent) {
+                            console.log(`Tìm thấy cha/mẹ: ${parent.name} (ID: ${parent.id}, Thế hệ ${parent.generation})`);
                             genealogyChain.push(parent);
                             currentPerson = parent;
                         } else {
+                            console.warn(`Không tìm thấy thông tin cho cha/mẹ có ID ${parentId}`);
                             break;
                         }
                     } else {
+                        console.warn(`Không tìm thấy ID cha/mẹ hợp lệ cho người ${currentPerson.name}`);
                         break;
                     }
                 }
                 
+                if (iterationCount >= 10) {
+                    console.warn("Đã đạt đến giới hạn vòng lặp khi xây dựng phả hệ");
+                }
+                
                 // Đảo ngược mảng để hiển thị từ thế hệ 1 đến người hiện tại
                 genealogyChain.reverse();
+                console.log(`Chuỗi phả hệ hoàn chỉnh có ${genealogyChain.length} người`);
                 
-                // Tạo HTML cho phả hệ
-                genealogyHTML = '<div class="genealogy-chain">';
-                genealogyHTML += '<ol style="padding-left: 20px; margin-top: 5px;">';
-                
-                genealogyChain.forEach((ancestor, index) => {
-                    const isLastItem = index === genealogyChain.length - 1;
-                    const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
+                // Kiểm tra xem chuỗi phả hệ có dữ liệu không
+                if (genealogyChain.length > 0) {
+                    // Tạo HTML cho phả hệ
+                    genealogyHTML = '<div class="genealogy-chain">';
+                    genealogyHTML += '<ol style="padding-left: 20px; margin-top: 5px;">';
                     
-                    genealogyHTML += `
-                        <li style="${itemStyle}">
-                            ${ancestor.name} (Thế hệ ${ancestor.generation})
-                        </li>
-                    `;
-                });
-                
-                genealogyHTML += '</ol></div>';
+                    genealogyChain.forEach((ancestor, index) => {
+                        const isLastItem = index === genealogyChain.length - 1;
+                        const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
+                        
+                        genealogyHTML += `
+                            <li style="${itemStyle}">
+                                ${ancestor.name} (Thế hệ ${ancestor.generation})
+                            </li>
+                        `;
+                    });
+                    
+                    genealogyHTML += '</ol></div>';
+                }
             }
 
             // Tìm thông tin cha mẹ
