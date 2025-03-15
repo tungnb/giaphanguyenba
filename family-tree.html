@@ -1235,8 +1235,8 @@
                 
                 // Thêm ảnh đại diện sử dụng phương pháp zoom thay vì clip-path
                 nodeEnter.append("foreignObject")
-                    .attr("x", -88)  // Điều chỉnh vị trí
-                    .attr("y", -22)  // Điều chỉnh vị trí
+                    .attr("x", -70)  // Điều chỉnh từ -88 lên -70
+                    .attr("y", -22)  // Giữ nguyên vị trí 
                     .attr("width", 40)  // Kích thước ảnh
                     .attr("height", 40)  // Kích thước ảnh
                     .html(d => {
@@ -1248,7 +1248,7 @@
                 // Thêm tên - đặt ngang với ảnh
                 nodeEnter.append("text")
                     .attr("dy", 0)
-                    .attr("dx", 0)
+                    .attr("dx", 20)  // Điều chỉnh từ 0 lên 20 để tránh đè lên avatar
                     .attr("text-anchor", "middle")
                     .text(d => {
                         // Cắt ngắn tên nếu quá dài
@@ -1338,7 +1338,7 @@
                     
                     // Chỉ hiển thị avatar của người phối ngẫu đầu tiên
                     spouseGroup.append("foreignObject")
-                        .attr("x", -70)  // Điều chỉnh từ -88 lên -70
+                        .attr("x", -60)  // Điều chỉnh từ -70 lên -60
                         .attr("y", -nodeHeight/2 + 3)
                         .attr("width", 40)
                         .attr("height", 40)
@@ -1376,7 +1376,7 @@
                     // Thêm tên người phối ngẫu với padding bên phải để không chồng lên avatar
                     spouseGroup.append("text")
                         .attr("dy", textStartY)
-                        .attr("dx", 5)  // Giảm từ 10 xuống 5
+                        .attr("dx", 20)  // Tăng từ 5 lên 20
                         .attr("text-anchor", "middle")
                         .html(spouseNames)
                         .style("font-size", "12px")
