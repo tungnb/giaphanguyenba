@@ -1104,6 +1104,9 @@
             // Lưu dữ liệu đã định dạng vào biến toàn cục để sử dụng sau này
             formattedChartData = formattedData;
             
+            // Biến đánh dấu là lần tải đầu tiên để căn giữa node gốc
+            let isFirstLoad = true;
+            
             // Xóa nội dung cũ
             d3.select("#family-tree").selectAll("*").remove();
             
@@ -1132,7 +1135,13 @@
                 .on("dblclick.zoom", null);
                 
             // Thiết lập zoom ban đầu để hiển thị toàn bộ cây
-            svgContainer.call(zoom.scaleTo, 0.8);
+            // Điều chỉnh scale để tối ưu hóa kích thước hiển thị
+            svgContainer.call(zoom.scaleTo, 0.9);
+            
+            // Căn chỉnh vị trí ban đầu để người thế hệ 1 nằm ở giữa
+            // Một approach đơn giản là dùng translateBy để điều chỉnh vị trí
+            // Đầu tiên di chuyển lên hơi cao một chút để thế hệ 1 nằm ở giữa theo chiều dọc
+            svgContainer.call(zoom.translateBy, 0, height/6);
             
             // Thêm nút điều khiển zoom
             const zoomControls = d3.select("#family-tree")
@@ -1261,7 +1270,7 @@
                         if (d.data.hasSpouse) classes += " couple";
                         return classes;
                     })
-                    .attr("transform", d => `translate(${source.x0 || 0},${source.y0 || 0})`)
+                    .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
                     .on("click", (event, d) => {
                         // Ngăn sự kiện lan truyền để không mở modal khi click vào nút +/-
                         const target = event.target;
@@ -1513,6 +1522,43 @@
                     d.x0 = d.x;
                     d.y0 = d.y;
                 });
+                
+                // Gọi centerRootNode sau khi cập nhật xong cây nếu là lần đầu tiên
+                if (isFirstLoad) {
+                    setTimeout(centerRootNode, 500); // Đợi 500ms để đảm bảo cây đã được vẽ xong
+                    isFirstLoad = false;
+                }
+            }
+            
+            // Hàm giúp căn giữa node gốc (thế hệ 1)
+            function centerRootNode() {
+                // Tìm node gốc (thế hệ 1)
+                const treeData = treeLayout(root);
+                const nodes = treeData.descendants();
+                const rootNodes = nodes.filter(node => node.depth === 0);
+                
+                if (rootNodes.length > 0) {
+                    const rootNode = rootNodes[0];
+                    
+                    // Tính toán vị trí hiện tại của cây
+                    const currentTransform = d3.zoomTransform(svgContainer.node());
+                    
+                    // Tính toán vị trí trung tâm của màn hình
+                    const centerX = width / 2;
+                    const centerY = height / 3; // Đặt người gốc ở 1/3 trên cùng của màn hình
+                    
+                    // Tính toán khoảng cách cần dịch chuyển
+                    const dx = centerX - rootNode.x * currentTransform.k;
+                    const dy = centerY - rootNode.y * currentTransform.k;
+                    
+                    // Áp dụng transform để căn giữa node gốc
+                    svgContainer.call(
+                        zoom.transform,
+                        d3.zoomIdentity
+                            .translate(dx, dy)
+                            .scale(currentTransform.k)
+                    );
+                }
             }
             
             // Khởi tạo vị trí ban đầu
@@ -1538,16 +1584,16 @@
                             if (value) {
                                 node._children = node.children;
                                 node.children = null;
-                        } else {
+                            } else {
                                 node.children = node._children;
-                        }
+                            }
                             updateTree(node);
                             return true;
-                    }
+                        }
                         if (node.children) {
                             for (const child of node.children) {
                                 if (findAndCollapseNode(child)) return true;
-                }
+                            }
                         }
                         return false;
                     };
