@@ -842,7 +842,9 @@
                 const data = await response.json();
                 allMembers = data || [];
                 
-                // Thêm timestamp cho mỗi member nếu chưa có
+                console.log('Loaded members before processing:', allMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
+                
+                // Đảm bảo tất cả thành viên đều có timestamp
                 allMembers = allMembers.map(member => {
                     if (!member.timestamp) {
                         // Tạo timestamp ngẫu nhiên trong quá khứ nếu chưa có
@@ -850,8 +852,21 @@
                         const timestamp = new Date(Date.now() - randomDays * 24 * 60 * 60 * 1000).getTime();
                         return {...member, timestamp};
                     }
+                    // Chuyển đổi timestamp từ string sang number nếu cần
+                    if (typeof member.timestamp === 'string') {
+                        member.timestamp = parseInt(member.timestamp);
+                    }
                     return member;
                 });
+                
+                // Sắp xếp thành viên theo timestamp mới nhất trước khi lọc
+                allMembers.sort((a, b) => {
+                    const timeA = a.timestamp || 0;
+                    const timeB = b.timestamp || 0;
+                    return timeB - timeA;
+                });
+                
+                console.log('Sorted members after processing:', allMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
                 
                 filterAndRenderMembers();
                 hideLoading();
@@ -891,6 +906,9 @@
         
         // Sắp xếp thành viên theo lựa chọn
         function sortMembers() {
+            console.log('Sorting with option:', currentSortOption);
+            console.log('Before sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, timestamp: m.timestamp})));
+            
             switch (currentSortOption) {
                 case "newest":
                     filteredMembers.sort((a, b) => {
@@ -913,6 +931,8 @@
                     filteredMembers.sort((a, b) => b.name.localeCompare(a.name));
                     break;
             }
+            
+            console.log('After sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, timestamp: m.timestamp})));
         }
         
         // Render members list with pagination
@@ -938,6 +958,8 @@
             const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
             const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredMembers.length);
             const currentPageMembers = filteredMembers.slice(startIndex, endIndex);
+            
+            console.log('Rendering page', currentPage, 'with members:', currentPageMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
             
             // Cập nhật thông tin phân trang
             document.getElementById('current-page').textContent = currentPage;
@@ -1413,8 +1435,10 @@
                 deathdate: document.getElementById('deathDate').value || null,
                 photo: document.getElementById('photo').value || null,
                 bio: document.getElementById('bio').value || null,
-                timestamp: Date.now() // Thêm timestamp khi lưu thành viên mới
+                timestamp: Date.now() // Luôn cập nhật timestamp khi lưu thành viên
             };
+            
+            console.log('Saving member with timestamp:', member.timestamp, 'Name:', member.name);
             
             // Add relations if editing
             if (!isNewMember) {
@@ -1450,6 +1474,8 @@
                 if (isNewMember) {
                     allMembers.push(member);
                 } else {
+                    // Cập nhật thành viên và timestamp để hiển thị như là mới nhất
+                    member.timestamp = Date.now(); // Đảm bảo thành viên được cập nhật lên đầu danh sách
                     allMembers = allMembers.map(m => m.id === member.id ? member : m);
                 }
                 
