@@ -1121,28 +1121,37 @@
             const treeLayout = d3.tree()
                 .nodeSize([280, 50])  // Duy trì khoảng cách ngang
                 .separation((a, b) => {
-                    // Áp dụng một khoảng cách cơ bản đồng đều giữa các node
-                    // Coi cặp node phối ngẫu như một đơn vị
+                    // Xác định xem các node có phối ngẫu không
+                    const aHasSpouse = a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0;
+                    const bHasSpouse = b.data.hasSpouse && b.data.spouses && b.data.spouses.length > 0;
                     
                     // Kiểm tra xem các node có cùng cha mẹ không
                     if (a.parent === b.parent) {
-                        // Nếu cùng cha mẹ, sử dụng khoảng cách cố định
-                        // Không phân biệt node có phối ngẫu hay không
-                        
-                        // Kiểm tra nếu là anh em liền kề
+                        // Nếu cùng cha mẹ, kiểm tra xem có phải là anh em liền kề không
                         const aSiblingIndex = a.parent.children.indexOf(a);
                         const bSiblingIndex = a.parent.children.indexOf(b);
                         
+                        // Nếu là anh em liền kề
                         if (Math.abs(aSiblingIndex - bSiblingIndex) === 1) {
-                            // Nếu là anh em liền kề, sử dụng khoảng cách cố định
-                            return 1.1;
+                            // Xác định node nào đứng trước, node nào đứng sau
+                            const firstNode = aSiblingIndex < bSiblingIndex ? a : b;
+                            const secondNode = aSiblingIndex < bSiblingIndex ? b : a;
+                            
+                            // Kiểm tra nếu node đứng trước có phối ngẫu
+                            if (firstNode.data.hasSpouse && firstNode.data.spouses && firstNode.data.spouses.length > 0) {
+                                // Tăng khoảng cách nhiều hơn để tránh chồng lên phối ngẫu của node trước
+                                return 2.5; // Giá trị lớn hơn để đảm bảo không bị chồng lấp
+                            }
+                            
+                            // Trường hợp thông thường
+                            return 1.5; // Khoảng cách cố định giữa các anh em liền kề
                         }
                         
-                        // Nếu không phải anh em liền kề, có thể tăng khoảng cách
-                        return 1.1 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.1;
+                        // Nếu không phải anh em liền kề
+                        return 1.5 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.2;
                     } else {
-                        // Nếu khác cha mẹ, sử dụng khoảng cách lớn hơn
-                        return 1.5;
+                        // Nếu khác cha mẹ
+                        return 2.0; // Tăng khoảng cách giữa các nhánh
                     }
                 });
             
