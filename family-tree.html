@@ -1119,7 +1119,7 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([180, 50])  // Giảm khoảng cách dọc từ 100 xuống 70 (70%)
+                .nodeSize([280, 50])  // Tăng từ 180 lên 280 để tạo thêm khoảng cách ngang
                 .separation((a, b) => {
                     // Tăng khoảng cách giữa các node anh chị em khi có vợ/chồng
                     let baseSeparation = a.parent === b.parent ? 1.2 : 1.8;
@@ -1127,7 +1127,7 @@
                     // Tăng khoảng cách nếu một trong hai node có vợ/chồng
                     if ((a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0) || 
                         (b.data.hasSpouse && b.data.spouses && b.data.spouses.length > 0)) {
-                        baseSeparation *= 1.2; // Tăng hệ số từ 1.1 lên 1.2
+                        baseSeparation *= 1.3; // Tăng hệ số từ 1.2 lên 1.3
                     }
                     
                     return baseSeparation;
@@ -1195,9 +1195,9 @@
                 
                 // Thêm hình chữ nhật cho node
                 nodeEnter.append("rect")
-                    .attr("width", 120)
+                    .attr("width", 200)  // Tăng từ 120 lên 200
                     .attr("height", 80)
-                    .attr("x", -60)
+                    .attr("x", -100)  // Điều chỉnh để căn giữa (width/2)
                     .attr("y", -40)
                     .attr("rx", 5)
                     .attr("ry", 5);
@@ -1205,7 +1205,7 @@
                 // Thêm ảnh đại diện
                 nodeEnter.append("image")
                     .attr("xlink:href", d => d.data.img)
-                    .attr("x", -25)
+                    .attr("x", -75)  // Điều chỉnh vị trí ảnh
                     .attr("y", -30)
                     .attr("width", 50)
                     .attr("height", 50)
@@ -1216,9 +1216,9 @@
                     .attr("dy", 35)
                     .attr("text-anchor", "middle")
                     .text(d => {
-                        // Cắt ngắn tên nếu quá dài
+                        // Cắt ngắn tên nếu quá dài - tăng lên 30 ký tự
                         let name = d.data.name || '';
-                        return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                        return name.length > 30 ? name.substring(0, 27) + '...' : name;
                     })
                     .style("font-size", "12px")
                     .style("font-weight", "bold");
@@ -1233,7 +1233,7 @@
                 // Thêm nút mở rộng/thu gọn - điều chỉnh lại vị trí và điều kiện hiển thị
                 nodeEnter.append("g")
                     .attr("class", "node-button")
-                    .attr("transform", "translate(-55, -35)")
+                    .attr("transform", "translate(-95, -35)")  // Điều chỉnh từ -55 sang -95
                     // Hiển thị nút mở rộng khi node có con (_children) chưa hiển thị (d.children != d._children)
                     .style("display", d => {
                         // Kiểm tra nếu node có con ẩn
@@ -1276,28 +1276,28 @@
                 // Thêm đường nối vợ chồng
                 coupleNodes.append("line")
                     .attr("class", "marriage-link")
-                    .attr("x1", 60)
+                    .attr("x1", 100)  // Tăng từ 60 lên 100
                     .attr("y1", 0)
-                    .attr("x2", 120)
+                    .attr("x2", 200)  // Tăng từ 120 lên 200
                     .attr("y2", 0);
                 
                 // Thêm node vợ/chồng
                 coupleNodes.each(function(d) {
                     // Thêm đường nối vợ chồng cho người đầu tiên
                     d3.select(this).select(".marriage-link")
-                        .attr("x2", 120); // Giữ nguyên khoảng cách tới vợ/chồng đầu tiên
+                        .attr("x2", 200); // Tăng từ 120 lên 200
                     
                     // Duyệt qua tất cả các vợ/chồng thay vì chỉ lấy người đầu tiên
                     d.data.spouses.forEach((spouse, index) => {
                         // Tính vị trí cho mỗi vợ/chồng, dựa trên thứ tự của họ
-                        const xPosition = 120 + (index * 130); // Mỗi vợ/chồng cách nhau 130px
+                        const xPosition = 200 + (index * 210); // Tăng từ 120 và 130 lên 200 và 210
                         
                         // Nếu là vợ/chồng thứ 2 trở đi, thêm đường nối mới
                         if (index > 0) {
                             d3.select(this)
                                 .append("line")
                                 .attr("class", "marriage-link")
-                                .attr("x1", 60)
+                                .attr("x1", 100)  // Tăng từ 60 lên 100
                                 .attr("y1", 0)
                                 .attr("x2", xPosition)
                                 .attr("y2", 0);
@@ -1310,9 +1310,9 @@
                         
                         // Thêm hình chữ nhật cho node vợ/chồng
                         spouseGroup.append("rect")
-                            .attr("width", 120)
+                            .attr("width", 200)  // Tăng từ 120 lên 200
                             .attr("height", 80)
-                            .attr("x", -60)
+                            .attr("x", -100)  // Tăng từ -60 lên -100
                             .attr("y", -40)
                             .attr("rx", 5)
                             .attr("ry", 5)
@@ -1321,7 +1321,7 @@
                         // Thêm ảnh đại diện vợ/chồng
                         spouseGroup.append("image")
                             .attr("xlink:href", spouse.img)
-                            .attr("x", -25)
+                            .attr("x", -75)  // Tăng từ -25 lên -75
                             .attr("y", -30)
                             .attr("width", 50)
                             .attr("height", 50)
@@ -1332,9 +1332,9 @@
                             .attr("dy", 35)
                             .attr("text-anchor", "middle")
                             .text(() => {
-                                // Cắt ngắn tên nếu quá dài
+                                // Cắt ngắn tên nếu quá dài - tăng lên 30 ký tự
                                 let name = spouse.name || '';
-                                return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                                return name.length > 30 ? name.substring(0, 27) + '...' : name;
                             })
                             .style("font-size", "12px")
                             .style("font-weight", "bold");
