@@ -1234,10 +1234,16 @@
                     .text(d => d.data.birth)
                     .style("font-size", "10px");
                 
+                // Chỉ tạo một node phối ngẫu duy nhất cho tất cả vợ/chồng
+                    const spouseGroup = d3.select(this)
+                        .append("g")
+                        .attr("class", "spouse-node")
+                        .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
+                        
                 // Thêm nút mở rộng/thu gọn - điều chỉnh lại vị trí
                 nodeEnter.append("g")
                     .attr("class", "node-button")
-                    .attr("transform", "translate(-95, -20)")  // Điều chỉnh từ -25 lên -20
+                    .attr("transform", "translate(-95, -20)")  // Điều chỉnh vị trí theo kích thước mới
                     .style("display", d => {
                         // Kiểm tra nếu node có con ẩn
                         return d._children && d._children.length > 0 ? "block" : "none";
@@ -1257,7 +1263,7 @@
                 // Thêm background cho nút
                 nodeEnter.select(".node-button")
                     .append("circle")
-                    .attr("r", 24) // Tăng từ 12 lên 24 (gấp đôi)
+                    .attr("r", 18) // Giảm từ 24 xuống 18 px theo yêu cầu
                     .style("fill", "#fff")
                     .style("stroke", "#0066cc")
                     .style("stroke-width", "2px");
@@ -1265,9 +1271,9 @@
                 // Thêm dấu + hoặc - vào nút
                 nodeEnter.select(".node-button")
                     .append("text")
-                    .attr("dy", 8) // Điều chỉnh từ 4 lên 8 để căn giữa
+                    .attr("dy", 6) // Điều chỉnh từ 8 xuống 6 để căn giữa phù hợp với kích thước mới
                     .attr("text-anchor", "middle")
-                    .style("font-size", "32px") // Tăng từ 16px lên 32px (gấp đôi)
+                    .style("font-size", "24px") // Giảm từ 32px xuống 24px để cân đối với kích thước vòng tròn mới
                     .style("font-weight", "bold")
                     .style("pointer-events", "none") // Đảm bảo text không chặn sự kiện click
                     .style("fill", "#0066cc")
@@ -1285,7 +1291,7 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", `translate(${150}, 0)`); // Di chuyển node phối ngẫu gần hơn với node chính
+                        .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
                     
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
