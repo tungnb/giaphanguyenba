@@ -1843,6 +1843,66 @@
                 }
             }
 
+            // --- Phần mới: xây dựng phả hệ từ thế hệ 1 đến người đó ---
+            let genealogyHTML = '<p>Không có thông tin phả hệ</p>';
+            
+            // Tìm người thế hệ 1 (gốc)
+            const rootPersons = familyData.filter(p => p.generation === 1);
+            
+            if (rootPersons.length > 0 && person.generation > 1) {
+                // Tạo mảng lưu người trong chuỗi phả hệ
+                let genealogyChain = [];
+                
+                // Thêm người hiện tại
+                genealogyChain.push(person);
+                
+                // Tìm ngược lên để xây dựng phả hệ
+                let currentPerson = person;
+                
+                while (currentPerson && currentPerson.generation > 1 && currentPerson.parents) {
+                    // Tìm cha (ưu tiên lấy theo cha)
+                    const fatherId = currentPerson.parents.find(parentId => {
+                        const parent = familyData.find(p => p.id === parentId);
+                        return parent && parent.gender === 'male';
+                    });
+                    
+                    // Nếu không có cha thì lấy mẹ
+                    const parentId = fatherId || currentPerson.parents[0];
+                    
+                    if (parentId) {
+                        const parent = familyData.find(p => p.id === parentId);
+                        if (parent) {
+                            genealogyChain.push(parent);
+                            currentPerson = parent;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Đảo ngược mảng để hiển thị từ thế hệ 1 đến người hiện tại
+                genealogyChain.reverse();
+                
+                // Tạo HTML cho phả hệ
+                genealogyHTML = '<div class="genealogy-chain">';
+                genealogyHTML += '<ol style="padding-left: 20px; margin-top: 5px;">';
+                
+                genealogyChain.forEach((ancestor, index) => {
+                    const isLastItem = index === genealogyChain.length - 1;
+                    const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
+                    
+                    genealogyHTML += `
+                        <li style="${itemStyle}">
+                            ${ancestor.name} (Thế hệ ${ancestor.generation})
+                        </li>
+                    `;
+                });
+                
+                genealogyHTML += '</ol></div>';
+            }
+
             // Tìm thông tin cha mẹ
             let parentsHTML = '<p>Không có thông tin</p>';
             if (person.parents && person.parents.length > 0) {
@@ -1894,6 +1954,9 @@
                 childrenHTML += '</div>';
             }
 
+            // --- Phần mới: trường tiểu sử ---
+            const biography = person.biography || 'Chưa có thông tin tiểu sử.';
+
             // Tạo nội dung chi tiết người
             contentContainer.innerHTML = `
                 <div class="person-detail-header">
@@ -1906,17 +1969,21 @@
                     </div>
                 </div>
                 
-                <div class="person-detail-section" style="background-color: #f5f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h3 style="margin-top: 0; color: #0066cc;">Thông tin ngày sinh</h3>
-                    <p style="font-size: 16px; margin-bottom: 8px;">
-                        <i class="fas fa-birthday-cake" style="color: #0066cc; margin-right: 8px;"></i>
+                <div class="person-detail-section">
+                    <h3>Thông tin ngày sinh</h3>
+                    <p>
                         <strong>${detailedBirthInfo}</strong>
                     </p>
-                    <p style="font-size: 14px; color: #666;">
+                    <p>
                         ${person.deathDate ? 
-                          `<i class="fas fa-cross" style="margin-right: 8px;"></i>Ngày mất: ${new Date(person.deathDate).getDate()}/${new Date(person.deathDate).getMonth() + 1}/${new Date(person.deathDate).getFullYear()}` : 
+                          `Ngày mất: ${new Date(person.deathDate).getDate()}/${new Date(person.deathDate).getMonth() + 1}/${new Date(person.deathDate).getFullYear()}` : 
                           ''}
                     </p>
+                </div>
+                
+                <div class="person-detail-section">
+                    <h3>Phả hệ</h3>
+                    ${genealogyHTML}
                 </div>
                 
                 <div class="person-detail-section">
@@ -1932,6 +1999,13 @@
                 <div class="person-detail-section">
                     <h3>Con cái</h3>
                     ${childrenHTML}
+                </div>
+                
+                <div class="person-detail-section">
+                    <h3>Tiểu sử</h3>
+                    <p>
+                        ${biography}
+                    </p>
                 </div>
             `;
             
