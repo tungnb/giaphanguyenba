@@ -1257,7 +1257,7 @@
                 // Thêm background cho nút
                 nodeEnter.select(".node-button")
                     .append("circle")
-                    .attr("r", 12)
+                    .attr("r", 24) // Tăng từ 12 lên 24 (gấp đôi)
                     .style("fill", "#fff")
                     .style("stroke", "#0066cc")
                     .style("stroke-width", "2px");
@@ -1265,9 +1265,9 @@
                 // Thêm dấu + hoặc - vào nút
                 nodeEnter.select(".node-button")
                     .append("text")
-                    .attr("dy", 4)
+                    .attr("dy", 8) // Điều chỉnh từ 4 lên 8 để căn giữa
                     .attr("text-anchor", "middle")
-                    .style("font-size", "16px")
+                    .style("font-size", "32px") // Tăng từ 16px lên 32px (gấp đôi)
                     .style("font-weight", "bold")
                     .style("pointer-events", "none") // Đảm bảo text không chặn sự kiện click
                     .style("fill", "#0066cc")
@@ -1285,7 +1285,7 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", `translate(${200}, 0)`);
+                        .attr("transform", `translate(${150}, 0)`); // Di chuyển node phối ngẫu gần hơn với node chính
                     
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
@@ -1301,14 +1301,7 @@
                         .attr("ry", 5)
                         .attr("stroke", d.data.spouses[0].gender === "male" ? "#0066cc" : "#e91e63");
                     
-                    // Thêm đường nối vợ chồng
-                    d3.select(this)
-                        .append("line")
-                        .attr("class", "marriage-link")
-                        .attr("x1", 100)
-                        .attr("y1", 0)
-                        .attr("x2", 200)
-                        .attr("y2", 0);
+                    // Không thêm đường nối vợ chồng nữa vì đã đặt sát nhau
                     
                     // Chỉ hiển thị avatar của người phối ngẫu đầu tiên
                     spouseGroup.append("foreignObject")
@@ -1332,7 +1325,7 @@
                     }
                     spouseNames = firstName;
                     
-                    // Thêm tên các người phối ngẫu còn lại
+                    // Thêm tên các người phối ngẫu còn lại - bỏ dấu "+"
                     if (d.data.spouses.length > 1) {
                         for (let i = 1; i < d.data.spouses.length; i++) {
                             // Cắt bớt tên nếu quá dài
@@ -1340,7 +1333,7 @@
                             if (spouseName.length > 20) {
                                 spouseName = spouseName.substring(0, 17) + '...';
                             }
-                            spouseNames += `<tspan x="0" dy="15">+ ${spouseName}</tspan>`;
+                            spouseNames += `<tspan x="0" dy="15">${spouseName}</tspan>`;
                         }
                     }
                     
