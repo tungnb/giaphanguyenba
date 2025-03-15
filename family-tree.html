@@ -1864,46 +1864,50 @@
             let lifespan = '';
             let detailedBirthInfo = 'Không có thông tin';
             
-            console.log("Thông tin ngày sinh của người:", {
-                id: person.id,
+            // Kiểm tra biến để gỡ lỗi
+            console.log("Kiểm tra dữ liệu người:", {
                 name: person.name,
-                birthDate: person.birthDate,
-                birthDateType: typeof person.birthDate
+                birthDate: person.birthDate, 
+                birthdate: person.birthdate,
+                biography: person.biography,
+                bio: person.bio
             });
             
-            if (person.birthDate) {
+            // Kiểm tra cả hai trường có thể có - birthDate hoặc birthdate
+            const birthDateValue = person.birthDate || person.birthdate || '';
+            
+            // Xử lý ngày sinh đơn giản hơn - tham khảo từ admin/family-tree.html
+            if (birthDateValue) {
                 try {
-                    const birthDate = new Date(person.birthDate);
+                    const birthDate = new Date(birthDateValue);
                     
-                    // Kiểm tra xem ngày có hợp lệ không
-                    if (isNaN(birthDate.getTime())) {
-                        console.warn(`Ngày sinh không hợp lệ: ${person.birthDate}`);
-                        detailedBirthInfo = 'Không có thông tin';
-                    } else {
+                    if (!isNaN(birthDate.getTime())) {
                         const birthDay = birthDate.getDate();
                         const birthMonth = birthDate.getMonth() + 1;
                         const birthYear = birthDate.getFullYear();
                         
-                        // Tính tuổi
+                        // Tính tuổi - kiểm tra cả hai trường ngày mất
+                        const deathDateValue = person.deathDate || person.deathdate;
                         const currentYear = new Date().getFullYear();
-                        const age = person.deathDate ? 
-                            (new Date(person.deathDate).getFullYear() - birthYear) : 
+                        const age = deathDateValue ? 
+                            (new Date(deathDateValue).getFullYear() - birthYear) : 
                             (currentYear - birthYear);
                         
-                        // Format thông tin chi tiết ngày sinh
+                        // Format thông tin đơn giản
                         detailedBirthInfo = `${birthDay}/${birthMonth}/${birthYear} (${age} tuổi)`;
                         
-                        // Format lifespan đơn giản như trước
-                        if (person.deathDate) {
-                            const deathYear = new Date(person.deathDate).getFullYear();
+                        // Lifespan
+                        if (deathDateValue) {
+                            const deathYear = new Date(deathDateValue).getFullYear();
                             lifespan = `${birthYear} - ${deathYear}`;
                         } else {
                             lifespan = `Sinh năm ${birthYear}`;
                         }
+                    } else {
+                        console.warn(`Ngày sinh không hợp lệ: ${birthDateValue}`);
                     }
                 } catch (error) {
-                    console.error(`Lỗi khi xử lý ngày sinh: ${error.message}`);
-                    detailedBirthInfo = 'Không có thông tin (lỗi định dạng)';
+                    console.error(`Lỗi xử lý ngày sinh: ${error.message}`);
                 }
             }
 
@@ -2108,17 +2112,16 @@
             }
 
             // --- Phần mới: trường tiểu sử ---
-            console.log("Thông tin tiểu sử của người:", {
-                id: person.id,
-                name: person.name,
-                hasBiography: !!person.biography,
-                biography: person.biography
-            });
+            // Đơn giản hóa phần xử lý tiểu sử - tham khảo từ admin/family-tree.html
+            let biography = 'Chưa có thông tin tiểu sử.';
             
-            // Hiển thị tiểu sử nếu có, nếu không hiển thị thông báo
-            const biography = person.biography ? person.biography : 'Chưa có thông tin tiểu sử.';
+            // Kiểm tra và gán tiểu sử trực tiếp nếu có
+            if (person.biography && person.biography.trim() !== '') {
+                biography = person.biography;
+            }
             
-            console.log(`Tiểu sử cuối cùng: "${biography}"`);
+            // Log để kiểm tra
+            console.log(`Tiểu sử của ${person.name}:`, biography);
             
             // Tạo nội dung chi tiết người
             contentContainer.innerHTML = `
@@ -2139,11 +2142,13 @@
                     </p>
                     <p>
                         ${(() => {
-                            if (person.deathDate) {
+                            // Kiểm tra cả hai trường có thể có
+                            const deathDateValue = person.deathDate || person.deathdate;
+                            if (deathDateValue) {
                                 try {
-                                    const deathDate = new Date(person.deathDate);
+                                    const deathDate = new Date(deathDateValue);
                                     if (isNaN(deathDate.getTime())) {
-                                        console.warn(`Ngày mất không hợp lệ: ${person.deathDate}`);
+                                        console.warn(`Ngày mất không hợp lệ: ${deathDateValue}`);
                                         return '';
                                     }
                                     return `Ngày mất: ${deathDate.getDate()}/${deathDate.getMonth() + 1}/${deathDate.getFullYear()}`;
@@ -2180,7 +2185,7 @@
                 <div class="person-detail-section">
                     <h3>Tiểu sử</h3>
                     <p>
-                        ${biography}
+                        ${person.biography || person.bio || 'Chưa có thông tin tiểu sử.'}
                     </p>
                 </div>
             `;
