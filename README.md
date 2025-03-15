@@ -1,4 +1,4 @@
-# Blog Cá Nhân
+# Github tạo gia phả bằng html và js. Hoàn toàn miễn phí, hoạt động online 100%
 
 Blog cá nhân sử dụng Cloudflare Pages với khả năng lưu trữ bài viết thông qua Google Sheets và hình ảnh thông qua Google Drive.
 
