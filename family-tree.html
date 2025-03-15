@@ -1235,7 +1235,7 @@
                 
                 // Thêm ảnh đại diện sử dụng phương pháp zoom thay vì clip-path
                 nodeEnter.append("foreignObject")
-                    .attr("x", -70)  // Điều chỉnh từ -88 lên -70
+                    .attr("x", -82)  // Dịch chuyển thêm 10px về bên trái (từ -70 xuống -80)
                     .attr("y", -22)  // Giữ nguyên vị trí 
                     .attr("width", 40)  // Kích thước ảnh
                     .attr("height", 40)  // Kích thước ảnh
@@ -1248,13 +1248,9 @@
                 // Thêm tên - đặt ngang với ảnh
                 nodeEnter.append("text")
                     .attr("dy", 0)
-                    .attr("dx", 20)  // Điều chỉnh từ 0 lên 20 để tránh đè lên avatar
+                    .attr("dx", 20)  // Giữ nguyên vị trí
                     .attr("text-anchor", "middle")
-                    .text(d => {
-                        // Cắt ngắn tên nếu quá dài
-                        let name = d.data.name || '';
-                        return name.length > 30 ? name.substring(0, 27) + '...' : name;
-                    })
+                    .text(d => d.data.name || '')  // Bỏ cắt ngắn tên, hiển thị đầy đủ
                     .style("font-size", "12px")
                     .style("font-weight", "bold");
                 
@@ -1338,7 +1334,7 @@
                     
                     // Chỉ hiển thị avatar của người phối ngẫu đầu tiên
                     spouseGroup.append("foreignObject")
-                        .attr("x", -60)  // Điều chỉnh từ -70 lên -60
+                        .attr("x", -82)  // Dịch chuyển thêm 10px về bên trái (từ -60 xuống -70)
                         .attr("y", -nodeHeight/2 + 3)
                         .attr("width", 40)
                         .attr("height", 40)
@@ -1351,14 +1347,10 @@
                     // Nội dung hiển thị tên tất cả các người phối ngẫu
                     let spouseNames = "";
                     
-                    // Xử lý tên người phối ngẫu thứ nhất
-                    let firstName = d.data.spouses[0].name;
-                    if (firstName.length > 16) {  // Giảm từ 20 xuống 16
-                        firstName = firstName.substring(0, 13) + '...';  // Giảm từ 17 xuống 13
-                    }
-                    spouseNames = firstName;
+                    // Xử lý tên người phối ngẫu thứ nhất - bỏ cắt ngắn
+                    spouseNames = d.data.spouses[0].name;
                     
-                    // Thêm tên các người phối ngẫu còn lại - bỏ dấu "+"
+                    // Thêm tên các người phối ngẫu còn lại - bỏ cắt ngắn
                     if (d.data.spouses.length > 1) {
                         for (let i = 1; i < d.data.spouses.length; i++) {
                             // Cắt bớt tên nếu quá dài
