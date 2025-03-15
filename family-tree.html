@@ -1119,7 +1119,7 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([280, 50])  // Duy trì khoảng cách ngang
+                .nodeSize([160, 40])  // Giảm từ [180, 40] xuống [160, 40]
                 .separation((a, b) => {
                     // Xác định xem các node có phối ngẫu không
                     const aHasSpouse = a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0;
@@ -1127,7 +1127,7 @@
                     
                     // Kiểm tra xem các node có cùng cha mẹ không
                     if (a.parent === b.parent) {
-                        // Nếu cùng cha mẹ, kiểm tra xem có phải là anh em liền kề không
+                        // Tính toán vị trí trong danh sách anh em
                         const aSiblingIndex = a.parent.children.indexOf(a);
                         const bSiblingIndex = a.parent.children.indexOf(b);
                         
@@ -1137,21 +1137,30 @@
                             const firstNode = aSiblingIndex < bSiblingIndex ? a : b;
                             const secondNode = aSiblingIndex < bSiblingIndex ? b : a;
                             
-                            // Kiểm tra nếu node đứng trước có phối ngẫu
-                            if (firstNode.data.hasSpouse && firstNode.data.spouses && firstNode.data.spouses.length > 0) {
-                                // Tăng khoảng cách nhiều hơn để tránh chồng lên phối ngẫu của node trước
-                                return 2.5; // Giá trị lớn hơn để đảm bảo không bị chồng lấp
+                            // Kiểm tra nếu cả hai node đều có phối ngẫu - cần khoảng cách lớn nhất
+                            if (aHasSpouse && bHasSpouse) {
+                                return 2.4; // Giảm từ 3.0 xuống 2.4
                             }
                             
-                            // Trường hợp thông thường
-                            return 1.5; // Khoảng cách cố định giữa các anh em liền kề
+                            // Kiểm tra nếu node đứng trước có phối ngẫu
+                            if (firstNode.data.hasSpouse && firstNode.data.spouses && firstNode.data.spouses.length > 0) {
+                                return 2.2; // Giảm từ 2.8 xuống 2.2
+                            }
+                            
+                            // Nếu một trong hai node có phối ngẫu
+                            if (aHasSpouse || bHasSpouse) {
+                                return 1.8; // Giảm từ 2.0 xuống 1.8
+                            }
+                            
+                            // Trường hợp cả hai node đều không có phối ngẫu
+                            return 1.3; // Giảm từ 1.4 xuống 1.3
                         }
                         
-                        // Nếu không phải anh em liền kề
-                        return 1.5 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.2;
+                        // Nếu không phải anh em liền kề (cách nhau >1 vị trí)
+                        return 1.4 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.2; // Giảm hệ số
                     } else {
                         // Nếu khác cha mẹ
-                        return 2.0; // Tăng khoảng cách giữa các nhánh
+                        return 1.8; // Giảm từ 2.0 xuống 1.8
                     }
                 });
             
@@ -1180,7 +1189,7 @@
                 
                 // Thiết lập vị trí y dựa trên depth
                 nodes.forEach(d => {
-                    d.y = d.depth * 100; // Giảm từ 120 xuống 100 để thu nhỏ thêm khoảng cách giữa các đời
+                    d.y = d.depth * 120; // Tăng từ 100 lên 120 để tăng khoảng cách giữa các thế hệ
                 });
                 
                 // ===== NODES =====
@@ -1217,10 +1226,10 @@
                 
                 // Thêm hình chữ nhật cho node
                 nodeEnter.append("rect")
-                    .attr("width", 200)
-                    .attr("height", 50)  // Giảm từ 60px xuống 50px
-                    .attr("x", -100)
-                    .attr("y", -25)  // Thay đổi từ -30 thành -25
+                    .attr("width", 160)  // Giảm từ 200 xuống 160
+                    .attr("height", 50)
+                    .attr("x", -80)  // Điều chỉnh từ -100 xuống -80
+                    .attr("y", -25)
                     .attr("rx", 5)
                     .attr("ry", 5);
                 
@@ -1309,17 +1318,17 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
+                        .attr("transform", `translate(${145}, 0)`);  // Điều chỉnh từ 165 xuống 145
                         
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
-                    const nodeHeight = Math.max(50, 35 + (spouseCount - 1) * 15); // Chiều cao cơ bản + thêm cho mỗi phối ngẫu
+                    const nodeHeight = Math.max(50, 35 + (spouseCount - 1) * 15);
                     
                     // Tạo hình chữ nhật cho node vợ/chồng
                     spouseGroup.append("rect")
-                        .attr("width", 200)
+                        .attr("width", 160)  // Giảm từ 200 xuống 160
                         .attr("height", nodeHeight)
-                        .attr("x", -100)
+                        .attr("x", -80)  // Điều chỉnh từ -100 xuống -80
                         .attr("y", -nodeHeight/2)
                         .attr("rx", 5)
                         .attr("ry", 5)
@@ -1329,7 +1338,7 @@
                     
                     // Chỉ hiển thị avatar của người phối ngẫu đầu tiên
                     spouseGroup.append("foreignObject")
-                        .attr("x", -88)
+                        .attr("x", -70)  // Điều chỉnh từ -88 lên -70
                         .attr("y", -nodeHeight/2 + 3)
                         .attr("width", 40)
                         .attr("height", 40)
@@ -1344,8 +1353,8 @@
                     
                     // Xử lý tên người phối ngẫu thứ nhất
                     let firstName = d.data.spouses[0].name;
-                    if (firstName.length > 20) {
-                        firstName = firstName.substring(0, 17) + '...';
+                    if (firstName.length > 16) {  // Giảm từ 20 xuống 16
+                        firstName = firstName.substring(0, 13) + '...';  // Giảm từ 17 xuống 13
                     }
                     spouseNames = firstName;
                     
@@ -1354,8 +1363,8 @@
                         for (let i = 1; i < d.data.spouses.length; i++) {
                             // Cắt bớt tên nếu quá dài
                             let spouseName = d.data.spouses[i].name;
-                            if (spouseName.length > 20) {
-                                spouseName = spouseName.substring(0, 17) + '...';
+                            if (spouseName.length > 16) {  // Giảm từ 20 xuống 16
+                                spouseName = spouseName.substring(0, 13) + '...';  // Giảm từ 17 xuống 13
                             }
                             spouseNames += `<tspan x="0" dy="15">${spouseName}</tspan>`;
                         }
@@ -1367,7 +1376,7 @@
                     // Thêm tên người phối ngẫu với padding bên phải để không chồng lên avatar
                     spouseGroup.append("text")
                         .attr("dy", textStartY)
-                        .attr("dx", 10) // Dịch text sang phải một chút để không chồng lên avatar
+                        .attr("dx", 5)  // Giảm từ 10 xuống 5
                         .attr("text-anchor", "middle")
                         .html(spouseNames)
                         .style("font-size", "12px")
