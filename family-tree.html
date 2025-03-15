@@ -776,9 +776,18 @@
                             ...person,
                             parents: Array.isArray(person.parents) ? person.parents : [],
                             spouses: Array.isArray(person.spouses) ? person.spouses : [],
-                            children: Array.isArray(person.children) ? person.children : []
+                            children: Array.isArray(person.children) ? person.children : [],
+                            // Đảm bảo các trường thông tin khác
+                            birthDate: person.birthDate || '',
+                            deathDate: person.deathDate || '',
+                            biography: person.biography || 'Chưa có thông tin tiểu sử người này.',
+                            // Đảm bảo các trường cần thiết khác
+                            photo: person.photo || ''
                         };
                     });
+                    
+                    // In log để kiểm tra dữ liệu sau khi xử lý
+                    console.log("Dữ liệu người đã xử lý:", processedData[0]);
                     
                     return processedData;
                 } catch (fetchError) {
@@ -807,7 +816,19 @@
                         deathDate: '1970-01-01',
                         spouses: ['100'],
                         children: ['2', '3', '4'],
-                        parents: [] // người gốc nên không có cha mẹ
+                        parents: [], // người gốc nên không có cha mẹ
+                        biography: 'Ông là người khởi đầu dòng họ Nguyễn Bá tại xã Hoàng Sơn, huyện Nông Cống, tỉnh Thanh Hóa. Ông đã lập nên nghiệp cơ và truyền lại cho con cháu đời sau. Cuộc đời ông gắn liền với nhiều đóng góp cho quê hương.'
+                    },
+                    {
+                        id: '2',
+                        name: 'Nguyễn Bá Trưởng',
+                        gender: 'male',
+                        generation: 2,
+                        birthDate: '1930-01-01',
+                        parents: ['1', '100'],
+                        spouses: ['101'],
+                        children: ['5', '6'],
+                        biography: 'Con trai trưởng của ông Nguyễn Bá Cụ. Ông đã kế tục sự nghiệp của cha và phát triển thêm nhiều thành tựu. Là người có uy tín trong vùng và được nhiều người kính trọng.'
                     },
                     {
                         id: '100',
@@ -819,16 +840,6 @@
                         spouses: ['1'],
                         children: ['2', '3', '4'],
                         parents: [] // người gốc nên không có cha mẹ
-                    },
-                    {
-                        id: '2',
-                        name: 'Nguyễn Bá Trưởng',
-                        gender: 'male',
-                        generation: 2,
-                        birthDate: '1930-01-01',
-                        parents: ['1', '100'],
-                        spouses: ['101'],
-                        children: ['5', '6']
                     },
                     {
                         id: '101',
@@ -938,7 +949,13 @@
                         ...person,
                         parents: Array.isArray(person.parents) ? person.parents : [],
                         spouses: Array.isArray(person.spouses) ? person.spouses : [],
-                        children: Array.isArray(person.children) ? person.children : []
+                        children: Array.isArray(person.children) ? person.children : [],
+                        // Đảm bảo các trường thông tin khác
+                        birthDate: person.birthDate || '',
+                        deathDate: person.deathDate || '',
+                        biography: person.biography || 'Chưa có thông tin tiểu sử người này.',
+                        // Đảm bảo các trường cần thiết khác
+                        photo: person.photo || ''
                     };
                 });
             }
@@ -1847,27 +1864,46 @@
             let lifespan = '';
             let detailedBirthInfo = 'Không có thông tin';
             
+            console.log("Thông tin ngày sinh của người:", {
+                id: person.id,
+                name: person.name,
+                birthDate: person.birthDate,
+                birthDateType: typeof person.birthDate
+            });
+            
             if (person.birthDate) {
-                const birthDate = new Date(person.birthDate);
-                const birthDay = birthDate.getDate();
-                const birthMonth = birthDate.getMonth() + 1;
-                const birthYear = birthDate.getFullYear();
-                
-                // Tính tuổi
-                const currentYear = new Date().getFullYear();
-                const age = person.deathDate ? 
-                    (new Date(person.deathDate).getFullYear() - birthYear) : 
-                    (currentYear - birthYear);
-                
-                // Format thông tin chi tiết ngày sinh
-                detailedBirthInfo = `${birthDay}/${birthMonth}/${birthYear} (${age} tuổi)`;
-                
-                // Format lifespan đơn giản như trước
-                if (person.deathDate) {
-                    const deathYear = new Date(person.deathDate).getFullYear();
-                    lifespan = `${birthYear} - ${deathYear}`;
-                } else {
-                    lifespan = `Sinh năm ${birthYear}`;
+                try {
+                    const birthDate = new Date(person.birthDate);
+                    
+                    // Kiểm tra xem ngày có hợp lệ không
+                    if (isNaN(birthDate.getTime())) {
+                        console.warn(`Ngày sinh không hợp lệ: ${person.birthDate}`);
+                        detailedBirthInfo = 'Không có thông tin';
+                    } else {
+                        const birthDay = birthDate.getDate();
+                        const birthMonth = birthDate.getMonth() + 1;
+                        const birthYear = birthDate.getFullYear();
+                        
+                        // Tính tuổi
+                        const currentYear = new Date().getFullYear();
+                        const age = person.deathDate ? 
+                            (new Date(person.deathDate).getFullYear() - birthYear) : 
+                            (currentYear - birthYear);
+                        
+                        // Format thông tin chi tiết ngày sinh
+                        detailedBirthInfo = `${birthDay}/${birthMonth}/${birthYear} (${age} tuổi)`;
+                        
+                        // Format lifespan đơn giản như trước
+                        if (person.deathDate) {
+                            const deathYear = new Date(person.deathDate).getFullYear();
+                            lifespan = `${birthYear} - ${deathYear}`;
+                        } else {
+                            lifespan = `Sinh năm ${birthYear}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Lỗi khi xử lý ngày sinh: ${error.message}`);
+                    detailedBirthInfo = 'Không có thông tin (lỗi định dạng)';
                 }
             }
 
@@ -2072,8 +2108,18 @@
             }
 
             // --- Phần mới: trường tiểu sử ---
-            const biography = person.biography || 'Chưa có thông tin tiểu sử.';
-
+            console.log("Thông tin tiểu sử của người:", {
+                id: person.id,
+                name: person.name,
+                hasBiography: !!person.biography,
+                biography: person.biography
+            });
+            
+            // Hiển thị tiểu sử nếu có, nếu không hiển thị thông báo
+            const biography = person.biography ? person.biography : 'Chưa có thông tin tiểu sử.';
+            
+            console.log(`Tiểu sử cuối cùng: "${biography}"`);
+            
             // Tạo nội dung chi tiết người
             contentContainer.innerHTML = `
                 <div class="person-detail-header">
@@ -2092,9 +2138,22 @@
                         <strong>${detailedBirthInfo}</strong>
                     </p>
                     <p>
-                        ${person.deathDate ? 
-                          `Ngày mất: ${new Date(person.deathDate).getDate()}/${new Date(person.deathDate).getMonth() + 1}/${new Date(person.deathDate).getFullYear()}` : 
-                          ''}
+                        ${(() => {
+                            if (person.deathDate) {
+                                try {
+                                    const deathDate = new Date(person.deathDate);
+                                    if (isNaN(deathDate.getTime())) {
+                                        console.warn(`Ngày mất không hợp lệ: ${person.deathDate}`);
+                                        return '';
+                                    }
+                                    return `Ngày mất: ${deathDate.getDate()}/${deathDate.getMonth() + 1}/${deathDate.getFullYear()}`;
+                                } catch (error) {
+                                    console.error(`Lỗi khi xử lý ngày mất: ${error.message}`);
+                                    return '';
+                                }
+                            }
+                            return '';
+                        })()}
                     </p>
                 </div>
                 
