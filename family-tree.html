@@ -1234,16 +1234,12 @@
                     .text(d => d.data.birth)
                     .style("font-size", "10px");
                 
-                // Chỉ tạo một node phối ngẫu duy nhất cho tất cả vợ/chồng
-                    const spouseGroup = d3.select(this)
-                        .append("g")
-                        .attr("class", "spouse-node")
-                        .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
+                // XÓA ĐOẠN CODE LỖI Ở ĐÂY: Đã xóa đoạn code tạo spouseGroup bị sai vị trí
                         
                 // Thêm nút mở rộng/thu gọn - điều chỉnh lại vị trí
                 nodeEnter.append("g")
                     .attr("class", "node-button")
-                    .attr("transform", "translate(-95, -20)")  // Điều chỉnh vị trí theo kích thước mới
+                    .attr("transform", "translate(-95, -20)")
                     .style("display", d => {
                         // Kiểm tra nếu node có con ẩn
                         return d._children && d._children.length > 0 ? "block" : "none";
@@ -1263,7 +1259,7 @@
                 // Thêm background cho nút
                 nodeEnter.select(".node-button")
                     .append("circle")
-                    .attr("r", 18) // Giảm từ 24 xuống 18 px theo yêu cầu
+                    .attr("r", 18) // Giữ ở 18px theo yêu cầu
                     .style("fill", "#fff")
                     .style("stroke", "#0066cc")
                     .style("stroke-width", "2px");
@@ -1292,7 +1288,7 @@
                         .append("g")
                         .attr("class", "spouse-node")
                         .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
-                    
+                        
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
                     const nodeHeight = Math.max(50, 35 + (spouseCount - 1) * 15); // Chiều cao cơ bản + thêm cho mỗi phối ngẫu
