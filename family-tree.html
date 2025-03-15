@@ -778,9 +778,9 @@
                             spouses: Array.isArray(person.spouses) ? person.spouses : [],
                             children: Array.isArray(person.children) ? person.children : [],
                             // Đảm bảo các trường thông tin khác
-                            birthDate: person.birthDate || '',
-                            deathDate: person.deathDate || '',
-                            biography: person.biography || 'Chưa có thông tin tiểu sử người này.',
+                            birthDate: person.birthDate || person.birthdate || '',
+                            deathDate: person.deathDate || person.deathdate || '',
+                            biography: person.biography || person.bio || 'Chưa có thông tin tiểu sử người này.',
                             // Đảm bảo các trường cần thiết khác
                             photo: person.photo || ''
                         };
@@ -951,9 +951,9 @@
                         spouses: Array.isArray(person.spouses) ? person.spouses : [],
                         children: Array.isArray(person.children) ? person.children : [],
                         // Đảm bảo các trường thông tin khác
-                        birthDate: person.birthDate || '',
-                        deathDate: person.deathDate || '',
-                        biography: person.biography || 'Chưa có thông tin tiểu sử người này.',
+                        birthDate: person.birthDate || person.birthdate || '',
+                        deathDate: person.deathDate || person.deathdate || '',
+                        biography: person.biography || person.bio || 'Chưa có thông tin tiểu sử người này.',
                         // Đảm bảo các trường cần thiết khác
                         photo: person.photo || ''
                     };
@@ -2112,16 +2112,35 @@
             }
 
             // --- Phần mới: trường tiểu sử ---
-            // Đơn giản hóa phần xử lý tiểu sử - tham khảo từ admin/family-tree.html
+            // Thêm logs đầy đủ để gỡ lỗi
+            console.log(`Dữ liệu người chi tiết (${person.id})`, {
+                name: person.name,
+                birthDate: person.birthDate,
+                birthdate: person.birthdate,
+                biography: person.biography,
+                bio: person.bio
+            });
+            
+            // Đơn giản hóa phần xử lý tiểu sử
             let biography = 'Chưa có thông tin tiểu sử.';
             
-            // Kiểm tra và gán tiểu sử trực tiếp nếu có
-            if (person.biography && person.biography.trim() !== '') {
+            // Ưu tiên dùng bio nếu có, nếu không thì dùng biography
+            if (person.bio && person.bio.trim() !== '') {
+                biography = person.bio;
+                console.log("Đã lấy tiểu sử từ trường bio");
+            } else if (person.biography && person.biography.trim() !== '') {
                 biography = person.biography;
+                console.log("Đã lấy tiểu sử từ trường biography");
+            } else {
+                console.log("Không tìm thấy tiểu sử");
             }
             
             // Log để kiểm tra
-            console.log(`Tiểu sử của ${person.name}:`, biography);
+            console.log(`Tiểu sử của ${person.name}:`, {
+                biography: person.biography,
+                bio: person.bio,
+                finalValue: biography
+            });
             
             // Tạo nội dung chi tiết người
             contentContainer.innerHTML = `
