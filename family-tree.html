@@ -1121,57 +1121,28 @@
             const treeLayout = d3.tree()
                 .nodeSize([280, 50])  // Duy trì khoảng cách ngang
                 .separation((a, b) => {
-                    // Kiểm tra xem các node có phải là độc thân không
-                    const aIsSingle = !a.data.hasSpouse || !a.data.spouses || a.data.spouses.length === 0;
-                    const bIsSingle = !b.data.hasSpouse || !b.data.spouses || b.data.spouses.length === 0;
+                    // Áp dụng một khoảng cách cơ bản đồng đều giữa các node
+                    // Coi cặp node phối ngẫu như một đơn vị
                     
-                    // Lấy thông tin về node kề nhau
-                    const aPrev = a.parent && a.parent.children ? a.parent.children[a.parent.children.indexOf(a) - 1] : null;
-                    const bNext = b.parent && b.parent.children ? b.parent.children[b.parent.children.indexOf(b) + 1] : null;
-                    
-                    // Áp dụng khoảng cách thích hợp cho các node
+                    // Kiểm tra xem các node có cùng cha mẹ không
                     if (a.parent === b.parent) {
-                        // Trường hợp đặc biệt: nếu node trước có phối ngẫu và node hiện tại là độc thân
-                        if (aPrev && aPrev === b && !bIsSingle && aIsSingle) {
-                            // Giảm khoảng cách xuống nhưng vẫn đảm bảo không chồng lấp
-                            return 1.4;
+                        // Nếu cùng cha mẹ, sử dụng khoảng cách cố định
+                        // Không phân biệt node có phối ngẫu hay không
+                        
+                        // Kiểm tra nếu là anh em liền kề
+                        const aSiblingIndex = a.parent.children.indexOf(a);
+                        const bSiblingIndex = a.parent.children.indexOf(b);
+                        
+                        if (Math.abs(aSiblingIndex - bSiblingIndex) === 1) {
+                            // Nếu là anh em liền kề, sử dụng khoảng cách cố định
+                            return 1.1;
                         }
                         
-                        // Trường hợp đặc biệt: nếu node đầu độc thân và node sau có phối ngẫu
-                        if (bNext && bNext === a && aIsSingle && !bIsSingle) {
-                            // Giảm khoảng cách xuống nhưng vẫn đảm bảo không chồng lấp
-                            return 1.4;
-                        }
-                        
-                        // Trường hợp cùng cha mẹ, node liền kề nhau
-                        if (Math.abs(a.parent.children.indexOf(a) - b.parent.children.indexOf(b)) === 1) {
-                            if (aIsSingle && !bIsSingle) {
-                                // Một node độc thân, kề với node có phối ngẫu - giảm khoảng cách
-                                return 1.4;
-                            } else if (!aIsSingle && bIsSingle) {
-                                // Một node có phối ngẫu, kề với node độc thân - giảm khoảng cách
-                                return 1.4;
-                            }
-                        }
-                        
-                        // Các trường hợp thông thường
-                        if (aIsSingle && bIsSingle) {
-                            // Cả hai node đều độc thân - sử dụng khoảng cách nhỏ hơn
-                            return 0.8;
-                        } else if (aIsSingle || bIsSingle) {
-                            // Một node độc thân, một node có phối ngẫu
-                            return 1.2;
-                        } else {
-                            // Cả hai đều có vợ/chồng - giảm xuống một chút
-                            return 1.6;
-                        }
+                        // Nếu không phải anh em liền kề, có thể tăng khoảng cách
+                        return 1.1 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.1;
                     } else {
-                        // Khác cha mẹ - khoảng cách lớn hơn
-                        if (aIsSingle && bIsSingle) {
-                            return 1.5;
-                        } else {
-                            return 1.6;
-                        }
+                        // Nếu khác cha mẹ, sử dụng khoảng cách lớn hơn
+                        return 1.5;
                     }
                 });
             
