@@ -1119,7 +1119,7 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([160, 40])  // Giảm từ [180, 40] xuống [160, 40]
+                .nodeSize([176, 40])  // Tăng từ [160, 40] lên [176, 40], tăng 10%
                 .separation((a, b) => {
                     // Xác định xem các node có phối ngẫu không
                     const aHasSpouse = a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0;
@@ -1226,9 +1226,9 @@
                 
                 // Thêm hình chữ nhật cho node
                 nodeEnter.append("rect")
-                    .attr("width", 160)  // Giảm từ 200 xuống 160
+                    .attr("width", 176)  // Tăng 10% từ 160 lên 176
                     .attr("height", 50)
-                    .attr("x", -80)  // Điều chỉnh từ -100 xuống -80
+                    .attr("x", -88)  // Điều chỉnh từ -80 xuống -88 để giữ cân đối
                     .attr("y", -25)
                     .attr("rx", 5)
                     .attr("ry", 5);
@@ -1318,7 +1318,7 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", `translate(${145}, 0)`);  // Điều chỉnh từ 165 xuống 145
+                        .attr("transform", `translate(${160}, 0)`);  // Điều chỉnh từ 145 lên 160 để tăng khoảng cách
                         
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
@@ -1326,9 +1326,9 @@
                     
                     // Tạo hình chữ nhật cho node vợ/chồng
                     spouseGroup.append("rect")
-                        .attr("width", 160)  // Giảm từ 200 xuống 160
+                        .attr("width", 176)  // Tăng 10% từ 160 lên 176
                         .attr("height", nodeHeight)
-                        .attr("x", -80)  // Điều chỉnh từ -100 xuống -80
+                        .attr("x", -88)  // Điều chỉnh từ -80 xuống -88 để giữ cân đối
                         .attr("y", -nodeHeight/2)
                         .attr("rx", 5)
                         .attr("ry", 5)
