@@ -1119,15 +1119,15 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([180, 100])  // Giảm khoảng cách ngang từ 220 xuống 180
+                .nodeSize([150, 80])  // Giảm khoảng cách ngang từ 180 xuống 150 và khoảng cách dọc từ 100 xuống 80
                 .separation((a, b) => {
                     // Tăng khoảng cách giữa các node anh chị em khi có vợ/chồng
-                    let baseSeparation = a.parent === b.parent ? 1.2 : 1.8;
+                    let baseSeparation = a.parent === b.parent ? 1.0 : 1.5;
                     
                     // Tăng khoảng cách nếu một trong hai node có vợ/chồng
                     if ((a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0) || 
                         (b.data.hasSpouse && b.data.spouses && b.data.spouses.length > 0)) {
-                        baseSeparation *= 1.2; // Giảm hệ số từ 1.5 xuống 1.2
+                        baseSeparation *= 1.1; // Giảm hệ số từ 1.2 xuống 1.1
                     }
                     
                     return baseSeparation;
@@ -1136,21 +1136,13 @@
             // Tạo hierarchy từ dữ liệu
             const root = d3.hierarchy(formattedData.root);
             
-            // Mặc định mở rộng 2 cấp đầu tiên
+            // Mặc định mở rộng chỉ 2 cấp đầu tiên (thế hệ 1 và 2)
             root.descendants().forEach(d => {
-                if (d.depth < 2) {
-                    d._children = d.children;
-                } else {
-                    d._children = d.children;
-                    d.children = null;
-                }
-            });
-            
-            // Thiết lập cấp độ thu gọn ban đầu - đảm bảo chỉ hiển thị 2 đời đầu tiên
-            root.descendants().forEach(d => {
-                // Các node ở cấp độ 2 trở lên (đời thứ 3 trở đi) sẽ được thu gọn
-                if (d.depth >= 2) {
-                    d._children = d.children;
+                // Lưu các node con vào _children cho tất cả các node
+                d._children = d.children;
+                
+                // Chỉ hiển thị con cho node ở cấp độ 0 và 1 (đời 1 và 2)
+                if (d.depth >= 1) {
                     d.children = null;
                 }
             });
@@ -1166,7 +1158,7 @@
                 
                 // Thiết lập vị trí y dựa trên depth
                 nodes.forEach(d => {
-                    d.y = d.depth * 180;
+                    d.y = d.depth * 150; // Giảm khoảng cách dọc từ 180 xuống 150
                 });
                 
                 // ===== NODES =====
@@ -1186,17 +1178,9 @@
                     })
                     .attr("transform", d => `translate(${source.x0 || 0},${source.y0 || 0})`)
                     .on("click", (event, d) => {
-                        // Toggle children on click
-                        if (d.children) {
-                            d._children = d.children;
-                            d.children = null;
-                        } else {
-                            d.children = d._children;
-                        }
-                        updateTree(d);
-                        
                         // Ngăn sự kiện lan truyền để không mở modal khi click vào nút +/-
-                        if (event.target.tagName === "circle" || event.target.tagName === "text") {
+                        if (event.target.tagName === "circle" || event.target.tagName === "text" && 
+                            event.target.parentNode.classList.contains("node-button")) {
                             event.stopPropagation();
                             return;
                         }
@@ -1205,48 +1189,12 @@
                         showPersonDetail(d.data.id);
                     });
                 
-                // Thêm hình chữ nhật cho node
-                nodeEnter.append("rect")
-                    .attr("width", 120)
-                    .attr("height", 80)
-                    .attr("x", -60)
-                    .attr("y", -40)
-                    .attr("rx", 5)
-                    .attr("ry", 5);
-                
-                // Thêm ảnh đại diện
-                nodeEnter.append("image")
-                    .attr("xlink:href", d => d.data.img)
-                    .attr("x", -25)
-                    .attr("y", -30)
-                    .attr("width", 50)
-                    .attr("height", 50)
-                    .attr("clip-path", d => `circle(25px at ${0}px ${-5}px)`);
-                
-                // Thêm tên
-                nodeEnter.append("text")
-                    .attr("dy", 35)
-                    .attr("text-anchor", "middle")
-                    .text(d => {
-                        // Cắt ngắn tên nếu quá dài
-                        let name = d.data.name || '';
-                        return name.length > 15 ? name.substring(0, 12) + '...' : name;
-                    })
-                    .style("font-size", "12px")
-                    .style("font-weight", "bold");
-                
-                // Thêm ngày sinh
-                nodeEnter.append("text")
-                    .attr("dy", 50)
-                    .attr("text-anchor", "middle")
-                    .text(d => d.data.birth)
-                    .style("font-size", "10px");
-                
                 // Thêm nút mở rộng/thu gọn
                 nodeEnter.append("g")
                     .attr("class", "node-button")
                     .attr("transform", "translate(-50, -30)")
-                    .style("display", d => d._children || d.children ? "block" : "none")
+                    // Chỉ hiển thị nút khi node có con đã được ẩn (_children không null)
+                    .style("display", d => d._children ? "block" : "none")
                     .on("click", (event, d) => {
                         if (d.children) {
                             d._children = d.children;
@@ -1271,15 +1219,52 @@
                     .style("font-weight", "bold")
                     .text(d => d.children ? "-" : "+");
                 
+                // Thêm hình chữ nhật cho node
+                nodeEnter.append("rect")
+                    .attr("width", 110) // Giảm kích thước từ 120 xuống 110
+                    .attr("height", 75) // Giảm kích thước từ 80 xuống 75
+                    .attr("x", -55) // Điều chỉnh vị trí
+                    .attr("y", -37) // Điều chỉnh vị trí
+                    .attr("rx", 5)
+                    .attr("ry", 5);
+                
+                // Thêm ảnh đại diện
+                nodeEnter.append("image")
+                    .attr("xlink:href", d => d.data.img)
+                    .attr("x", -22) // Điều chỉnh vị trí từ -25 đến -22
+                    .attr("y", -28) // Điều chỉnh vị trí từ -30 đến -28
+                    .attr("width", 45) // Giảm kích thước từ 50 xuống 45
+                    .attr("height", 45) // Giảm kích thước từ 50 xuống 45
+                    .attr("clip-path", d => `circle(22px at ${0}px ${-5}px)`); // Điều chỉnh clip path
+                
+                // Thêm tên
+                nodeEnter.append("text")
+                    .attr("dy", 30) // Di chuyển lên từ 35 đến 30
+                    .attr("text-anchor", "middle")
+                    .text(d => {
+                        // Cắt ngắn tên nếu quá dài
+                        let name = d.data.name || '';
+                        return name.length > 14 ? name.substring(0, 11) + '...' : name;
+                    })
+                    .style("font-size", "12px")
+                    .style("font-weight", "bold");
+                
+                // Thêm ngày sinh
+                nodeEnter.append("text")
+                    .attr("dy", 45) // Di chuyển lên từ 50 đến 45
+                    .attr("text-anchor", "middle")
+                    .text(d => d.data.birth)
+                    .style("font-size", "10px");
+                
                 // Thêm thông tin vợ/chồng nếu có
                 const coupleNodes = nodeEnter.filter(d => d.data.hasSpouse && d.data.spouses && d.data.spouses.length > 0);
                 
                 // Thêm đường nối vợ chồng
                 coupleNodes.append("line")
                     .attr("class", "marriage-link")
-                    .attr("x1", 60)
+                    .attr("x1", 55) // Giảm từ 60 xuống 55
                     .attr("y1", 0)
-                    .attr("x2", 120)  // Giảm độ dài đường nối từ 140 xuống 120
+                    .attr("x2", 100) // Giảm từ 120 xuống 100
                     .attr("y2", 0);
                 
                 // Thêm node vợ/chồng
@@ -1289,14 +1274,14 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", "translate(120, 0)");  // Giảm khoảng cách từ 140 xuống 120
+                        .attr("transform", "translate(100, 0)"); // Giảm khoảng cách từ 120 xuống 100
                     
                     // Thêm hình chữ nhật cho node vợ/chồng
                     spouseGroup.append("rect")
-                        .attr("width", 120)
-                        .attr("height", 80)
-                        .attr("x", -60)
-                        .attr("y", -40)
+                        .attr("width", 110) // Giảm kích thước từ 120 xuống 110
+                        .attr("height", 75) // Giảm kích thước từ 80 xuống 75
+                        .attr("x", -55) // Điều chỉnh vị trí
+                        .attr("y", -37) // Điều chỉnh vị trí
                         .attr("rx", 5)
                         .attr("ry", 5)
                         .attr("stroke", spouse.gender === "male" ? "#0066cc" : "#e91e63");
@@ -1304,27 +1289,27 @@
                     // Thêm ảnh đại diện vợ/chồng
                     spouseGroup.append("image")
                         .attr("xlink:href", spouse.img)
-                        .attr("x", -25)
-                        .attr("y", -30)
-                        .attr("width", 50)
-                        .attr("height", 50)
-                        .attr("clip-path", `circle(25px at ${0}px ${-5}px)`);
+                        .attr("x", -22) // Điều chỉnh vị trí
+                        .attr("y", -28) // Điều chỉnh vị trí
+                        .attr("width", 45) // Giảm kích thước
+                        .attr("height", 45) // Giảm kích thước
+                        .attr("clip-path", `circle(22px at ${0}px ${-5}px)`); // Điều chỉnh clip path
                     
                     // Thêm tên vợ/chồng
                     spouseGroup.append("text")
-                        .attr("dy", 35)
+                        .attr("dy", 30) // Di chuyển lên từ 35 đến 30
                         .attr("text-anchor", "middle")
                         .text(() => {
                             // Cắt ngắn tên nếu quá dài
                             let name = spouse.name || '';
-                            return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                            return name.length > 14 ? name.substring(0, 11) + '...' : name;
                         })
                         .style("font-size", "12px")
                         .style("font-weight", "bold");
                     
                     // Thêm ngày sinh vợ/chồng
                     spouseGroup.append("text")
-                        .attr("dy", 50)
+                        .attr("dy", 45) // Di chuyển lên từ 50 đến 45
                         .attr("text-anchor", "middle")
                         .text(spouse.birth)
                         .style("font-size", "10px");
