@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="family-tree.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Thư viện OrgChart.js -->
-    <script src="js/OrgChart.js"></script>
+    <!-- Thay OrgChart.js bằng D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     
     <!-- Thêm Google API Client và Google Picker API -->
     <script src="https://apis.google.com/js/api.js"></script>
@@ -48,6 +48,64 @@
             object-fit: cover;
             margin: 0 auto 8px;
             border: 3px solid #f0f5ff;
+        }
+        
+        /* D3.js specific styles */
+        .node {
+            cursor: pointer;
+        }
+
+        .node rect {
+            fill: white;
+            stroke-width: 3px;
+            rx: 5;
+            ry: 5;
+        }
+
+        .node.male rect {
+            stroke: #0066cc;
+        }
+
+        .node.female rect {
+            stroke: #e91e63;
+        }
+
+        .node.couple rect {
+            stroke: #E4E4E4;
+        }
+
+        .node.couple.male rect {
+            stroke: #0066cc;
+        }
+
+        .node.couple.female rect {
+            stroke: #e91e63;
+        }
+
+        .node text {
+            font-family: Arial, sans-serif;
+            text-anchor: middle;
+        }
+
+        .node image {
+            border-radius: 50%;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+
+        .marriage-link {
+            fill: none;
+            stroke: #FF9999;
+            stroke-width: 2px;
+            stroke-dasharray: 4;
+        }
+
+        .node-button {
+            cursor: pointer;
         }
         
         /* Tùy chỉnh cho modal */
@@ -112,7 +170,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Tùy chỉnh giao diện OrgChart */
+        /* Tùy chỉnh giao diện D3.js */
         [data-boc-name] {
             font-weight: bold;
             font-size: 14px;
@@ -600,6 +658,8 @@
         let currentSearchTerm = '';
 
         // Thêm polyfill cho phương thức addPartnerAndParentNodes nếu nó không tồn tại trong OrgChart
+        // Không cần thiết khi sử dụng D3.js
+        /*
         if (OrgChart && !OrgChart.prototype.addPartnerAndParentNodes) {
             OrgChart.prototype.addPartnerAndParentNodes = function(nodeId, childrenIds, partnerData) {
                 console.log("Polyfill cho addPartnerAndParentNodes được gọi");
@@ -609,6 +669,7 @@
                 return;
             };
         }
+        */
 
         // Lấy dữ liệu gia phả từ API hoặc dữ liệu mẫu
         async function getFamilyData() {
@@ -772,15 +833,22 @@
 
         // Tạo danh sách node từ dữ liệu gia phả
         function formatFamilyData(familyDataArray) {
-            const nodes = [];
-            const coupleNodes = new Map();
-            const processedIds = new Set();
-
-            // Bước 1: Tạo các node cho từng người
+            // Tạo cấu trúc dữ liệu phù hợp với D3.js
+            // D3.js sử dụng cấu trúc dạng cây phân cấp với nodes và links
+            
+            // Thiết lập root node (node gốc)
+            const rootPersons = familyDataArray.filter(p => p.generation === 1);
+            
+            if (rootPersons.length === 0) {
+                console.error("Không tìm thấy người thế hệ gốc");
+                return { root: null, nodeMap: new Map() };
+            }
+            
+            // Tạo một map lưu trữ tất cả các node để dễ dàng truy cập
+            const nodeMap = new Map();
+            
+            // Tạo các node cơ bản từ dữ liệu người
             familyDataArray.forEach(person => {
-                // Kiểm tra nếu người này đã được xử lý trong một cặp vợ chồng
-                if (processedIds.has(person.id)) return;
-
                 // Avatar mặc định nếu không có ảnh
                 let photoUrl = person.photo;
                 if (!photoUrl) {
@@ -802,427 +870,411 @@
                         lifespan = `Sinh năm ${birthYear}`;
                     }
                 }
-
-                // Nếu có vợ/chồng, tạo node với thông tin vợ/chồng đầu tiên
-                if (person.spouses && person.spouses.length > 0) {
-                    // Lấy thông tin vợ/chồng đầu tiên
-                    const spouseId = person.spouses[0];
-                    const spouse = familyDataArray.find(p => p.id === spouseId);
-                    
-                    if (!spouse) {
-                        // Nếu không tìm thấy vợ/chồng, tạo node đơn
-                        const node = {
-                            id: person.id,
-                            name: person.name,
-                            img: photoUrl,
-                            birth: lifespan,
-                            gender: person.gender,
-                            generation: person.generation,
-                            tags: [person.gender],
-                            personId: person.id,
-                            personGender: person.gender,
-                            children: person.children || []
-                        };
-                        nodes.push(node);
-                    } else {
-                        // Ảnh của vợ/chồng
-                        let spousePhotoUrl = spouse.photo;
-                        if (!spousePhotoUrl) {
-                            if (spouse.gender === 'male') {
-                                spousePhotoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
-                            } else {
-                                spousePhotoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
-                            }
-                        }
-
-                        // Lifespan của vợ/chồng
-                        let spouseLifespan = '';
-                        if (spouse.birthDate) {
-                            const birthYear = new Date(spouse.birthDate).getFullYear();
-                            if (spouse.deathDate) {
-                                const deathYear = new Date(spouse.deathDate).getFullYear();
-                                spouseLifespan = `${birthYear} - ${deathYear}`;
-                            } else {
-                                spouseLifespan = `Sinh năm ${birthYear}`;
-                            }
-                        }
-
-                        // Tạo node với thông tin của person và vợ/chồng đầu tiên
-                        const coupleId = person.id; // Sử dụng ID của người nội tộc làm ID node
-                        
-                        const coupleNode = {
-                            id: coupleId,
-                            personId: person.id,
-                            name: person.name, 
-                            img: photoUrl,
-                            birth: lifespan,
-                            personGender: person.gender,
-                            spouseId: spouse.id,
-                            spouseName: spouse.name,
-                            spouseImg: spousePhotoUrl,
-                            spouseBirth: spouseLifespan,
-                            spouseGender: spouse.gender,
-                            generation: person.generation,
-                            tags: [person.gender === 'male' ? 'couple_male' : 'couple_female'],
-                            // Gộp danh sách con từ tất cả các vợ/chồng
-                            children: [...(person.children || [])]
-                        };
-                        
-                        // Thêm tất cả con của vợ/chồng
-                        if (spouse.children) {
-                            coupleNode.children = [...coupleNode.children, ...spouse.children];
-                        }
-                        
-                        // Thêm node vợ chồng vào mảng
-                        nodes.push(coupleNode);
-                        coupleNodes.set(coupleId, coupleNode);
-                        
-                        // Đánh dấu người nội tộc đã được xử lý
-                        processedIds.add(person.id);
-                        
-                        // Đánh dấu TẤT CẢ vợ/chồng của người này đã được xử lý
-                        if (person.spouses) {
-                            person.spouses.forEach(id => processedIds.add(id));
-                        }
-                    }
-                }
-                // Nếu không có vợ/chồng, tạo node bình thường
-                else if (!processedIds.has(person.id)) {
-                    const node = {
-                        id: person.id,
-                        name: person.name,
-                        img: photoUrl,
-                        birth: lifespan,
-                        gender: person.gender,
-                        generation: person.generation,
-                        tags: [person.gender],
-                        // Thêm một số thuộc tính để thống nhất hiển thị với couple nodes
-                        personId: person.id,
-                        personGender: person.gender,
-                        children: person.children || []
-                    };
-                    nodes.push(node);
-                }
+                
+                // Tạo node mới
+                const node = {
+                    id: person.id,
+                    name: person.name,
+                    img: photoUrl,
+                    birth: lifespan,
+                    gender: person.gender,
+                    generation: person.generation,
+                    data: person,  // Lưu toàn bộ dữ liệu gốc
+                    children: []   // Sẽ được cập nhật sau
+                };
+                
+                nodeMap.set(person.id, node);
             });
             
-            // Bước 2: Thiết lập quan hệ cha mẹ - con
+            // Xây dựng cấu trúc cây bằng cách thiết lập quan hệ cha-con
             familyDataArray.forEach(person => {
-                if (!person.parents || person.parents.length === 0) return;
+                if (!person.children || person.children.length === 0) return;
                 
-                // Tìm node tương ứng của người này
-                let personNode = nodes.find(n => n.id === person.id);
+                const parentNode = nodeMap.get(person.id);
+                if (!parentNode) return;
                 
-                // Nếu không tìm thấy node riêng, tìm node vợ chồng chứa người này
-                if (!personNode) {
-                    personNode = nodes.find(n => 
-                        (n.personId === person.id) || (n.spouseId === person.id)
-                    );
-                }
-                
-                if (!personNode) return;
-
-                // Nếu có cả cha và mẹ
-                if (person.parents.length >= 2) {
-                    // Tìm parent ID - ưu tiên ID của người cha (nội tộc)
-                    const fatherParent = person.parents.find(parentId => {
-                        const parent = familyDataArray.find(p => p.id === parentId);
-                        return parent && parent.gender === 'male';
-                    });
-                    
-                    // Nếu tìm thấy ID cha, sử dụng ID đó
-                    if (fatherParent) {
-                        personNode.pid = fatherParent;
-                    } else {
-                        // Nếu không tìm thấy, sử dụng parent ID đầu tiên
-                        personNode.pid = person.parents[0];
+                // Thêm các con vào node cha
+                person.children.forEach(childId => {
+                    const childNode = nodeMap.get(childId);
+                    if (childNode && !parentNode.children.includes(childNode)) {
+                        // Chỉ thêm nếu node con tồn tại và chưa được thêm
+                        parentNode.children.push(childNode);
                     }
-                } else if (person.parents.length === 1) {
-                    // Nếu chỉ có một người làm cha/mẹ
-                    personNode.pid = person.parents[0];
-                }
-            });
-
-            return { nodes };
-        }
-
-        // Hàm khởi tạo OrgChart
-        function initializeOrgChart(formattedData) {
-            // Lưu dữ liệu đã định dạng vào biến toàn cục để sử dụng sau này
-            formattedChartData = formattedData;
-
-            // Tùy chỉnh template cho node đơn
-            OrgChart.templates.single = Object.assign({}, OrgChart.templates.olivia);
-            OrgChart.templates.single.size = [280, 120];
-            OrgChart.templates.single.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>';
-            OrgChart.templates.single.nodeMenuButton = 
-                '<g style="display:none"></g>';
-            OrgChart.templates.single.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="140" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.single.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="140" y="50" text-anchor="middle">{val}</text>';
-            OrgChart.templates.single.img_0 = 
-                '<clipPath id="personClip_{id}"><circle cx="140" cy="80" r="25"></circle></clipPath>' +
-                '<image preserveAspectRatio="xMidYMid slice" clip-path="url(#personClip_{id})" xlink:href="{val}" x="115" y="55" width="50" height="50"></image>';
-
-            // Tùy chỉnh template cho node nam
-            OrgChart.templates.single_male = Object.assign({}, OrgChart.templates.single);
-            OrgChart.templates.single_male.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>';
-            OrgChart.templates.single_male.nodeMenuButton = 
-                '<g style="display:none"></g>';
-
-            // Tùy chỉnh template cho node nữ
-            OrgChart.templates.single_female = Object.assign({}, OrgChart.templates.single);
-            OrgChart.templates.single_female.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>';
-            OrgChart.templates.single_female.nodeMenuButton = 
-                '<g style="display:none"></g>';
-
-            // Tạo template tùy chỉnh cho node vợ chồng - ĐƠN GIẢN HÓA TOÀN BỘ
-            OrgChart.templates.couple = Object.assign({}, OrgChart.templates.olivia);
-            OrgChart.templates.couple.size = [280, 120];
-            OrgChart.templates.couple.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#E4E4E4"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple.nodeMenuButton = 
-                '<g style="display:none"></g>';
-            
-            // Tên ở trên, avatar ở dưới - giống template single
-            OrgChart.templates.couple.field_0 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="70" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple.field_1 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="70" y="45" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple.field_2 = 
-                '<text style="font-size:14px;" fill="#2D2D2D" x="210" y="30" text-anchor="middle">{val}</text>';
-            OrgChart.templates.couple.field_3 = 
-                '<text style="font-size:12px;" fill="#5B5B5B" x="210" y="45" text-anchor="middle">{val}</text>';
-                
-            // Avatar - Không dùng clipPath, chỉ vẽ hình tròn và đặt ảnh ở dưới tên
-            OrgChart.templates.couple.img_0 = 
-                '<circle cx="70" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="50" y="60" width="40" height="40"></image>';
-            
-            OrgChart.templates.couple.img_1 = 
-                '<circle cx="210" cy="80" r="20" fill="white" stroke="#ccc" stroke-width="1"></circle>' +
-                '<image preserveAspectRatio="xMidYMid slice" xlink:href="{val}" x="190" y="60" width="40" height="40"></image>';
-                
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nam
-            OrgChart.templates.couple_male = Object.assign({}, OrgChart.templates.couple);
-            OrgChart.templates.couple_male.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#0066cc"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_male.nodeMenuButton = 
-                '<g style="display:none"></g>';
-            
-            // Tùy chỉnh template cho node vợ chồng khi người con trong gia phả là nữ
-            OrgChart.templates.couple_female = Object.assign({}, OrgChart.templates.couple);
-            OrgChart.templates.couple_female.node = 
-                '<rect x="0" y="0" width="280" height="120" rx="5" ry="5" fill="#ffffff" stroke-width="3" stroke="#e91e63"></rect>' +
-                '<line x1="140" y1="0" x2="140" y2="120" stroke="#E4E4E4" stroke-width="1"></line>';
-            OrgChart.templates.couple_female.nodeMenuButton = 
-                '<g style="display:none"></g>';
-
-            // Tùy chỉnh template cho nút mở rộng/thu gọn
-            OrgChart.templates.single.min = {
-                w: 280,
-                h: 120
-            };
-            OrgChart.templates.single.plus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
-            OrgChart.templates.single.minus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
-
-            // Sao chép cấu hình nút mở rộng/thu gọn cho tất cả các template khác
-            OrgChart.templates.single_male.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.single_male.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.single_male.min = OrgChart.templates.single.min;
-            
-            OrgChart.templates.single_female.plus = OrgChart.templates.single.plus;
-            OrgChart.templates.single_female.minus = OrgChart.templates.single.minus;
-            OrgChart.templates.single_female.min = OrgChart.templates.single.min;
-            
-            // Tạo template riêng cho couple để đặt nút ở góc dưới bên trái của phần vợ/chồng
-            OrgChart.templates.couple.plus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">+</text>';
-            OrgChart.templates.couple.minus = 
-                '<circle cx="30" cy="10" r="15" fill="#ffffff" stroke="#aeaeae" stroke-width="1"></circle>'
-                + '<text text-anchor="middle" style="font-size:18px;" fill="#757575" x="30" y="16">-</text>';
-            OrgChart.templates.couple.min = OrgChart.templates.single.min;
-            
-            OrgChart.templates.couple_male.plus = OrgChart.templates.couple.plus;
-            OrgChart.templates.couple_male.minus = OrgChart.templates.couple.minus;
-            OrgChart.templates.couple_male.min = OrgChart.templates.couple.min;
-            
-            OrgChart.templates.couple_female.plus = OrgChart.templates.couple.plus;
-            OrgChart.templates.couple_female.minus = OrgChart.templates.couple.minus;
-            OrgChart.templates.couple_female.min = OrgChart.templates.couple.min;
-
-            const chart = new OrgChart(document.getElementById("family-tree"), {
-                template: "olivia",
-                enableSearch: false,
-                enableDragDrop: false,
-                showXScroll: false,
-                showYScroll: false,
-                enableMenu: false,
-                orientation: OrgChart.orientation.top,
-                nodeBinding: {
-                    field_0: "name",
-                    field_1: "birth",
-                    img_0: "img",
-                    field_2: "spouseName",
-                    field_3: "spouseBirth",
-                    img_1: "spouseImg"
-                },
-                // Cấu hình collapse - điều chỉnh để phù hợp với database
-                collapse: {
-                    level: 2, // Hiển thị đến thế hệ 2 (vì thế hệ gốc là 1 trong database)
-                    allChildren: false
-                },
-                // Thêm nút mở rộng/thu gọn nhánh
-                enableCollapsing: true,
-                // Cấu hình hiển thị nút mở rộng/thu gọn - điều chỉnh theo thế hệ trong database
-                plusVisibility: [3, 4, 5, 6], // Hiển thị nút + cho các thế hệ 3 trở đi
-                minusVisibility: [3, 4, 5, 6], // Hiển thị nút - cho các thế hệ 3 trở đi
-                // Thêm kiểu di chuột vào nút mở rộng
-                mouseScroolBehaviour: OrgChart.action.ctrlZoom,
-                // Cho phép xử lý thao tác với nút +/-
-                nodeMenu: {
-                    pdf: null,
-                    png: null,
-                    svg: null,
-                    csv: null,
-                    json: null,
-                    details: null
-                },
-                nodes: formattedData.nodes,
-                tags: {
-                    male: {
-                        template: "single_male",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
-                    },
-                    female: {
-                        template: "single_female",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
-                    },
-                    couple_male: {
-                        template: "couple_male",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
-                    },
-                    couple_female: {
-                        template: "couple_female",
-                        nodeMenu: {
-                            pdf: null,
-                            png: null,
-                            svg: null,
-                            csv: null,
-                            json: null,
-                            details: null
-                        }
-                    }
-                },
-                // Cấu hình hiển thị
-                levelSeparation: 100,
-                siblingSeparation: 50,
-                subtreeSeparation: 80
-            });
-            
-            // Sự kiện đơn giản - khi chart được tải
-            chart.on('load', function() {
-                console.log("Biểu đồ gia phả đã tải xong");
-                
-                // Thu gọn các nhánh từ thế hệ 3 trở đi để hiển thị đúng 2 thế hệ đầu tiên (thế hệ 1 và 2)
-                // Lặp qua tất cả các node và thu gọn các node có generation > 2
-                let nodesToCollapse = [];
-                
-                // Thu thập tất cả các node trong chart
-                for (let id in chart.nodes) {
-                    const node = chart.nodes[id];
-                    const originalData = formattedChartData.nodes.find(n => n.id === id);
-                    
-                    // Nếu là thế hệ 3 trở đi (tức là > 2), thì thu gọn
-                    if (originalData && originalData.generation && originalData.generation > 2) {
-                        nodesToCollapse.push(id);
-                    }
-                }
-                
-                // Thu gọn tất cả các node thế hệ 3 trở đi
-                nodesToCollapse.forEach(id => {
-                    chart.collapse(id, true);
-                    console.log("Thu gọn node thế hệ > 2:", id);
                 });
             });
-
-            // Xử lý sự kiện mở rộng và thu gọn nhánh
-            chart.on('expcollclick', function(sender, collapse, id, ids) {
-                console.log(`${collapse ? "Thu gọn" : "Mở rộng"} nhánh ${id}`);
-                return true; // Cho phép mở rộng/thu gọn
-            });
-
-            // Xử lý sự kiện khi click vào node
-            chart.on('click', function(sender, args) {
-                if (args.node) {
-                    // Log đầy đủ thông tin node để debug
-                    console.log("Node clicked:", args.node.id);
+            
+            // Thiết lập node gốc từ người thế hệ 1
+            const rootNode = nodeMap.get(rootPersons[0].id);
+            
+            // Xử lý các cặp vợ chồng
+            familyDataArray.forEach(person => {
+                if (!person.spouses || person.spouses.length === 0) return;
+                
+                const personNode = nodeMap.get(person.id);
+                if (!personNode) return;
+                
+                // Đánh dấu là có vợ/chồng
+                personNode.hasSpouse = true;
+                
+                // Thêm thông tin vợ/chồng vào node
+                person.spouses.forEach(spouseId => {
+                    const spouse = familyDataArray.find(p => p.id === spouseId);
+                    if (!spouse) return;
                     
-                    try {
-                        // Kiểm tra nếu là node vợ chồng dựa vào ID có chứa dấu "_"
-                        const isCouple = args.node.id.includes("_");
-                        
-                        if (isCouple) {
-                            // Truy cập trực tiếp vào dữ liệu gốc để tìm node
-                            const originalData = formattedChartData.nodes.find(n => n.id === args.node.id);
-                            
-                            if (originalData && originalData.personId) {
-                                console.log("Found personId in original data:", originalData.personId);
-                                showPersonDetail(originalData.personId);
-                            } else {
-                                // Phương pháp dự phòng: Sử dụng ID đầu tiên trong cặp
-                                const ids = args.node.id.split('_');
-                                if (ids.length === 2) {
-                                    const personId = ids[0];
-                                    console.log("Using first ID from couple:", personId);
-                                    showPersonDetail(personId);
-                                } else {
-                                    console.error("Không thể xác định personId cho node vợ chồng:", args.node.id);
-                                }
-                            }
+                    // Lưu thông tin vợ/chồng vào node hiện tại
+                    if (!personNode.spouses) personNode.spouses = [];
+                    
+                    // Tạo thông tin vợ/chồng
+                    let spousePhotoUrl = spouse.photo;
+                    if (!spousePhotoUrl) {
+                        if (spouse.gender === 'male') {
+                            spousePhotoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
                         } else {
-                            // Nếu là node đơn, sử dụng id trực tiếp
-                            showPersonDetail(args.node.id);
+                            spousePhotoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
                         }
-                    } catch (error) {
-                        console.error("Error in click handler:", error);
                     }
-                }
-                return false; // Ngăn hành vi mặc định
-            });
 
-            return chart;
+                    // Lifespan của vợ/chồng
+                    let spouseLifespan = '';
+                    if (spouse.birthDate) {
+                        const birthYear = new Date(spouse.birthDate).getFullYear();
+                        if (spouse.deathDate) {
+                            const deathYear = new Date(spouse.deathDate).getFullYear();
+                            spouseLifespan = `${birthYear} - ${deathYear}`;
+                        } else {
+                            spouseLifespan = `Sinh năm ${birthYear}`;
+                        }
+                    }
+                    
+                    personNode.spouses.push({
+                        id: spouse.id,
+                        name: spouse.name,
+                        img: spousePhotoUrl,
+                        birth: spouseLifespan,
+                        gender: spouse.gender
+                    });
+                });
+            });
+            
+            return { root: rootNode, nodeMap: nodeMap };
+        }
+
+        // Hàm khởi tạo D3.js tree
+        function initializeD3Tree(formattedData) {
+            // Lưu dữ liệu đã định dạng vào biến toàn cục để sử dụng sau này
+            formattedChartData = formattedData;
+            
+            // Xóa nội dung cũ
+            d3.select("#family-tree").selectAll("*").remove();
+            
+            // Kích thước của container
+            const width = document.getElementById('family-tree-container').offsetWidth;
+            const height = document.getElementById('family-tree-container').offsetHeight;
+            
+            // Tạo SVG container
+            const svg = d3.select("#family-tree")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2}, 50)`);
+            
+            // Tạo zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 3])
+                .on("zoom", (event) => {
+                    svg.attr("transform", event.transform);
+                });
+            
+            d3.select("#family-tree svg")
+                .call(zoom)
+                .on("dblclick.zoom", null);
+            
+            // Tạo layout cây
+            const treeLayout = d3.tree()
+                .nodeSize([120, 100])
+                .separation((a, b) => a.parent === b.parent ? 1.5 : 2);
+            
+            // Tạo hierarchy từ dữ liệu
+            const root = d3.hierarchy(formattedData.root);
+            
+            // Mặc định mở rộng 2 cấp đầu tiên
+            root.descendants().forEach(d => {
+                if (d.depth < 2) {
+                    d._children = d.children;
+                } else {
+                    d._children = d.children;
+                    d.children = null;
+                }
+            });
+            
+            // Cập nhật cây
+            function updateTree(source) {
+                // Tính toán layout mới
+                const treeData = treeLayout(root);
+                
+                // Lấy tất cả nodes và links
+                const nodes = treeData.descendants();
+                const links = treeData.links();
+                
+                // Thiết lập vị trí y dựa trên depth
+                nodes.forEach(d => {
+                    d.y = d.depth * 180;
+                });
+                
+                // ===== NODES =====
+                // Cập nhật nodes
+                const node = svg.selectAll(".node")
+                    .data(nodes, d => d.data.id);
+                
+                // Enter new nodes
+                const nodeEnter = node.enter()
+                    .append("g")
+                    .attr("class", d => {
+                        let classes = "node";
+                        if (d.data.gender === "male") classes += " male";
+                        else if (d.data.gender === "female") classes += " female";
+                        if (d.data.hasSpouse) classes += " couple";
+                        return classes;
+                    })
+                    .attr("transform", d => `translate(${source.x0 || 0},${source.y0 || 0})`)
+                    .on("click", (event, d) => {
+                        // Toggle children on click
+                        if (d.children) {
+                            d._children = d.children;
+                            d.children = null;
+                        } else {
+                            d.children = d._children;
+                        }
+                        updateTree(d);
+                        
+                        // Ngăn sự kiện lan truyền để không mở modal khi click vào nút +/-
+                        if (event.target.tagName === "circle" || event.target.tagName === "text") {
+                            event.stopPropagation();
+                            return;
+                        }
+                        
+                        // Hiển thị chi tiết người
+                        showPersonDetail(d.data.id);
+                    });
+                
+                // Thêm hình chữ nhật cho node
+                nodeEnter.append("rect")
+                    .attr("width", 120)
+                    .attr("height", 80)
+                    .attr("x", -60)
+                    .attr("y", -40)
+                    .attr("rx", 5)
+                    .attr("ry", 5);
+                
+                // Thêm ảnh đại diện
+                nodeEnter.append("image")
+                    .attr("xlink:href", d => d.data.img)
+                    .attr("x", -25)
+                    .attr("y", -30)
+                    .attr("width", 50)
+                    .attr("height", 50)
+                    .attr("clip-path", d => `circle(25px at ${0}px ${-5}px)`);
+                
+                // Thêm tên
+                nodeEnter.append("text")
+                    .attr("dy", 35)
+                    .attr("text-anchor", "middle")
+                    .text(d => d.data.name)
+                    .style("font-size", "12px")
+                    .style("font-weight", "bold");
+                
+                // Thêm ngày sinh
+                nodeEnter.append("text")
+                    .attr("dy", 50)
+                    .attr("text-anchor", "middle")
+                    .text(d => d.data.birth)
+                    .style("font-size", "10px");
+                
+                // Thêm nút mở rộng/thu gọn
+                nodeEnter.append("g")
+                    .attr("class", "node-button")
+                    .attr("transform", "translate(-50, -30)")
+                    .style("display", d => d._children || d.children ? "block" : "none")
+                    .on("click", (event, d) => {
+                        if (d.children) {
+                            d._children = d.children;
+                            d.children = null;
+                        } else {
+                            d.children = d._children;
+                        }
+                        updateTree(d);
+                        event.stopPropagation();
+                    })
+                    .append("circle")
+                    .attr("r", 10)
+                    .style("fill", "white")
+                    .style("stroke", "#ccc");
+                
+                // Thêm dấu + hoặc - vào nút
+                nodeEnter.select(".node-button")
+                    .append("text")
+                    .attr("dy", 4)
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "16px")
+                    .style("font-weight", "bold")
+                    .text(d => d.children ? "-" : "+");
+                
+                // Thêm thông tin vợ/chồng nếu có
+                const coupleNodes = nodeEnter.filter(d => d.data.hasSpouse && d.data.spouses && d.data.spouses.length > 0);
+                
+                // Thêm đường nối vợ chồng
+                coupleNodes.append("line")
+                    .attr("class", "marriage-link")
+                    .attr("x1", 60)
+                    .attr("y1", 0)
+                    .attr("x2", 140)
+                    .attr("y2", 0);
+                
+                // Thêm node vợ/chồng
+                coupleNodes.each(function(d) {
+                    const spouse = d.data.spouses[0]; // Lấy vợ/chồng đầu tiên
+                    
+                    const spouseGroup = d3.select(this)
+                        .append("g")
+                        .attr("class", "spouse-node")
+                        .attr("transform", "translate(140, 0)");
+                    
+                    // Thêm hình chữ nhật cho node vợ/chồng
+                    spouseGroup.append("rect")
+                        .attr("width", 120)
+                        .attr("height", 80)
+                        .attr("x", -60)
+                        .attr("y", -40)
+                        .attr("rx", 5)
+                        .attr("ry", 5)
+                        .attr("stroke", spouse.gender === "male" ? "#0066cc" : "#e91e63");
+                    
+                    // Thêm ảnh đại diện vợ/chồng
+                    spouseGroup.append("image")
+                        .attr("xlink:href", spouse.img)
+                        .attr("x", -25)
+                        .attr("y", -30)
+                        .attr("width", 50)
+                        .attr("height", 50)
+                        .attr("clip-path", `circle(25px at ${0}px ${-5}px)`);
+                    
+                    // Thêm tên vợ/chồng
+                    spouseGroup.append("text")
+                        .attr("dy", 35)
+                        .attr("text-anchor", "middle")
+                        .text(spouse.name)
+                        .style("font-size", "12px")
+                        .style("font-weight", "bold");
+                    
+                    // Thêm ngày sinh vợ/chồng
+                    spouseGroup.append("text")
+                        .attr("dy", 50)
+                        .attr("text-anchor", "middle")
+                        .text(spouse.birth)
+                        .style("font-size", "10px");
+                });
+                
+                // Transition nodes to their new position
+                const nodeUpdate = nodeEnter.merge(node)
+                    .transition()
+                    .duration(750)
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+                
+                // Update button text (+ or -)
+                nodeUpdate.select(".node-button text")
+                    .text(d => d.children ? "-" : "+");
+                
+                // Transition exiting nodes to parent's position
+                const nodeExit = node.exit()
+                    .transition()
+                    .duration(750)
+                    .attr("transform", d => `translate(${source.x},${source.y})`)
+                    .remove();
+                
+                // ===== LINKS =====
+                // Cập nhật links
+                const link = svg.selectAll(".link")
+                    .data(links, d => d.target.data.id);
+                
+                // Hàm tạo đường cong cho link
+                const diagonal = d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y);
+                
+                // Enter new links
+                const linkEnter = link.enter()
+                    .append("path")
+                    .attr("class", "link")
+                    .attr("d", d => {
+                        const o = {x: source.x0 || 0, y: source.y0 || 0};
+                        return diagonal({source: o, target: o});
+                    });
+                
+                // Transition links to their new position
+                linkEnter.merge(link)
+                    .transition()
+                    .duration(750)
+                    .attr("d", diagonal);
+                
+                // Transition exiting links to parent's position
+                link.exit()
+                    .transition()
+                    .duration(750)
+                    .attr("d", d => {
+                        const o = {x: source.x, y: source.y};
+                        return diagonal({source: o, target: o});
+                    })
+                    .remove();
+                
+                // Lưu vị trí cũ cho transitions
+                nodes.forEach(d => {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
+                });
+            }
+            
+            // Khởi tạo vị trí ban đầu
+            root.x0 = 0;
+            root.y0 = 0;
+            
+            // Cập nhật cây lần đầu
+            updateTree(root);
+            
+            // Tạo một đối tượng giả để tương thích với code cũ
+            return {
+                on: function(event, callback) {
+                    if (event === 'click') {
+                        // D3 đã xử lý sự kiện click trong updateTree
+                        return this;
+                    }
+                    return this;
+                },
+                collapse: function(id, value) {
+                    // Tìm node theo id và thu gọn
+                    const findAndCollapseNode = (node) => {
+                        if (node.data.id === id) {
+                            if (value) {
+                                node._children = node.children;
+                                node.children = null;
+                            } else {
+                                node.children = node._children;
+                            }
+                            updateTree(node);
+                            return true;
+                        }
+                        if (node.children) {
+                            for (const child of node.children) {
+                                if (findAndCollapseNode(child)) return true;
+                            }
+                        }
+                        return false;
+                    };
+                    
+                    findAndCollapseNode(root);
+                    return this;
+                }
+            };
         }
 
         // API Key và Client ID cho Google Drive API
@@ -1414,9 +1466,9 @@
                 // Cập nhật lại cây gia phả
                 const formattedData = formatFamilyData(familyData);
                 
-                // Khởi tạo lại OrgChart với dữ liệu mới
+                // Khởi tạo lại D3.js tree với dữ liệu mới
                 document.getElementById('family-tree').innerHTML = '';
-                familyChart = initializeOrgChart(formattedData);
+                familyChart = initializeD3Tree(formattedData);
                 
                 // Cập nhật ảnh trong modal chi tiết
                 const personImage = document.querySelector('#person-detail-content .node-image');
@@ -1694,12 +1746,12 @@
                     return;
                 }
 
-                // Chuyển đổi dữ liệu cho OrgChart.js
+                // Chuyển đổi dữ liệu cho D3.js
                 const formattedData = formatFamilyData(familyData);
                 
-                // Khởi tạo OrgChart
+                // Khởi tạo D3.js tree
                 document.getElementById('family-tree-container').style.display = 'block';
-                familyChart = initializeOrgChart(formattedData);
+                familyChart = initializeD3Tree(formattedData);
 
                 // Ẩn loading indicator
                 document.getElementById('loading-indicator').style.display = 'none';
