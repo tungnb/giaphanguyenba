@@ -501,6 +501,78 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+        
+        /* Thêm CSS cho modal chi tiết người */
+        .person-detail-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .person-detail-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .person-detail-info {
+            flex: 1;
+        }
+        
+        .person-detail-name {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+        
+        .person-detail-dates {
+            color: #666;
+            font-weight: 500;
+            margin: 5px 0;
+        }
+        
+        .person-detail-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f8ff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .person-detail-section h3 {
+            margin: 0 0 10px 0;
+            color: #0066cc;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .relation-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .relation-item {
+            background-color: #e6f7ff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #0066cc;
+        }
+        
+        .genealogy-chain {
+            margin-top: 10px;
+        }
+        
+        .genealogy-chain ol {
+            padding-left: 20px;
+        }
+        
+        .genealogy-chain li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -1693,6 +1765,8 @@
             
             // Chuẩn bị thông tin chi tiết về ngày sinh
             let birthInfo = 'Không có thông tin';
+            let lifespan = '';
+            
             if (member.birthdate) {
                 const birthDate = new Date(member.birthdate);
                 const day = birthDate.getDate();
@@ -1705,91 +1779,193 @@
                     (currentYear - year);
                 
                 birthInfo = `${day}/${month}/${year} (${age} tuổi)`;
+                
+                // Tạo thông tin lifespan
+                if (member.deathdate) {
+                    const deathYear = new Date(member.deathdate).getFullYear();
+                    lifespan = `${year} - ${deathYear}`;
+                } else {
+                    lifespan = `Sinh năm ${year}`;
+                }
             }
             
             // Chuẩn bị thông tin chi tiết về ngày mất
             let deathInfo = member.deathdate ? 
                 `${formatDate(member.deathdate)}` : 
                 'Còn sống';
+            
+            // Ảnh đại diện phù hợp với giới tính
+            let photoUrl = member.photo;
+            if (!photoUrl) {
+                if (member.gender === 'male') {
+                    photoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                } else {
+                    photoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                }
+            }
                 
-            // Chuẩn bị thông tin về quan hệ
-            const parents = (member.parents || []).map(pid => {
-                const parent = allMembers.find(m => m.id === pid);
-                return parent ? parent.name : 'Không rõ';
-            }).join(', ') || 'Không có thông tin';
+            // Xây dựng phả hệ từ thế hệ 1 đến người hiện tại
+            let genealogyHTML = '<p>Không có thông tin phả hệ</p>';
             
-            const spouses = (member.spouses || []).map(sid => {
-                const spouse = allMembers.find(m => m.id === sid);
-                return spouse ? spouse.name : 'Không rõ';
-            }).join(', ') || 'Không có thông tin';
+            // Tìm danh sách tổ tiên (người thế hệ 1)
+            const rootPersons = allMembers.filter(m => m.generation === 1);
             
-            const children = (member.children || []).map(cid => {
-                const child = allMembers.find(m => m.id === cid);
-                return child ? child.name : 'Không rõ';
-            }).join(', ') || 'Không có thông tin';
+            if (member.parents && member.parents.length > 0 && parseInt(member.generation) > 1) {
+                const genealogyChain = [member];
+                let currentPerson = member;
+                let iterationCount = 0;
+                
+                // Đi ngược lên tìm tổ tiên
+                while (currentPerson.parents && currentPerson.parents.length > 0 && iterationCount < 10) {
+                    iterationCount++;
+                    
+                    // Tìm cha (ưu tiên lấy theo cha)
+                    const fatherId = currentPerson.parents.find(parentId => {
+                        const parent = allMembers.find(m => m.id === parentId);
+                        return parent && parent.gender === 'male';
+                    });
+                    
+                    // Nếu không có cha thì lấy mẹ
+                    const parentId = fatherId || currentPerson.parents[0];
+                    
+                    if (parentId) {
+                        const parent = allMembers.find(m => m.id === parentId);
+                        if (parent) {
+                            genealogyChain.push(parent);
+                            currentPerson = parent;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Đảo ngược mảng để hiển thị từ thế hệ 1 đến người hiện tại
+                genealogyChain.reverse();
+                
+                // Tạo HTML cho phả hệ
+                if (genealogyChain.length > 0) {
+                    genealogyHTML = '<div class="genealogy-chain">';
+                    genealogyHTML += '<ol>';
+                    
+                    genealogyChain.forEach((ancestor, index) => {
+                        const isLastItem = index === genealogyChain.length - 1;
+                        const itemStyle = isLastItem ? 'font-weight: bold; color: #0066cc;' : '';
+                        
+                        genealogyHTML += `
+                            <li style="${itemStyle}">
+                                ${ancestor.name} (Thế hệ ${ancestor.generation})
+                            </li>
+                        `;
+                    });
+                    
+                    genealogyHTML += '</ol></div>';
+                }
+            }
+                
+            // Chuẩn bị thông tin về quan hệ dưới dạng thẻ
+            const parentsHTML = createRelationHTML(member.parents, 'parent');
+            const spousesHTML = createRelationHTML(member.spouses, 'spouse');
+            const childrenHTML = createRelationHTML(member.children, 'child');
             
             // Tạo HTML chi tiết
             detailContainer.innerHTML = `
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <img src="${member.photo || `https://via.placeholder.com/100/cccccc/ffffff?text=${member.name.charAt(0)}`}" 
+                <div class="person-detail-header">
+                    <img src="${photoUrl}" 
                          alt="${member.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-                    <div>
-                        <h2 style="margin: 0 0 10px 0; color: #333;">${member.name}</h2>
-                        <p style="margin: 5px 0; color: #666;">
-                            <strong>Giới tính:</strong> ${member.gender === 'male' ? 'Nam' : 'Nữ'}
-                        </p>
-                        <p style="margin: 5px 0; color: #666;">
-                            <strong>Thế hệ:</strong> ${member.generation}
-                        </p>
+                    <div class="person-detail-info">
+                        <h2 class="person-detail-name">${member.name}</h2>
+                        <p class="person-detail-dates">${lifespan}</p>
+                        <p><strong>Thế hệ:</strong> ${member.generation}</p>
+                        <p><strong>Giới tính:</strong> ${member.gender === 'male' ? 'Nam' : 'Nữ'}</p>
                     </div>
                 </div>
                 
-                <div style="background-color: #f5f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h3 style="margin: 0 0 10px 0; color: #0066cc;">Thông tin ngày sinh</h3>
-                    <p style="margin: 5px 0; font-size: 18px; color: #333;">
+                <div class="person-detail-section">
+                    <h3>Thông tin ngày sinh</h3>
+                    <p style="font-size: 16px;">
                         <i class="fas fa-birthday-cake" style="color: #0066cc;"></i> 
                         <strong>${birthInfo}</strong>
                     </p>
-                    <p style="margin: 5px 0; color: #666;">
+                    <p>
                         <i class="fas fa-cross" style="color: #777;"></i> 
                         <strong>Ngày mất:</strong> ${deathInfo}
                     </p>
                 </div>
                 
-                <div style="margin-top: 15px;">
-                    <h3 style="margin: 0 0 10px 0; color: #333;">Quan hệ gia đình</h3>
-                    <p style="margin: 5px 0; color: #666;">
-                        <strong>Cha mẹ:</strong> ${parents}
-                    </p>
-                    <p style="margin: 5px 0; color: #666;">
-                        <strong>Vợ/Chồng:</strong> ${spouses}
-                    </p>
-                    <p style="margin: 5px 0; color: #666;">
-                        <strong>Con cái:</strong> ${children}
-                    </p>
+                <div class="person-detail-section">
+                    <h3>Phả hệ</h3>
+                    ${genealogyHTML}
+                </div>
+                
+                <div class="person-detail-section">
+                    <h3>Quan hệ gia đình</h3>
+                    <div style="margin: 10px 0;">
+                        <p><strong>Cha mẹ:</strong></p>
+                        ${parentsHTML}
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <p><strong>Vợ/Chồng:</strong></p>
+                        ${spousesHTML}
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <p><strong>Con cái:</strong></p>
+                        ${childrenHTML}
+                    </div>
                 </div>
                 
                 ${member.bio ? `
-                <div style="margin-top: 15px;">
-                    <h3 style="margin: 0 0 10px 0; color: #333;">Tiểu sử</h3>
-                    <p style="margin: 5px 0; color: #666;">${member.bio}</p>
+                <div class="person-detail-section">
+                    <h3>Tiểu sử</h3>
+                    <p>${member.bio}</p>
                 </div>` : ''}
             `;
             
             // Hiển thị modal
             modal.style.display = 'block';
             
-            // Thêm sự kiện đóng modal
-            document.getElementById('close-detail-modal').addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-            
-            // Đóng modal khi click bên ngoài
+            // Thêm sự kiện đóng modal khi click bên ngoài
             window.addEventListener('click', function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             });
+        }
+        
+        // Hàm tạo HTML cho các mối quan hệ
+        function createRelationHTML(relationIds, type) {
+            if (!relationIds || relationIds.length === 0) {
+                return '<p>Không có thông tin</p>';
+            }
+            
+            let html = '<div class="relation-list">';
+            
+            relationIds.forEach(relationId => {
+                const person = allMembers.find(m => m.id === relationId);
+                if (!person) return;
+                
+                let relationText = '';
+                
+                if (type === 'parent') {
+                    relationText = person.gender === 'male' ? 'Cha' : 'Mẹ';
+                } else if (type === 'spouse') {
+                    relationText = person.gender === 'male' ? 'Chồng' : 'Vợ';
+                } else if (type === 'child') {
+                    relationText = person.gender === 'male' ? 'Con trai' : 'Con gái';
+                }
+                
+                html += `
+                    <div class="relation-item" onclick="showPersonDetail('${person.id}')" style="cursor: pointer;">
+                        ${person.name} (${relationText})
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
         }
     </script>
 </body>
