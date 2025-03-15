@@ -840,33 +840,13 @@
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                allMembers = data || [];
                 
-                console.log('Loaded members before processing:', allMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
-                
-                // Đảm bảo tất cả thành viên đều có timestamp
-                allMembers = allMembers.map(member => {
-                    if (!member.timestamp) {
-                        // Tạo timestamp ngẫu nhiên trong quá khứ nếu chưa có
-                        const randomDays = Math.floor(Math.random() * 365);
-                        const timestamp = new Date(Date.now() - randomDays * 24 * 60 * 60 * 1000).getTime();
-                        return {...member, timestamp};
-                    }
-                    // Chuyển đổi timestamp từ string sang number nếu cần
-                    if (typeof member.timestamp === 'string') {
-                        member.timestamp = parseInt(member.timestamp);
-                    }
-                    return member;
+                // Thêm thuộc tính index dựa trên vị trí trong database
+                allMembers = (data || []).map((member, index) => {
+                    return { ...member, index: index };
                 });
                 
-                // Sắp xếp thành viên theo timestamp mới nhất trước khi lọc
-                allMembers.sort((a, b) => {
-                    const timeA = a.timestamp || 0;
-                    const timeB = b.timestamp || 0;
-                    return timeB - timeA;
-                });
-                
-                console.log('Sorted members after processing:', allMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
+                console.log('Loaded members with index:', allMembers.map(m => ({name: m.name, index: m.index})));
                 
                 filterAndRenderMembers();
                 hideLoading();
@@ -874,7 +854,7 @@
                 console.error('Error loading members:', error);
                 showError('Không thể tải dữ liệu thành viên: ' + error.message);
                 // Fallback to sample data if API fails
-                allMembers = getSampleMembers();
+                allMembers = getSampleMembers().map((member, index) => ({...member, index: index}));
                 filterAndRenderMembers();
                 hideLoading();
             }
@@ -907,22 +887,16 @@
         // Sắp xếp thành viên theo lựa chọn
         function sortMembers() {
             console.log('Sorting with option:', currentSortOption);
-            console.log('Before sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, timestamp: m.timestamp})));
+            console.log('Before sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, index: m.index})));
             
             switch (currentSortOption) {
                 case "newest":
-                    filteredMembers.sort((a, b) => {
-                        const timeA = a.timestamp || 0;
-                        const timeB = b.timestamp || 0;
-                        return timeB - timeA;
-                    });
+                    // Sắp xếp theo index giảm dần (index cao nhất = người mới nhất = ở đầu danh sách)
+                    filteredMembers.sort((a, b) => b.index - a.index);
                     break;
                 case "oldest":
-                    filteredMembers.sort((a, b) => {
-                        const timeA = a.timestamp || 0;
-                        const timeB = b.timestamp || 0;
-                        return timeA - timeB;
-                    });
+                    // Sắp xếp theo index tăng dần (index thấp nhất = người cũ nhất = ở đầu danh sách)
+                    filteredMembers.sort((a, b) => a.index - b.index);
                     break;
                 case "name_asc":
                     filteredMembers.sort((a, b) => a.name.localeCompare(b.name));
@@ -932,7 +906,7 @@
                     break;
             }
             
-            console.log('After sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, timestamp: m.timestamp})));
+            console.log('After sort, first few members:', filteredMembers.slice(0, 3).map(m => ({name: m.name, index: m.index})));
         }
         
         // Render members list with pagination
@@ -959,7 +933,7 @@
             const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredMembers.length);
             const currentPageMembers = filteredMembers.slice(startIndex, endIndex);
             
-            console.log('Rendering page', currentPage, 'with members:', currentPageMembers.map(m => ({name: m.name, timestamp: m.timestamp})));
+            console.log('Rendering page', currentPage, 'with members:', currentPageMembers.map(m => ({name: m.name, index: m.index})));
             
             // Cập nhật thông tin phân trang
             document.getElementById('current-page').textContent = currentPage;
@@ -1434,11 +1408,8 @@
                 birthdate: document.getElementById('birthDate').value || null,
                 deathdate: document.getElementById('deathDate').value || null,
                 photo: document.getElementById('photo').value || null,
-                bio: document.getElementById('bio').value || null,
-                timestamp: Date.now() // Luôn cập nhật timestamp khi lưu thành viên
+                bio: document.getElementById('bio').value || null
             };
-            
-            console.log('Saving member with timestamp:', member.timestamp, 'Name:', member.name);
             
             // Add relations if editing
             if (!isNewMember) {
@@ -1447,12 +1418,18 @@
                     member.parents = existingMember.parents || [];
                     member.spouses = existingMember.spouses || [];
                     member.children = existingMember.children || [];
+                    member.index = existingMember.index; // Giữ nguyên index nếu là thành viên đã tồn tại
                 }
             } else {
                 member.parents = [];
                 member.spouses = [];
                 member.children = [];
+                // Đặt index cao nhất cho thành viên mới (để hiển thị đầu tiên khi sắp xếp "newest")
+                const maxIndex = Math.max(...allMembers.map(m => m.index || 0), 0);
+                member.index = maxIndex + 1;
             }
+            
+            console.log('Saving member with index:', member.index, 'Name:', member.name);
             
             showLoading();
             try {
@@ -1474,8 +1451,6 @@
                 if (isNewMember) {
                     allMembers.push(member);
                 } else {
-                    // Cập nhật thành viên và timestamp để hiển thị như là mới nhất
-                    member.timestamp = Date.now(); // Đảm bảo thành viên được cập nhật lên đầu danh sách
                     allMembers = allMembers.map(m => m.id === member.id ? member : m);
                 }
                 
@@ -1501,6 +1476,9 @@
         async function deleteMember(id) {
             showLoading();
             try {
+                // Cập nhật mối quan hệ cho các thành viên có liên quan
+                updateRelatedMembers(id);
+                
                 // Gửi request xóa thành viên
                 const response = await fetch(API_URL, {
                     method: 'DELETE',
@@ -1510,11 +1488,10 @@
                     body: JSON.stringify({ id: id })
                 });
                 
-                // Cập nhật mối quan hệ cho các thành viên có liên quan
-                updateRelatedMembers(id);
-                
                 // Cập nhật danh sách
                 allMembers = allMembers.filter(m => m.id !== id);
+                
+                // Không cần cập nhật lại index vì vị trí trong database vẫn giữ nguyên
                 
                 showSuccess('Thành viên đã được xóa thành công');
                 resetForm();
