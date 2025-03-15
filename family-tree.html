@@ -1119,7 +1119,7 @@
             
             // Tạo layout cây
             const treeLayout = d3.tree()
-                .nodeSize([140, 25])  // Giảm từ [280, 50] xuống một nửa
+                .nodeSize([280, 50])  // Duy trì khoảng cách ngang
                 .separation((a, b) => {
                     // Xác định xem các node có phối ngẫu không
                     const aHasSpouse = a.data.hasSpouse && a.data.spouses && a.data.spouses.length > 0;
@@ -1140,18 +1140,18 @@
                             // Kiểm tra nếu node đứng trước có phối ngẫu
                             if (firstNode.data.hasSpouse && firstNode.data.spouses && firstNode.data.spouses.length > 0) {
                                 // Tăng khoảng cách nhiều hơn để tránh chồng lên phối ngẫu của node trước
-                                return 1.25; // Giảm từ 2.5 xuống một nửa
+                                return 2.5; // Giá trị lớn hơn để đảm bảo không bị chồng lấp
                             }
                             
                             // Trường hợp thông thường
-                            return 0.75; // Giảm từ 1.5 xuống một nửa
+                            return 1.5; // Khoảng cách cố định giữa các anh em liền kề
                         }
                         
                         // Nếu không phải anh em liền kề
-                        return 0.75 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.1; // Giảm từ 1.5 xuống 0.75 và 0.2 xuống 0.1
+                        return 1.5 + (Math.abs(aSiblingIndex - bSiblingIndex) - 1) * 0.2;
                     } else {
                         // Nếu khác cha mẹ
-                        return 1.0; // Giảm từ 2.0 xuống một nửa
+                        return 2.0; // Tăng khoảng cách giữa các nhánh
                     }
                 });
             
@@ -1180,7 +1180,7 @@
                 
                 // Thiết lập vị trí y dựa trên depth
                 nodes.forEach(d => {
-                    d.y = d.depth * 50; // Giảm từ 100 xuống 50 để thu nhỏ khoảng cách giữa các đời
+                    d.y = d.depth * 100; // Giảm từ 120 xuống 100 để thu nhỏ thêm khoảng cách giữa các đời
                 });
                 
                 // ===== NODES =====
@@ -1217,21 +1217,21 @@
                 
                 // Thêm hình chữ nhật cho node
                 nodeEnter.append("rect")
-                    .attr("width", 120) // Giảm từ 200 xuống 120
-                    .attr("height", 40)  // Giảm từ 50 xuống 40
-                    .attr("x", -60) // Điều chỉnh tọa độ x từ -100 xuống -60
-                    .attr("y", -20)  // Điều chỉnh tọa độ y từ -25 xuống -20
+                    .attr("width", 200)
+                    .attr("height", 50)  // Giảm từ 60px xuống 50px
+                    .attr("x", -100)
+                    .attr("y", -25)  // Thay đổi từ -30 thành -25
                     .attr("rx", 5)
                     .attr("ry", 5);
                 
                 // Thêm ảnh đại diện sử dụng phương pháp zoom thay vì clip-path
                 nodeEnter.append("foreignObject")
-                    .attr("x", -55)  // Điều chỉnh vị trí từ -88 thành -55
-                    .attr("y", -18)  // Điều chỉnh vị trí từ -22 thành -18
-                    .attr("width", 35)  // Giảm kích thước ảnh từ 40 xuống 35
-                    .attr("height", 35)  // Giảm kích thước ảnh từ 40 xuống 35
+                    .attr("x", -88)  // Điều chỉnh vị trí
+                    .attr("y", -22)  // Điều chỉnh vị trí
+                    .attr("width", 40)  // Kích thước ảnh
+                    .attr("height", 40)  // Kích thước ảnh
                     .html(d => {
-                        return `<div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden;">
+                        return `<div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
                             <img src="${d.data.img}" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>`;
                     });
@@ -1309,7 +1309,7 @@
                     const spouseGroup = d3.select(this)
                         .append("g")
                         .attr("class", "spouse-node")
-                        .attr("transform", `translate(${100}, 0)`); // Giảm từ 200 xuống 100
+                        .attr("transform", `translate(${200}, 0)`); // Tăng từ 150 lên 200 để tránh chồng lên nhau
                         
                     // Tính toán chiều cao node dựa trên số lượng phối ngẫu
                     const spouseCount = d.data.spouses.length;
@@ -1317,9 +1317,9 @@
                     
                     // Tạo hình chữ nhật cho node vợ/chồng
                     spouseGroup.append("rect")
-                        .attr("width", 120) // Giảm từ 200 xuống 120
+                        .attr("width", 200)
                         .attr("height", nodeHeight)
-                        .attr("x", -60) // Điều chỉnh từ -100 xuống -60
+                        .attr("x", -100)
                         .attr("y", -nodeHeight/2)
                         .attr("rx", 5)
                         .attr("ry", 5)
@@ -1329,12 +1329,12 @@
                     
                     // Chỉ hiển thị avatar của người phối ngẫu đầu tiên
                     spouseGroup.append("foreignObject")
-                        .attr("x", -55) // Điều chỉnh từ -88 xuống -55
+                        .attr("x", -88)
                         .attr("y", -nodeHeight/2 + 3)
-                        .attr("width", 35)  // Giảm từ 40 xuống 35
-                        .attr("height", 35)  // Giảm từ 40 xuống 35
+                        .attr("width", 40)
+                        .attr("height", 40)
                         .html(() => {
-                            return `<div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden;">
+                            return `<div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
                                 <img src="${d.data.spouses[0].img}" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>`;
                         });
