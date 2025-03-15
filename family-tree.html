@@ -650,7 +650,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+        <div class="container">
         <section class="content">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</a>
 
@@ -706,8 +706,8 @@
                 <i class="fas fa-users-slash"></i>
                 <h3>Chưa có dữ liệu gia phả</h3>
                 <p>Dữ liệu gia phả đang được cập nhật. Vui lòng quay lại sau.</p>
-            </div>
-        </section>
+        </div>
+    </section>
     </div>
 
     <div id="person-detail-modal" class="modal">
@@ -1011,27 +1011,27 @@
                     if (!personNode.spouses) personNode.spouses = [];
                     
                     // Tạo thông tin vợ/chồng
-                    let spousePhotoUrl = spouse.photo;
-                    if (!spousePhotoUrl) {
-                        if (spouse.gender === 'male') {
-                            spousePhotoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
-                        } else {
-                            spousePhotoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                        let spousePhotoUrl = spouse.photo;
+                        if (!spousePhotoUrl) {
+                            if (spouse.gender === 'male') {
+                                spousePhotoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                            } else {
+                                spousePhotoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                            }
                         }
-                    }
 
-                    // Lifespan của vợ/chồng
-                    let spouseLifespan = '';
-                    if (spouse.birthDate) {
-                        const birthYear = new Date(spouse.birthDate).getFullYear();
-                        if (spouse.deathDate) {
-                            const deathYear = new Date(spouse.deathDate).getFullYear();
-                            spouseLifespan = `${birthYear} - ${deathYear}`;
-                        } else {
-                            spouseLifespan = `Sinh năm ${birthYear}`;
+                        // Lifespan của vợ/chồng
+                        let spouseLifespan = '';
+                        if (spouse.birthDate) {
+                            const birthYear = new Date(spouse.birthDate).getFullYear();
+                            if (spouse.deathDate) {
+                                const deathYear = new Date(spouse.deathDate).getFullYear();
+                                spouseLifespan = `${birthYear} - ${deathYear}`;
+                            } else {
+                                spouseLifespan = `Sinh năm ${birthYear}`;
+                            }
                         }
-                    }
-                    
+
                     personNode.spouses.push({
                         id: spouse.id,
                         name: spouse.name,
@@ -1283,50 +1283,69 @@
                 
                 // Thêm node vợ/chồng
                 coupleNodes.each(function(d) {
-                    const spouse = d.data.spouses[0]; // Lấy vợ/chồng đầu tiên
+                    // Thêm đường nối vợ chồng cho người đầu tiên
+                    d3.select(this).select(".marriage-link")
+                        .attr("x2", 120); // Giữ nguyên khoảng cách tới vợ/chồng đầu tiên
                     
-                    const spouseGroup = d3.select(this)
-                        .append("g")
-                        .attr("class", "spouse-node")
-                        .attr("transform", "translate(120, 0)");
-                    
-                    // Thêm hình chữ nhật cho node vợ/chồng
-                    spouseGroup.append("rect")
-                        .attr("width", 120)
-                        .attr("height", 80)
-                        .attr("x", -60)
-                        .attr("y", -40)
-                        .attr("rx", 5)
-                        .attr("ry", 5)
-                        .attr("stroke", spouse.gender === "male" ? "#0066cc" : "#e91e63");
-                    
-                    // Thêm ảnh đại diện vợ/chồng
-                    spouseGroup.append("image")
-                        .attr("xlink:href", spouse.img)
-                        .attr("x", -25)
-                        .attr("y", -30)
-                        .attr("width", 50)
-                        .attr("height", 50)
-                        .attr("clip-path", `circle(25px at ${0}px ${-5}px)`);
-                    
-                    // Thêm tên vợ/chồng
-                    spouseGroup.append("text")
-                        .attr("dy", 35)
-                        .attr("text-anchor", "middle")
-                        .text(() => {
-                            // Cắt ngắn tên nếu quá dài
-                            let name = spouse.name || '';
-                            return name.length > 15 ? name.substring(0, 12) + '...' : name;
-                        })
-                        .style("font-size", "12px")
-                        .style("font-weight", "bold");
-                    
-                    // Thêm ngày sinh vợ/chồng
-                    spouseGroup.append("text")
-                        .attr("dy", 50)
-                        .attr("text-anchor", "middle")
-                        .text(spouse.birth)
-                        .style("font-size", "10px");
+                    // Duyệt qua tất cả các vợ/chồng thay vì chỉ lấy người đầu tiên
+                    d.data.spouses.forEach((spouse, index) => {
+                        // Tính vị trí cho mỗi vợ/chồng, dựa trên thứ tự của họ
+                        const xPosition = 120 + (index * 130); // Mỗi vợ/chồng cách nhau 130px
+                        
+                        // Nếu là vợ/chồng thứ 2 trở đi, thêm đường nối mới
+                        if (index > 0) {
+                            d3.select(this)
+                                .append("line")
+                                .attr("class", "marriage-link")
+                                .attr("x1", 60)
+                                .attr("y1", 0)
+                                .attr("x2", xPosition)
+                                .attr("y2", 0);
+                        }
+                        
+                        const spouseGroup = d3.select(this)
+                            .append("g")
+                            .attr("class", "spouse-node")
+                            .attr("transform", `translate(${xPosition}, 0)`);
+                        
+                        // Thêm hình chữ nhật cho node vợ/chồng
+                        spouseGroup.append("rect")
+                            .attr("width", 120)
+                            .attr("height", 80)
+                            .attr("x", -60)
+                            .attr("y", -40)
+                            .attr("rx", 5)
+                            .attr("ry", 5)
+                            .attr("stroke", spouse.gender === "male" ? "#0066cc" : "#e91e63");
+                        
+                        // Thêm ảnh đại diện vợ/chồng
+                        spouseGroup.append("image")
+                            .attr("xlink:href", spouse.img)
+                            .attr("x", -25)
+                            .attr("y", -30)
+                            .attr("width", 50)
+                            .attr("height", 50)
+                            .attr("clip-path", `circle(25px at ${0}px ${-5}px)`);
+                        
+                        // Thêm tên vợ/chồng
+                        spouseGroup.append("text")
+                            .attr("dy", 35)
+                            .attr("text-anchor", "middle")
+                            .text(() => {
+                                // Cắt ngắn tên nếu quá dài
+                                let name = spouse.name || '';
+                                return name.length > 15 ? name.substring(0, 12) + '...' : name;
+                            })
+                            .style("font-size", "12px")
+                            .style("font-weight", "bold");
+                        
+                        // Thêm ngày sinh vợ/chồng
+                        spouseGroup.append("text")
+                            .attr("dy", 50)
+                            .attr("text-anchor", "middle")
+                            .text(spouse.birth)
+                            .style("font-size", "10px");
+                    });
                 });
                 
                 // Transition nodes to their new position
