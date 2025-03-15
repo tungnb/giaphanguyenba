@@ -467,6 +467,24 @@
             cursor: pointer;
         }
         
+        .delete-photo-btn {
+            background-color: #fff0f0;
+            color: #e53e3e;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #e53e3e;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+            display: none; /* Ẩn mặc định, chỉ hiển thị khi có ảnh */
+            width: 100%;
+        }
+        
+        .delete-photo-btn:hover {
+            background-color: #e53e3e;
+            color: white;
+        }
+        
         .upload-progress {
             height: 5px;
             width: 100%;
@@ -598,6 +616,9 @@
                                 </button>
                                 <input type="file" id="photo-upload" accept="image/*">
                             </div>
+                            <button type="button" id="delete-photo-btn" class="delete-photo-btn">
+                                <i class="fas fa-trash"></i> Xóa ảnh
+                            </button>
                             <input type="hidden" id="photo" class="form-control">
                             <div class="upload-progress" id="upload-progress">
                                 <div class="upload-progress-bar" id="upload-progress-bar"></div>
@@ -714,7 +735,9 @@
             
             // New person button
             document.getElementById('new-person-btn').addEventListener('click', function() {
+                // Đảm bảo form được reset hoàn toàn trước khi hiển thị
                 resetForm();
+                
                 // Switch to add/edit tab
                 document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -741,6 +764,27 @@
             document.getElementById('delete-member').addEventListener('click', function() {
                 if (confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
                     deleteMember(currentMemberId);
+                }
+            });
+            
+            // Delete photo button
+            document.getElementById('delete-photo-btn').addEventListener('click', function() {
+                if (confirm('Bạn có chắc chắn muốn xóa ảnh đại diện này?')) {
+                    // Xóa giá trị của trường ảnh
+                    document.getElementById('photo').value = '';
+                    
+                    // Reset ảnh đại diện về biểu tượng mặc định
+                    document.getElementById('photo-preview').innerHTML = `
+                        <div class="photo-preview-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    `;
+                    
+                    // Ẩn nút xóa ảnh
+                    document.getElementById('delete-photo-btn').style.display = 'none';
+                    
+                    // Hiển thị thông báo
+                    showSuccess('Đã xóa ảnh đại diện');
                 }
             });
             
@@ -1008,6 +1052,9 @@
                 document.getElementById('photo-preview').innerHTML = `
                     <img src="${e.target.result}" alt="Preview">
                 `;
+                
+                // Hiển thị nút xóa ảnh khi có ảnh được tải lên
+                document.getElementById('delete-photo-btn').style.display = 'block';
             };
             reader.readAsDataURL(file);
             
@@ -1043,6 +1090,9 @@
                     document.getElementById('photo').value = data.proxyUrl;
                     progressBarFill.style.width = '100%';
                     uploadStatus.textContent = 'Tải lên thành công';
+                    
+                    // Hiển thị nút xóa ảnh
+                    document.getElementById('delete-photo-btn').style.display = 'block';
                     
                     setTimeout(() => {
                         progressBar.style.display = 'none';
@@ -1083,12 +1133,16 @@
                 document.getElementById('photo-preview').innerHTML = `
                     <img src="${member.photo}" alt="${member.name}">
                 `;
+                // Hiển thị nút xóa ảnh
+                document.getElementById('delete-photo-btn').style.display = 'block';
             } else {
                 document.getElementById('photo-preview').innerHTML = `
                     <div class="photo-preview-placeholder">
                         <i class="fas fa-user"></i>
                     </div>
                 `;
+                // Ẩn nút xóa ảnh
+                document.getElementById('delete-photo-btn').style.display = 'none';
             }
             
             // Show the delete button
@@ -1378,8 +1432,21 @@
         function resetForm() {
             document.getElementById('member-form').reset();
             document.getElementById('member-id').value = '';
+            document.getElementById('photo').value = ''; // Reset giá trị ẩn của ảnh
             document.getElementById('delete-member').style.display = 'none';
             currentMemberId = null;
+            
+            // Reset ảnh đại diện về biểu tượng mặc định
+            document.getElementById('photo-preview').innerHTML = `
+                <div class="photo-preview-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+            `;
+            
+            // Reset thanh tiến trình upload và thông báo
+            document.getElementById('upload-progress').style.display = 'none';
+            document.getElementById('upload-progress-bar').style.width = '0%';
+            document.getElementById('upload-status').textContent = '';
             
             // Reset relations
             document.getElementById('parents-container').innerHTML = '<p class="empty-relations">Chưa có quan hệ nào được thêm.</p>';
