@@ -1058,16 +1058,41 @@
                 
                 // Thêm thông tin vợ/chồng vào node
                 person.spouses.forEach(spouseId => {
-                    const spouseData = familyData.find(p => p.id === spouseId);
-                    if (spouseData) {
-                        spousesHTML += `
-                            <div class="relation-item">
-                                <a href="javascript:void(0)" onclick="showPersonDetail('${spouseData.id}')" style="text-decoration:none;color:#333;">
-                                    ${spouseData.name} (${spouseData.gender === 'male' ? 'Chồng' : 'Vợ'})
-                                </a>
-                            </div>
-                        `;
+                    const spouse = familyDataArray.find(p => p.id === spouseId);
+                    if (!spouse) return;
+                    
+                    // Lưu thông tin vợ/chồng vào node hiện tại
+                    if (!personNode.spouses) personNode.spouses = [];
+                    
+                    // Tạo thông tin vợ/chồng
+                    let spousePhotoUrl = spouse.photo;
+                    if (!spousePhotoUrl) {
+                        if (spouse.gender === 'male') {
+                            spousePhotoUrl = 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png';
+                        } else {
+                            spousePhotoUrl = 'https://cdn-icons-png.flaticon.com/512/6997/6997662.png';
+                        }
                     }
+
+                    // Lifespan của vợ/chồng
+                    let spouseLifespan = '';
+                    if (spouse.birthDate) {
+                        const birthYear = new Date(spouse.birthDate).getFullYear();
+                        if (spouse.deathDate) {
+                            const deathYear = new Date(spouse.deathDate).getFullYear();
+                            spouseLifespan = `${birthYear} - ${deathYear}`;
+                        } else {
+                            spouseLifespan = `Sinh năm ${birthYear}`;
+                        }
+                    }
+
+                    personNode.spouses.push({
+                        id: spouse.id,
+                        name: spouse.name,
+                        img: spousePhotoUrl,
+                        birth: spouseLifespan,
+                        gender: spouse.gender
+                    });
                 });
             });
             
