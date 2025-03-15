@@ -1855,10 +1855,7 @@
                 }
             }
             
-            // Chuẩn bị thông tin chi tiết về ngày mất
-            let deathInfo = member.deathdate ? 
-                `${formatDate(member.deathdate)}` : 
-                'Còn sống';
+           
             
             // Ảnh đại diện phù hợp với giới tính
             let photoUrl = member.photo;
@@ -1962,7 +1959,7 @@
                     </div>
                     <div class="person-attribute">
                         <i class="fas fa-${member.deathdate ? 'cross' : 'heart'}"></i>
-                        <span><strong>Trạng thái:</strong> ${member.deathdate ? `Mất ngày ${deathInfo}` : 'Còn sống'}</span>
+                 
                     </div>
                 </div>
                 
