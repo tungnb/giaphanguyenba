@@ -1121,19 +1121,26 @@
             const treeLayout = d3.tree()
                 .nodeSize([280, 50])  // Duy trì khoảng cách ngang
                 .separation((a, b) => {
-                    // Kiểm tra xem cả hai node có phải là độc thân không
+                    // Kiểm tra xem các node có phải là độc thân không
                     const aIsSingle = !a.data.hasSpouse || !a.data.spouses || a.data.spouses.length === 0;
                     const bIsSingle = !b.data.hasSpouse || !b.data.spouses || b.data.spouses.length === 0;
+                    const aPrev = a.parent && a.parent.children ? a.parent.children[a.parent.children.indexOf(a) - 1] : null;
                     
                     // Áp dụng khoảng cách nhỏ hơn cho các node độc thân
                     if (a.parent === b.parent) {
+                        // Trường hợp đặc biệt: nếu node trước có phối ngẫu và node hiện tại là độc thân
+                        if (aPrev && aPrev === b && !bIsSingle && aIsSingle) {
+                            // Tăng khoảng cách để tránh chồng lấp
+                            return 1.8;
+                        }
+                        
                         // Trường hợp cùng cha mẹ
                         if (aIsSingle && bIsSingle) {
-                            // Cả hai node đều độc thân - giảm khoảng cách
-                            return 0.8; // Giảm từ 1.2 xuống 0.8 (giảm 33%)
+                            // Cả hai node đều độc thân - sử dụng khoảng cách nhỏ hơn
+                            return 0.8;
                         } else if (aIsSingle || bIsSingle) {
-                            // Chỉ một node độc thân, node kia có vợ/chồng
-                            return 1.2;
+                            // Một node độc thân, một node có phối ngẫu
+                            return 1.5; // Tăng từ 1.2 lên 1.5
                         } else {
                             // Cả hai đều có vợ/chồng
                             return 1.2 * 1.3;
@@ -1141,10 +1148,8 @@
                     } else {
                         // Khác cha mẹ - khoảng cách lớn hơn
                         if (aIsSingle && bIsSingle) {
-                            // Cả hai đều độc thân
-                            return 1.5; // Giảm từ 1.8 xuống 1.5
+                            return 1.5;
                         } else {
-                            // Ít nhất một node có vợ/chồng
                             return 1.8;
                         }
                     }
