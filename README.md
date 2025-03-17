@@ -10,7 +10,7 @@ Link quản lý: domain/admin/login
 
 ### Biến môi trường cho Google Sheets
 - `GOOGLE_SERVICE_ACCOUNT_KEY`: Chứa thông tin xác thực Service Account cho Google Sheets
-- `GOOGLE_SPREADSHEET_ID`: ID của Google Spreadsheet để lưu trữ bài viết
+- `GOOGLE_SHEET_ID`: ID của Google Spreadsheet để lưu trữ bài viết
 
 ### Biến môi trường cho Google Drive (mới)
 - `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`: Chứa thông tin xác thực Service Account cho Google Drive
